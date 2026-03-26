@@ -14,12 +14,20 @@ router = APIRouter(prefix="/api/connections", tags=["connections"])
 
 class ConnectionCreate(BaseModel):
     name: str
-    db_type: str  # postgres, clickhouse, sybase
+    db_type: str  # postgres, clickhouse, sybase, mysql, mssql
     host: str
     port: int
     database: str
     username: str
-    password: str
+    password: str = ""
+    use_ssl: bool = False
+    ssh_enabled: bool = False
+    ssh_host: Optional[str] = None
+    ssh_port: int = 22
+    ssh_username: Optional[str] = None
+    ssh_password: Optional[str] = None
+    connection_timeout: int = 30
+    jdbc_url: Optional[str] = None
 
 
 class ConnectionOut(BaseModel):
@@ -30,6 +38,10 @@ class ConnectionOut(BaseModel):
     port: int
     database: str
     username: str
+    use_ssl: bool
+    ssh_enabled: bool
+    ssh_host: Optional[str] = None
+    connection_timeout: int
 
     class Config:
         from_attributes = True
@@ -37,6 +49,10 @@ class ConnectionOut(BaseModel):
 
 @router.post("/", response_model=ConnectionOut)
 def create_connection(body: ConnectionCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not body.host.strip():
+        raise HTTPException(status_code=400, detail="Host is required")
+    if not body.database.strip():
+        raise HTTPException(status_code=400, detail="Database name is required")
     conn = DBConnection(**body.model_dump(), created_by=user.id)
     db.add(conn)
     db.commit()

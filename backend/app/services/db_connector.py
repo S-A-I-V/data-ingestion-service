@@ -32,12 +32,14 @@ class BaseConnector(ABC):
 class PostgresConnector(BaseConnector):
     def _engine(self):
         from sqlalchemy import create_engine
-        url = f"postgresql://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}"
-        return create_engine(url)
+        pwd = f":{self.conn.password}" if self.conn.password else ""
+        url = f"postgresql://{self.conn.username}{pwd}@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        return create_engine(url, connect_args={"connect_timeout": self.conn.connection_timeout or 30})
 
     def test(self):
+        from sqlalchemy import text
         with self._engine().connect() as c:
-            c.execute("SELECT 1")
+            c.execute(text("SELECT 1"))
 
     def list_tables(self) -> List[str]:
         from sqlalchemy import text
@@ -75,7 +77,7 @@ class ClickHouseConnector(BaseConnector):
             username=self.conn.username,
             password=self.conn.password,
             database=self.conn.database,
-            secure=self.conn.port == 443,
+            secure=self.conn.use_ssl or self.conn.port == 443,
         )
 
     def test(self):
@@ -118,10 +120,91 @@ class SybaseConnector(BaseConnector):
         raise NotImplementedError("Sybase connector not yet implemented")
 
 
+class MySQLConnector(BaseConnector):
+    """Requires pymysql: pip install pymysql"""
+
+    def _engine(self):
+        from sqlalchemy import create_engine
+        ssl = "?ssl=true" if self.conn.use_ssl else ""
+        url = f"mysql+pymysql://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
+        return create_engine(url)
+
+    def test(self):
+        from sqlalchemy import text
+        with self._engine().connect() as c:
+            c.execute(text("SELECT 1"))
+
+    def list_tables(self) -> List[str]:
+        from sqlalchemy import text
+        with self._engine().connect() as c:
+            rows = c.execute(text("SHOW TABLES"))
+            return [r[0] for r in rows]
+
+    def list_columns(self, table: str) -> List[Dict[str, Any]]:
+        from sqlalchemy import text
+        with self._engine().connect() as c:
+            rows = c.execute(text(
+                "SELECT column_name, data_type, is_nullable FROM information_schema.columns "
+                "WHERE table_schema = DATABASE() AND table_name = :t ORDER BY ordinal_position"
+            ), {"t": table})
+            return [{"name": r[0], "type": r[1], "nullable": r[2] == "YES"} for r in rows]
+
+    def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int:
+        from sqlalchemy import text
+        placeholders = ", ".join([f":{c}" for c in columns])
+        sql = f"INSERT INTO `{table}` ({', '.join(columns)}) VALUES ({placeholders})"
+        with self._engine().begin() as c:
+            for row in rows:
+                c.execute(text(sql), dict(zip(columns, row)))
+        return len(rows)
+
+
+class MSSQLConnector(BaseConnector):
+    """Requires pyodbc: pip install pyodbc"""
+
+    def _engine(self):
+        from sqlalchemy import create_engine
+        url = f"mssql+pyodbc://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}?driver=ODBC+Driver+17+for+SQL+Server"
+        return create_engine(url)
+
+    def test(self):
+        from sqlalchemy import text
+        with self._engine().connect() as c:
+            c.execute(text("SELECT 1"))
+
+    def list_tables(self) -> List[str]:
+        from sqlalchemy import text
+        with self._engine().connect() as c:
+            rows = c.execute(text(
+                "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_name"
+            ))
+            return [r[0] for r in rows]
+
+    def list_columns(self, table: str) -> List[Dict[str, Any]]:
+        from sqlalchemy import text
+        with self._engine().connect() as c:
+            rows = c.execute(text(
+                "SELECT column_name, data_type, is_nullable FROM information_schema.columns "
+                "WHERE table_name = :t ORDER BY ordinal_position"
+            ), {"t": table})
+            return [{"name": r[0], "type": r[1], "nullable": r[2] == "YES"} for r in rows]
+
+    def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int:
+        from sqlalchemy import text
+        placeholders = ", ".join([f":{c}" for c in columns])
+        sql = f"INSERT INTO [{table}] ({', '.join(columns)}) VALUES ({placeholders})"
+        with self._engine().begin() as c:
+            for row in rows:
+                c.execute(text(sql), dict(zip(columns, row)))
+        return len(rows)
+
+
 CONNECTORS = {
     "postgres": PostgresConnector,
     "clickhouse": ClickHouseConnector,
     "sybase": SybaseConnector,
+    "mysql": MySQLConnector,
+    "mssql": MSSQLConnector,
 }
 
 

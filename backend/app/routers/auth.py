@@ -85,3 +85,10 @@ async def logout():
     response = RedirectResponse(url=settings.FRONTEND_URL)
     response.delete_cookie("token")
     return response
+
+
+@router.post("/logout")
+async def logout():
+    response = RedirectResponse(url=settings.FRONTEND_URL)
+    response.delete_cookie("token")
+    return response

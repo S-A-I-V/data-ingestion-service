@@ -48,6 +48,11 @@ async def execute_ingestion(
         raise HTTPException(status_code=404, detail="Connection not found")
 
     mapping = json.loads(column_mapping)  # {csv_col: db_col}
+    # Filter out unmapped columns (where db_col is empty = "Skip")
+    mapping = {k: v for k, v in mapping.items() if v}
+    if not mapping:
+        raise HTTPException(status_code=400, detail="No columns mapped")
+
     content = await file.read()
     text = content.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(text))
