@@ -1,25 +1,45 @@
 # NFC Data Ingestion Service
 
-CSV-to-ClickHouse ingestion service for the `nfc_db/whichever db` database.
+A self-service data ingestion platform with AI-powered query analysis and audit trails.
 
-Each folder represents a table. Inside each folder is a Python script that reads a CSV file and inserts the data into the corresponding db table.
+## Features
 
-## Setup
+- Google OAuth authentication
+- Multi-database support: PostgreSQL, ClickHouse, Sybase (stub)
+- CSV upload with column mapping UI
+- AI query analyzer (risk, optimization, cost estimation)
+- Full audit log of all operations
 
-```bash
-pip3 install -r <table_folder>/requirements.txt
+## Architecture
+
+```
+backend/     → FastAPI (Python)
+frontend/    → React + TypeScript (Vite)
+users/       → Legacy standalone scripts
 ```
 
-Copy `.env.example` to `.env` inside the table folder and fill in your db credentials.
+## Quick Start
 
-## Usage
-
+### Backend
 ```bash
-python3 <table_folder>/ingest_csv_to_db.py <path_to_csv>
+cd backend
+cp .env.example .env   # fill in credentials
+pip3 install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-Example:
-
+### Frontend
 ```bash
-python3 users/ingest_csv_to_db.py ~/Downloads/my_data.csv
+cd frontend
+npm install
+npm run dev
 ```
+
+App runs at http://localhost:5173, API at http://localhost:8000.
+
+## Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create OAuth 2.0 credentials (Web application)
+3. Set authorized redirect URI to `http://localhost:8000/api/auth/callback`
+4. Add client ID and secret to `backend/.env`
