@@ -33,7 +33,7 @@ COLUMN_CONFIG = {
     "firstName":        {"csv": "firstName",         "type": "str", "nullable": False},
     "middleInitial":    {"csv": "middleInitial",     "type": "str", "nullable": True},
     "lastName":         {"csv": "lastName",          "type": "str", "nullable": False},
-    "email":            {"csv": "email",             "type": "str", "nullable": False},
+    "email":            {"csv": "Email",             "type": "str", "nullable": False},
 }
 
 
