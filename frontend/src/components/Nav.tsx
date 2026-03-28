@@ -12,21 +12,23 @@ export default function Nav({ user }: Props) {
 
   return (
     <nav className="nav">
-      <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+      <Link to="/home" style={{ textDecoration: "none" }}>
         <span className="nav-brand">
-          <span className="brand-icon">⚡</span>
+          <img src="/images/logo.jpeg" alt="NFC Logo" className="brand-logo" />
           NFC Ingestion
         </span>
+      </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div className="nav-tabs">
-          <Link to="/" className={`nav-tab ${loc.pathname === "/" ? "active" : ""}`}>Database</Link>
+          <Link to="/home" className={`nav-tab ${loc.pathname === "/home" ? "active" : ""}`}>Home</Link>
+          <Link to="/connections" className={`nav-tab ${loc.pathname === "/connections" ? "active" : ""}`}>Database</Link>
           <Link to="/ingest" className={`nav-tab ${loc.pathname === "/ingest" ? "active" : ""}`}>Data Transfer</Link>
           <Link to="/audit" className={`nav-tab ${loc.pathname === "/audit" ? "active" : ""}`}>Audit Log</Link>
         </div>
-      </div>
-      <div className="nav-user">
-        <span>{user.email}</span>
-        {user.picture && <img src={user.picture} alt={user.name} />}
-        <button type="button" className="btn btn-sm" onClick={logout}>Sign out</button>
+        <div className="nav-user">
+          {user.picture && <img src={user.picture} alt={user.name} />}
+          <button type="button" className="btn btn-sm" onClick={logout}>Sign out</button>
+        </div>
       </div>
     </nav>
   );
