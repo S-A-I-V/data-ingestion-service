@@ -1244,6 +1244,10 @@ body {
   transform: translateY(-2px);
 }
 
+.problem-card:focus {
+  outline: none;
+}
+
 .problem-card-wide {
   grid-column: span 2;
   height: 180px;
