@@ -868,9 +868,9 @@ a:hover {
   color: var(--text-muted);
   z-index: 100;
 }
-body {
+/* body {
   padding-bottom: 32px;
-}
+} */
 
 /* ===== LOADER ===== */
 .loader {
@@ -908,7 +908,7 @@ body {
   right: 0;
   height: 100vh;
   background:
-    url("/images/bg-home.svg") center center / contain no-repeat,
+    url("/images/bg-home.svg") center center / cover no-repeat,
     #1a1a1a;
   z-index: 0;
 }
@@ -1043,9 +1043,9 @@ body {
   justify-content: center;
 }
 .home-subtitle {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: 6px;
+  letter-spacing: 8px;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 16px;
   text-transform: uppercase;
@@ -1066,7 +1066,7 @@ body {
 /* Main bold words — bitmap/pixel edge effect */
 .home-title-bold {
   font-family: "Silkscreen", "Courier New", monospace;
-  font-size: clamp(64px, 10vw, 120px);
+  font-size: clamp(80px, 12vw, 150px);
   font-weight: 400;
   color: #fff;
   letter-spacing: 2px;
@@ -1080,7 +1080,7 @@ body {
 /* "ingest" label — white box, dark text, rotated like "my" in reference */
 .home-title-accent {
   font-family: "Archivo Black", Impact, sans-serif;
-  font-size: clamp(24px, 3.5vw, 42px);
+  font-size: clamp(30px, 4.5vw, 52px);
   font-weight: 900;
   background: #fff;
   color: #1a1a1a;
@@ -1109,7 +1109,7 @@ body {
   width: 100%;
 }
 .home-byline {
-  font-size: 18px;
+  font-size: 22px;
   color: rgba(255, 255, 255, 0.5);
   font-weight: 400;
   font-family: var(--font);
@@ -1122,7 +1122,7 @@ body {
 .home-byline strong {
   color: rgba(255, 255, 255, 0.85);
   font-weight: 700;
-  font-size: 20px;
+  font-size: 24px;
   letter-spacing: -0.3px;
 }
 .byline-logo {
@@ -1139,24 +1139,24 @@ body {
   margin-bottom: 48px;
 }
 .home-btn-primary {
-  padding: 16px 36px;
+  padding: 18px 42px;
   border-radius: 6px;
   border: 2px solid #0d42fd;
   background: #0d42fd;
   color: #fff;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font);
   letter-spacing: 0.3px;
 }
 .home-btn-secondary {
-  padding: 16px 36px;
+  padding: 18px 42px;
   border-radius: 6px;
   border: 2px solid rgba(255, 255, 255, 0.35);
   background: transparent;
   color: #fff;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font);
@@ -1198,6 +1198,12 @@ body {
   color: rgba(255, 255, 255, 0.3);
   font-size: 20px;
   z-index: 5;
+  animation: scroll-bounce 2s ease-in-out infinite;
+}
+
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
 }
 
 /* ===== TOP PROBLEMS SECTION ===== */
@@ -1471,3 +1477,64 @@ body {
 }
 
 .table-wrap { overflow-x: auto; overflow-y: visible; }
+
+/* ===== CTA BANNER ===== */
+.cta-banner {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  background: url("/images/bg-section.jpeg") center center / cover no-repeat;
+  padding: 80px 80px;
+  overflow: hidden;
+}
+
+.cta-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.cta-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cta-banner-title {
+  font-family: "Archivo Black", Impact, sans-serif;
+  font-size: clamp(48px, 7vw, 90px);
+  font-weight: 400;
+  color: #fff;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  flex-shrink: 0;
+}
+
+.cta-banner-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.cta-banner-text p {
+  margin-bottom: 20px;
+}
+
+.cta-banner-cta {
+  color: #fff;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .cta-banner { padding: 60px 30px; }
+  .cta-banner-inner { flex-direction: column; gap: 30px; }
+}

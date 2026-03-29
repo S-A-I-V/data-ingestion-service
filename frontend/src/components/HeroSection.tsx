@@ -39,22 +39,6 @@ export default function HeroSection() {
           </motion.button>
         </Link>
       </div>
-      <div className="home-stats">
-        <div className="home-stat">
-          <div className="home-stat-num">5+</div>
-          <div className="home-stat-label">Database Engines</div>
-        </div>
-        <div className="home-stat-divider" />
-        <div className="home-stat">
-          <div className="home-stat-num">AI</div>
-          <div className="home-stat-label">Query Analysis</div>
-        </div>
-        <div className="home-stat-divider" />
-        <div className="home-stat">
-          <div className="home-stat-num">100%</div>
-          <div className="home-stat-label">Audit Trail</div>
-        </div>
-      </div>
     </div>
   );
 }
