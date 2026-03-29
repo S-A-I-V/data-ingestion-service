@@ -41,9 +41,7 @@ async def execute_ingestion(
 ):
     import json
 
-    conn = db.query(DBConnection).filter(
-        DBConnection.id == connection_id, DBConnection.created_by == user.id
-    ).first()
+    conn = db.query(DBConnection).filter(DBConnection.id == connection_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
 

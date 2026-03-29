@@ -29,11 +29,11 @@ TABLE_NAME = "users"
 # Update this if the table schema changes.
 COLUMN_CONFIG = {
     "businessEntityID": {"csv": "businessEntityID", "type": "int", "nullable": False},
-    "associateID":      {"csv": "associateID",      "type": "int", "nullable": False},
-    "firstName":        {"csv": "firstName",         "type": "str", "nullable": False},
-    "middleInitial":    {"csv": "middleInitial",     "type": "str", "nullable": True},
-    "lastName":         {"csv": "lastName",          "type": "str", "nullable": False},
-    "email":            {"csv": "Email",             "type": "str", "nullable": False},
+    "associateID": {"csv": "associateID", "type": "int", "nullable": False},
+    "firstName": {"csv": "firstName", "type": "str", "nullable": False},
+    "middleInitial": {"csv": "middleInitial", "type": "str", "nullable": True},
+    "lastName": {"csv": "lastName", "type": "str", "nullable": False},
+    "email": {"csv": "Email", "type": "str", "nullable": False},
 }
 
 
@@ -63,10 +63,7 @@ def read_csv(csv_path):
 
         rows = []
         for row in reader:
-            rows.append([
-                parse_value(row[cfg["csv"]], cfg)
-                for cfg in COLUMN_CONFIG.values()
-            ])
+            rows.append([parse_value(row[cfg["csv"]], cfg) for cfg in COLUMN_CONFIG.values()])
     return rows
 
 

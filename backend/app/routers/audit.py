@@ -17,13 +17,7 @@ def get_audit_logs(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    logs = (
-        db.query(AuditLog)
-        .order_by(AuditLog.executed_at.desc())
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
+    logs = db.query(AuditLog).order_by(AuditLog.executed_at.desc()).offset(offset).limit(limit).all()
     return [
         {
             "id": l.id,

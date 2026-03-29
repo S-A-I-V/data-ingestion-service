@@ -26,6 +26,7 @@ async def analyze_query(body: AnalyzeRequest, user: User = Depends(get_current_u
 
     try:
         import httpx
+
         prompt = _build_prompt(body)
         async with httpx.AsyncClient() as client:
             resp = await client.post(
@@ -34,7 +35,10 @@ async def analyze_query(body: AnalyzeRequest, user: User = Depends(get_current_u
                 json={
                     "model": "gpt-4o-mini",
                     "messages": [
-                        {"role": "system", "content": "You are a database expert. Analyze the proposed query and provide: 1) Risk assessment 2) Optimization suggestions 3) Estimated cost/time 4) Potential issues. Be concise."},
+                        {
+                            "role": "system",
+                            "content": "You are a database expert. Analyze the proposed query and provide: 1) Risk assessment 2) Optimization suggestions 3) Estimated cost/time 4) Potential issues. Be concise.",
+                        },
                         {"role": "user", "content": prompt},
                     ],
                     "max_tokens": 500,

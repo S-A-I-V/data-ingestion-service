@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import api from "./api";
+import type { User } from "./types";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
@@ -9,25 +10,26 @@ import Ingest from "./pages/Ingest";
 import AuditLog from "./pages/AuditLog";
 import Nav from "./components/Nav";
 
-interface User { id: string; email: string; name: string; picture: string; }
-
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
-    api.get("/auth/me").then(r => setUser(r.data)).catch(() => setUser(null)).finally(() => setLoading(false));
+    api
+      .get("/auth/me")
+      .then((r) => setUser(r.data))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
-      <div className="loader" />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="loader-page">
+        <div className="loader" />
+      </div>
+    );
   if (!user) return <Login />;
-
-  const isHome = location.pathname === "/home";
 
   return (
     <>

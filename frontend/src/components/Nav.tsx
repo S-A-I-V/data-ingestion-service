@@ -20,14 +20,24 @@ export default function Nav({ user }: Props) {
       </Link>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div className="nav-tabs">
-          <Link to="/home" className={`nav-tab ${loc.pathname === "/home" ? "active" : ""}`}>Home</Link>
-          <Link to="/connections" className={`nav-tab ${loc.pathname === "/connections" ? "active" : ""}`}>Database</Link>
-          <Link to="/ingest" className={`nav-tab ${loc.pathname === "/ingest" ? "active" : ""}`}>Data Transfer</Link>
-          <Link to="/audit" className={`nav-tab ${loc.pathname === "/audit" ? "active" : ""}`}>Audit Log</Link>
+          <Link to="/home" className={`nav-tab ${loc.pathname === "/home" ? "active" : ""}`}>
+            Home
+          </Link>
+          <Link to="/connections" className={`nav-tab ${loc.pathname === "/connections" ? "active" : ""}`}>
+            Database
+          </Link>
+          <Link to="/ingest" className={`nav-tab ${loc.pathname === "/ingest" ? "active" : ""}`}>
+            Data Transfer
+          </Link>
+          <Link to="/audit" className={`nav-tab ${loc.pathname === "/audit" ? "active" : ""}`}>
+            Audit Log
+          </Link>
         </div>
         <div className="nav-user">
           {user.picture && <img src={user.picture} alt={user.name} />}
-          <button type="button" className="btn btn-sm" onClick={logout}>Sign out</button>
+          <button type="button" className="btn btn-sm" onClick={logout}>
+            Sign out
+          </button>
         </div>
       </div>
     </nav>
