@@ -211,7 +211,6 @@ export default function Dashboard() {
           </ModalWrapper>
         )}
 
-        <div className="status-bar"><span>{conns.length} connection(s)</span></div>
       </div>
     </PageTransition>
   );
