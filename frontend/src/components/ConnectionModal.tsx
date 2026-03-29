@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ModalWrapper, motion } from "./Motion";
 import { DB_TYPES, EMPTY_CONNECTION_FORM, MODAL_TABS } from "../constants/database";
+import DbIcon from "./DbIcon";
 import api from "../api";
 import MainTab from "./connection-form/MainTab";
 import SshTab from "./connection-form/SshTab";
@@ -56,7 +57,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast }: Props) {
     <ModalWrapper onClose={onClose}>
       <div className="modal-header">
         <span className="modal-header-title">
-          {dbInfo?.icon} New Connection — {dbInfo?.label}
+          <DbIcon icon={dbInfo?.icon || ""} size={20} /> New Connection — {dbInfo?.label}
         </span>
         <button type="button" className="close-btn" onClick={onClose}>
           ✕

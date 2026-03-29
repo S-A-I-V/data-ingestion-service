@@ -1,5 +1,6 @@
 import { Stagger, StaggerItem, HoverCard, motion } from "./Motion";
 import { DB_TYPES } from "../constants/database";
+import DbIcon from "./DbIcon";
 import type { Connection } from "../types";
 
 interface Props {
@@ -26,7 +27,7 @@ export default function ConnectionList({ connections, onTest, onDelete }: Props)
         return (
           <StaggerItem key={c.id}>
             <HoverCard className="conn-card">
-              <div className="conn-icon">{info?.icon || "🗄️"}</div>
+              <div className="conn-icon"><DbIcon icon={info?.icon || "🗄️"} size={24} /></div>
               <div className="conn-info">
                 <div className="conn-name">{c.name}</div>
                 <div className="conn-detail">

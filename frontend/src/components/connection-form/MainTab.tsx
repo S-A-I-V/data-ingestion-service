@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { DB_TYPES } from "../../constants/database";
+import DbIcon from "../DbIcon";
 import type { ConnectionForm } from "../../types";
 
 interface Props {
@@ -27,7 +28,7 @@ export default function MainTab({ form, setForm, connectBy, setConnectBy }: Prop
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.95 }}
           >
-            <span className="icon">{t.icon}</span>
+            <DbIcon icon={t.icon} size={28} />
             {t.label}
           </motion.button>
         ))}

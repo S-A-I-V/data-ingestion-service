@@ -1,11 +1,11 @@
 import type { DbType, ConnectionForm } from "../types";
 
 export const DB_TYPES: DbType[] = [
-  { value: "postgres", label: "PostgreSQL", defaultPort: 5432, icon: "🐘" },
-  { value: "clickhouse", label: "ClickHouse", defaultPort: 443, icon: "🏠" },
-  { value: "mysql", label: "MySQL", defaultPort: 3306, icon: "🐬" },
-  { value: "mssql", label: "SQL Server", defaultPort: 1433, icon: "🔷" },
-  { value: "sybase", label: "Sybase", defaultPort: 5000, icon: "📊" },
+  { value: "postgres", label: "PostgreSQL", defaultPort: 5432, icon: "https://www.svgrepo.com/show/354200/postgresql.svg" },
+  { value: "clickhouse", label: "ClickHouse", defaultPort: 443, icon: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/clickhouse/clickhouse-original.svg" },
+  { value: "mysql", label: "MySQL", defaultPort: 3306, icon: "https://www.svgrepo.com/show/303251/mysql-logo.svg" },
+  { value: "mssql", label: "SQL Server", defaultPort: 1433, icon: "https://www.svgrepo.com/show/303229/microsoft-sql-server-logo.svg" },
+  { value: "sybase", label: "Sybase", defaultPort: 5000, icon: "https://www.svgrepo.com/show/331760/sql-database-generic.svg" },
 ];
 
 export const EMPTY_CONNECTION_FORM: ConnectionForm = {
