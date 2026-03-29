@@ -14,23 +14,32 @@ export default function ProblemsSection() {
           <h2 className="problems-title">TOP 10 PROBLEMS</h2>
         </FadeIn>
         <div className="problems-grid">
-          {PROBLEMS.map((item, i) => (
-            <FadeIn key={i} delay={0.05 * i}>
-              <div
-                className={`problem-card ${item.highlight ? "problem-card-highlight" : ""}`}
-                onClick={() => setSelected(i)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && setSelected(i)}
-              >
-                <div className="problem-card-header">
-                  <span className="problem-tag">{item.tag}</span>
-                  <span className="problem-arrow">›</span>
+          {PROBLEMS.map((item, i) => {
+            const isWide = i < 2;
+            let cardClass = "problem-card";
+            if (item.highlight) {
+              cardClass += " problem-card-highlight";
+            } else if (!isWide && i % 2 === 1) {
+              cardClass += " problem-card-white";
+            }
+            return (
+              <FadeIn key={i} delay={0.05 * i} className={isWide ? "problem-card-wide" : ""}>
+                <div
+                  className={cardClass}
+                  onClick={() => setSelected(i)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && setSelected(i)}
+                >
+                  <div className="problem-card-header">
+                    <span className="problem-tag">{item.tag}</span>
+                    <span className="problem-arrow">›</span>
+                  </div>
+                  <p className="problem-question">{item.question}</p>
                 </div>
-                <p className="problem-question">{item.question}</p>
-              </div>
-            </FadeIn>
-          ))}
+              </FadeIn>
+            );
+          })}
         </div>
       </div>
 

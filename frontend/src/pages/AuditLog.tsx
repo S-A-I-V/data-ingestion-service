@@ -39,7 +39,7 @@ export default function AuditLog() {
                 <div className="empty-desc">Run a data transfer to see it here.</div>
               </div>
             ) : (
-              <div style={{ overflow: "auto" }}>
+              <div className="table-wrap">
                 <table className="data-table">
                   <thead>
                     <tr>

@@ -47,7 +47,7 @@ export const PROBLEMS: Problem[] = [
     frequency: 5,
     whitespace: 8.5,
     itch: 68,
-    highlight: false,
+    highlight: true,
   },
   {
     tag: "Scalability",
@@ -71,7 +71,7 @@ export const PROBLEMS: Problem[] = [
     frequency: 8,
     whitespace: 8.5,
     itch: 71,
-    highlight: true,
+    highlight: false,
   },
   {
     tag: "Mapping",
@@ -83,7 +83,7 @@ export const PROBLEMS: Problem[] = [
     frequency: 9,
     whitespace: 7,
     itch: 66,
-    highlight: true,
+    highlight: false,
   },
   {
     tag: "AI",
@@ -95,6 +95,30 @@ export const PROBLEMS: Problem[] = [
     frequency: 4,
     whitespace: 9.5,
     itch: 62,
+    highlight: true,
+  },
+  {
+    tag: "Validation",
+    question: "Why is there no easy way to validate and preview data before committing it to production tables?",
+    description:
+      "Teams push data into production without previewing results, leading to rollbacks and downstream failures.",
+    severity: 80,
+    tam: 8,
+    frequency: 7,
+    whitespace: 8,
+    itch: 70,
+    highlight: true,
+  },
+  {
+    tag: "Automation",
+    question: "Why can't recurring data imports be scheduled and monitored without building custom pipelines?",
+    description:
+      "Every repeated import requires manual intervention, wasting engineering time on tasks that should be automated.",
+    severity: 76,
+    tam: 8,
+    frequency: 8,
+    whitespace: 7.5,
+    itch: 67,
     highlight: false,
   },
 ];

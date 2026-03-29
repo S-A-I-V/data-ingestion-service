@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import type { Problem } from "../types";
 
@@ -7,6 +8,13 @@ interface Props {
 }
 
 export default function ProblemPopup({ problem, onClose }: Props) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
   return (
     <motion.div
       className="problem-popup-overlay"
