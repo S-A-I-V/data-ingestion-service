@@ -15,7 +15,7 @@ export default function Nav({ user }: Props) {
       <Link to="/home" style={{ textDecoration: "none" }}>
         <span className="nav-brand">
           <img src="/images/logo.jpeg" alt="NFC Logo" className="brand-logo" />
-          NFC Ingestion
+          NFC Data Ingestion
         </span>
       </Link>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
