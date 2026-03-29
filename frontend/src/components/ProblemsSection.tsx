@@ -16,10 +16,11 @@ export default function ProblemsSection() {
         <div className="problems-grid">
           {PROBLEMS.map((item, i) => {
             const isWide = i < 2;
+            const whiteIndices = [3, 6, 8];
             let cardClass = "problem-card";
             if (item.highlight) {
               cardClass += " problem-card-highlight";
-            } else if (!isWide && i % 2 === 1) {
+            } else if (whiteIndices.includes(i)) {
               cardClass += " problem-card-white";
             }
             return (

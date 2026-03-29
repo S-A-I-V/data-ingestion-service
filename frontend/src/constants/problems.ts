@@ -47,7 +47,7 @@ export const PROBLEMS: Problem[] = [
     frequency: 5,
     whitespace: 8.5,
     itch: 68,
-    highlight: true,
+    highlight: false,
   },
   {
     tag: "Scalability",
@@ -59,7 +59,7 @@ export const PROBLEMS: Problem[] = [
     frequency: 7,
     whitespace: 7,
     itch: 74,
-    highlight: false,
+    highlight: true,
   },
   {
     tag: "Multi-DB",
@@ -107,7 +107,7 @@ export const PROBLEMS: Problem[] = [
     frequency: 7,
     whitespace: 8,
     itch: 70,
-    highlight: true,
+    highlight: false,
   },
   {
     tag: "Automation",
