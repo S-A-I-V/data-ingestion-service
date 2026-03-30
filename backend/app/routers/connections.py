@@ -76,6 +76,18 @@ def delete_connection(conn_id: int, user: User = Depends(get_current_user), db: 
     return {"ok": True}
 
 
+@router.put("/{conn_id}", response_model=ConnectionOut)
+def update_connection(conn_id: int, body: ConnectionCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
+    if not conn:
+        raise HTTPException(status_code=404, detail="Connection not found")
+    for key, value in body.model_dump().items():
+        setattr(conn, key, value)
+    db.commit()
+    db.refresh(conn)
+    return conn
+
+
 @router.post("/{conn_id}/test")
 def test_connection(conn_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()

@@ -7,9 +7,10 @@ interface Props {
   connections: Connection[];
   onTest: (id: number) => void;
   onDelete: (id: number) => void;
+  onEdit: (conn: Connection) => void;
 }
 
-export default function ConnectionList({ connections, onTest, onDelete }: Props) {
+export default function ConnectionList({ connections, onTest, onDelete, onEdit }: Props) {
   if (connections.length === 0) {
     return (
       <div className="empty-state">
@@ -37,6 +38,15 @@ export default function ConnectionList({ connections, onTest, onDelete }: Props)
                 </div>
               </div>
               <div className="conn-actions">
+                <motion.button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => onEdit(c)}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Edit
+                </motion.button>
                 <motion.button
                   type="button"
                   className="btn btn-sm btn-success"

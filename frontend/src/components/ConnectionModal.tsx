@@ -7,19 +7,23 @@ import MainTab from "./connection-form/MainTab";
 import SshTab from "./connection-form/SshTab";
 import SslTab from "./connection-form/SslTab";
 import AdvancedTab from "./connection-form/AdvancedTab";
+import type { ConnectionForm } from "../types";
 
 interface Props {
   onClose: () => void;
   onSaved: () => void;
   onToast: (toast: { ok: boolean; msg: string }) => void;
+  editId?: number | null;
+  initialData?: Partial<ConnectionForm>;
 }
 
-export default function ConnectionModal({ onClose, onSaved, onToast }: Props) {
-  const [form, setForm] = useState({ ...EMPTY_CONNECTION_FORM });
+export default function ConnectionModal({ onClose, onSaved, onToast, editId, initialData }: Props) {
+  const [form, setForm] = useState<ConnectionForm>({ ...EMPTY_CONNECTION_FORM, ...initialData });
   const [tab, setTab] = useState("main");
   const [connectBy, setConnectBy] = useState<"host" | "url">("host");
   const [saving, setSaving] = useState(false);
 
+  const isEditing = editId != null;
   const dbInfo = DB_TYPES.find((d) => d.value === form.db_type);
 
   const save = async () => {
@@ -29,10 +33,14 @@ export default function ConnectionModal({ onClose, onSaved, onToast }: Props) {
     if (!form.username.trim()) return alert("Username is required");
     setSaving(true);
     try {
-      await api.post("/connections/", form);
+      if (isEditing) {
+        await api.put(`/connections/${editId}`, form);
+      } else {
+        await api.post("/connections/", form);
+      }
       onClose();
       onSaved();
-      onToast({ ok: true, msg: "Connection saved" });
+      onToast({ ok: true, msg: isEditing ? "Connection updated" : "Connection saved" });
     } catch (e: any) {
       alert(e.response?.data?.detail || "Failed");
     }
@@ -57,7 +65,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast }: Props) {
     <ModalWrapper onClose={onClose}>
       <div className="modal-header">
         <span className="modal-header-title">
-          <DbIcon icon={dbInfo?.icon || ""} size={20} /> New Connection — {dbInfo?.label}
+          <DbIcon icon={dbInfo?.icon || ""} size={20} /> {isEditing ? "Edit" : "New"} Connection — {dbInfo?.label}
         </span>
         <button type="button" className="close-btn" onClick={onClose}>
           ✕

@@ -8,6 +8,7 @@ import type { Connection } from "../types";
 export default function Dashboard() {
   const [conns, setConns] = useState<Connection[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [editConn, setEditConn] = useState<Connection | null>(null);
   const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
 
   const load = () => api.get("/connections").then((r) => setConns(r.data));
@@ -43,7 +44,7 @@ export default function Dashboard() {
             <motion.button
               type="button"
               className="btn btn-primary"
-              onClick={() => setShowModal(true)}
+              onClick={() => { setEditConn(null); setShowModal(true); }}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
             >
@@ -54,7 +55,7 @@ export default function Dashboard() {
 
         <FadeIn delay={0.1}>
           <div className="panel">
-            <ConnectionList connections={conns} onTest={testConn} onDelete={del} />
+            <ConnectionList connections={conns} onTest={testConn} onDelete={del} onEdit={(c) => { setEditConn(c); setShowModal(true); }} />
           </div>
         </FadeIn>
 
@@ -69,7 +70,25 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {showModal && <ConnectionModal onClose={() => setShowModal(false)} onSaved={load} onToast={setToast} />}
+        {showModal && (
+          <ConnectionModal
+            onClose={() => { setShowModal(false); setEditConn(null); }}
+            onSaved={load}
+            onToast={setToast}
+            editId={editConn?.id}
+            initialData={editConn ? {
+              name: editConn.name,
+              db_type: editConn.db_type,
+              host: editConn.host,
+              port: editConn.port,
+              database: editConn.database,
+              username: editConn.username,
+              use_ssl: editConn.use_ssl,
+              ssh_enabled: editConn.ssh_enabled,
+              connection_timeout: editConn.connection_timeout,
+            } : undefined}
+          />
+        )}
       </div>
     </PageTransition>
   );
