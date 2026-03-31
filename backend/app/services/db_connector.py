@@ -42,6 +42,11 @@ class SQLAlchemyConnector(BaseConnector):
     def _url(self) -> str:
         raise NotImplementedError("Subclass must implement _url()")
 
+    def _safe(self, val: str) -> str:
+        """URL-encode a value for use in connection strings."""
+        from urllib.parse import quote_plus
+        return quote_plus(val or "")
+
     def _engine_kwargs(self) -> dict:
         return {}
 
@@ -112,8 +117,7 @@ class SQLAlchemyConnector(BaseConnector):
 
 class PostgresConnector(SQLAlchemyConnector):
     def _url(self) -> str:
-        pwd = f":{self.conn.password}" if self.conn.password else ""
-        return f"postgresql://{self.conn.username}{pwd}@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        return f"postgresql://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}@{self.conn.host}:{self.conn.port}/{self.conn.database}"
 
 
 # ─── MySQL ───────────────────────────────────────────────────────────────────
@@ -122,7 +126,7 @@ class PostgresConnector(SQLAlchemyConnector):
 class MySQLConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         ssl = "?ssl=true" if self.conn.use_ssl else ""
-        return f"mysql+pymysql://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
+        return f"mysql+pymysql://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
 
     def _list_tables_query(self) -> str:
         return "SHOW TABLES"
@@ -145,7 +149,7 @@ class MySQLConnector(SQLAlchemyConnector):
 class MariaDBConnector(MySQLConnector):
     def _url(self) -> str:
         ssl = "?ssl=true" if self.conn.use_ssl else ""
-        return f"mariadb+pymysql://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
+        return f"mariadb+pymysql://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
 
 
 # ─── SQL Server (MSSQL) ─────────────────────────────────────────────────────
@@ -154,7 +158,7 @@ class MariaDBConnector(MySQLConnector):
 class MSSQLConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"mssql+pyodbc://{self.conn.username}:{self.conn.password}"
+            f"mssql+pyodbc://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
             f"?driver=ODBC+Driver+17+for+SQL+Server"
         )
@@ -182,7 +186,7 @@ class MSSQLConnector(SQLAlchemyConnector):
 class OracleConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"oracle+oracledb://{self.conn.username}:{self.conn.password}"
+            f"oracle+oracledb://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -202,10 +206,9 @@ class OracleConnector(SQLAlchemyConnector):
 
 class SnowflakeConnector(SQLAlchemyConnector):
     def _url(self) -> str:
-        # host = account.snowflakecomputing.com → account = host minus suffix
         account = self.conn.host.replace(".snowflakecomputing.com", "")
         return (
-            f"snowflake://{self.conn.username}:{self.conn.password}"
+            f"snowflake://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{account}/{self.conn.database}"
         )
 
@@ -227,7 +230,7 @@ class SnowflakeConnector(SQLAlchemyConnector):
 class RedshiftConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"redshift+redshift_connector://{self.conn.username}:{self.conn.password}"
+            f"redshift+redshift_connector://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -276,9 +279,8 @@ class SQLiteConnector(SQLAlchemyConnector):
 class CockroachDBConnector(PostgresConnector):
     def _url(self) -> str:
         ssl = "?sslmode=verify-full" if self.conn.use_ssl else "?sslmode=disable"
-        pwd = f":{self.conn.password}" if self.conn.password else ""
         return (
-            f"cockroachdb://{self.conn.username}{pwd}"
+            f"cockroachdb://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
         )
 
@@ -328,7 +330,7 @@ class ClickHouseConnector(BaseConnector):
 class VerticaConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"vertica+vertica_python://{self.conn.username}:{self.conn.password}"
+            f"vertica+vertica_python://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -339,7 +341,7 @@ class VerticaConnector(SQLAlchemyConnector):
 class TeradataConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"teradatasql://{self.conn.username}:{self.conn.password}"
+            f"teradatasql://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}/{self.conn.database}"
         )
 
@@ -364,7 +366,7 @@ class TeradataConnector(SQLAlchemyConnector):
 class ExasolConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"exa+pyodbc://{self.conn.username}:{self.conn.password}"
+            f"exa+pyodbc://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -375,7 +377,7 @@ class ExasolConnector(SQLAlchemyConnector):
 class SAPHANAConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"hana+hdbcli://{self.conn.username}:{self.conn.password}"
+            f"hana+hdbcli://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}"
         )
 
@@ -399,7 +401,7 @@ class SAPHANAConnector(SQLAlchemyConnector):
 class FirebirdConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"firebird+firebird://{self.conn.username}:{self.conn.password}"
+            f"firebird+firebird://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -428,7 +430,7 @@ class DuckDBConnector(SQLAlchemyConnector):
 class HiveConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"hive://{self.conn.username}:{self.conn.password}"
+            f"hive://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -486,7 +488,7 @@ class ElasticsearchConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         scheme = "https" if self.conn.use_ssl else "http"
         return (
-            f"elasticsearch+{scheme}://{self.conn.username}:{self.conn.password}"
+            f"elasticsearch+{scheme}://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/"
         )
 
@@ -503,9 +505,8 @@ class OpenSearchConnector(ElasticsearchConnector):
 
 class DatabricksConnector(SQLAlchemyConnector):
     def _url(self) -> str:
-        # host = workspace URL, database = catalog/schema, jdbc_url has http_path
         return (
-            f"databricks://token:{self.conn.password}"
+            f"databricks://token:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -598,7 +599,7 @@ class AzureSQLConnector(MSSQLConnector):
 class MonetDBConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"monetdb://{self.conn.username}:{self.conn.password}"
+            f"monetdb://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -609,7 +610,7 @@ class MonetDBConnector(SQLAlchemyConnector):
 class DB2Connector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"db2+ibm_db://{self.conn.username}:{self.conn.password}"
+            f"db2+ibm_db://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 
@@ -620,7 +621,7 @@ class DB2Connector(SQLAlchemyConnector):
 class SybaseConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         return (
-            f"sybase+pyodbc://{self.conn.username}:{self.conn.password}"
+            f"sybase+pyodbc://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
             f"?driver=FreeTDS"
         )
@@ -665,7 +666,7 @@ class DatabendConnector(SQLAlchemyConnector):
     def _url(self) -> str:
         scheme = "https" if self.conn.use_ssl else "http"
         return (
-            f"databend://{self.conn.username}:{self.conn.password}"
+            f"databend://{self._safe(self.conn.username)}:{self._safe(self.conn.password)}"
             f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
         )
 

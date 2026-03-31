@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ModalWrapper, motion } from "./Motion";
+import { ModalWrapper, motion, AnimatePresence } from "./Motion";
 import { DB_TYPES, EMPTY_CONNECTION_FORM, MODAL_TABS } from "../constants/database";
 import DbIcon from "./DbIcon";
 import DbPicker from "./DbPicker";
@@ -18,11 +18,19 @@ interface Props {
   initialData?: Partial<ConnectionForm>;
 }
 
+interface TestResult {
+  ok: boolean;
+  message: string;
+  elapsed?: number;
+}
+
 export default function ConnectionModal({ onClose, onSaved, onToast, editId, initialData }: Props) {
   const [form, setForm] = useState<ConnectionForm>({ ...EMPTY_CONNECTION_FORM, ...initialData });
   const [tab, setTab] = useState("main");
   const [connectBy, setConnectBy] = useState<"host" | "url">("host");
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [showPicker, setShowPicker] = useState(!editId && !initialData?.db_type);
 
   const isEditing = editId != null;
@@ -45,8 +53,8 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
       } else {
         await api.post("/connections/", form);
       }
-      onClose();
       onSaved();
+      onClose();
       onToast({ ok: true, msg: isEditing ? "Connection updated" : "Connection saved" });
     } catch (e: any) {
       alert(e.response?.data?.detail || "Failed");
@@ -54,18 +62,35 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
     setSaving(false);
   };
 
-  const testNew = async () => {
+  const testConnection = async () => {
     if (!form.host.trim() || !form.database.trim() || !form.username.trim()) return alert("Fill required fields");
-    setSaving(true);
+    setTesting(true);
+    setTestResult(null);
+    const start = Date.now();
     try {
-      const r = await api.post("/connections/", form);
-      const tr = await api.post(`/connections/${r.data.id}/test`);
-      onToast({ ok: tr.data.ok, msg: tr.data.ok ? "Connection successful!" : tr.data.message });
-      onSaved();
+      let connId = editId;
+      if (!connId) {
+        // Save first, then test
+        const r = await api.post("/connections/", form);
+        connId = r.data.id;
+        onSaved();
+      }
+      const tr = await api.post(`/connections/${connId}/test`);
+      const elapsed = Date.now() - start;
+      setTestResult({
+        ok: tr.data.ok,
+        message: tr.data.ok ? "Connection successful" : tr.data.message,
+        elapsed,
+      });
     } catch (e: any) {
-      onToast({ ok: false, msg: e.response?.data?.detail || "Failed" });
+      const elapsed = Date.now() - start;
+      setTestResult({
+        ok: false,
+        message: e.response?.data?.detail || "Connection failed",
+        elapsed,
+      });
     }
-    setSaving(false);
+    setTesting(false);
   };
 
   if (showPicker) {
@@ -118,12 +143,12 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
         <motion.button
           type="button"
           className="btn"
-          onClick={testNew}
-          disabled={saving}
+          onClick={testConnection}
+          disabled={saving || testing}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
         >
-          Test Connection
+          {testing ? "Testing..." : "Test Connection"}
         </motion.button>
         <div className="modal-footer-actions">
           <button type="button" className="btn" onClick={onClose}>Cancel</button>
@@ -131,7 +156,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
             type="button"
             className="btn btn-primary"
             onClick={save}
-            disabled={saving}
+            disabled={saving || testing}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
           >
@@ -139,6 +164,69 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
           </motion.button>
         </div>
       </div>
+
+      {/* Test Result Modal (DBeaver-style centered) */}
+      <AnimatePresence>
+        {(testing || testResult) && (
+          <div className="test-result-overlay" onClick={() => !testing && setTestResult(null)}>
+            <motion.div
+              className="test-result-modal"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="test-result-header">Connection Test</div>
+              <div className="test-result-body">
+                {testing ? (
+                  <div className="test-result-loading">
+                    <div className="spinner" />
+                    <span>Testing connection to {dbInfo?.label}...</span>
+                  </div>
+                ) : testResult ? (
+                  <>
+                    <div className={`test-result-icon ${testResult.ok ? "success" : "error"}`}>
+                      {testResult.ok ? "✓" : "✗"}
+                    </div>
+                    <div className="test-result-status">
+                      {testResult.ok ? "Connected" : "Connection Failed"}
+                      {testResult.elapsed != null && (
+                        <span className="test-result-time"> ({testResult.elapsed} ms)</span>
+                      )}
+                    </div>
+                    {testResult.ok ? (
+                      <div className="test-result-details">
+                        <div className="test-result-row">
+                          <span className="test-result-label">Server:</span>
+                          <span>{dbInfo?.label}</span>
+                        </div>
+                        <div className="test-result-row">
+                          <span className="test-result-label">Host:</span>
+                          <span>{form.host}:{form.port}</span>
+                        </div>
+                        <div className="test-result-row">
+                          <span className="test-result-label">Database:</span>
+                          <span>{form.database}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="test-result-error-msg">{testResult.message}</div>
+                    )}
+                  </>
+                ) : null}
+              </div>
+              {!testing && (
+                <div className="test-result-footer">
+                  <button type="button" className="btn btn-primary" onClick={() => setTestResult(null)}>
+                    OK
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </ModalWrapper>
   );
 }

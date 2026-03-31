@@ -1,20 +1,28 @@
 import { useState, useEffect } from "react";
 import api from "../api";
-import { PageTransition, FadeIn, motion } from "../components/Motion";
+import { PageTransition, FadeIn, motion, AnimatePresence } from "../components/Motion";
 import ConnectionList from "../components/ConnectionList";
 import ConnectionModal from "../components/ConnectionModal";
+import { DB_TYPES } from "../constants/database";
 import type { Connection } from "../types";
+
+interface TestResult {
+  ok: boolean;
+  message: string;
+  elapsed?: number;
+  conn?: Connection;
+}
 
 export default function Dashboard() {
   const [conns, setConns] = useState<Connection[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editConn, setEditConn] = useState<Connection | null>(null);
   const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [testing, setTesting] = useState<Connection | null>(null);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
 
   const load = () => api.get("/connections").then((r) => setConns(r.data));
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
   useEffect(() => {
     if (toast) {
       const t = setTimeout(() => setToast(null), 4000);
@@ -23,8 +31,30 @@ export default function Dashboard() {
   }, [toast]);
 
   const testConn = async (id: number) => {
-    const r = await api.post(`/connections/${id}/test`);
-    setToast({ ok: r.data.ok, msg: r.data.ok ? "Connection successful!" : r.data.message });
+    const conn = conns.find((c) => c.id === id);
+    if (!conn) return;
+    setTesting(conn);
+    setTestResult(null);
+    const start = Date.now();
+    try {
+      const r = await api.post(`/connections/${id}/test`);
+      const elapsed = Date.now() - start;
+      setTestResult({
+        ok: r.data.ok,
+        message: r.data.ok ? "Connection successful" : r.data.message,
+        elapsed,
+        conn,
+      });
+    } catch (e: any) {
+      const elapsed = Date.now() - start;
+      setTestResult({
+        ok: false,
+        message: e.response?.data?.detail || "Connection failed",
+        elapsed,
+        conn,
+      });
+    }
+    setTesting(null);
   };
 
   const del = async (id: number) => {
@@ -33,6 +63,14 @@ export default function Dashboard() {
     load();
     setToast({ ok: true, msg: "Deleted" });
   };
+
+  const closeTestResult = () => {
+    setTesting(null);
+    setTestResult(null);
+  };
+
+  const testingConn = testing || testResult?.conn;
+  const testDbInfo = testingConn ? DB_TYPES.find((d) => d.value === testingConn.db_type) : null;
 
   return (
     <PageTransition>
@@ -89,6 +127,67 @@ export default function Dashboard() {
             } : undefined}
           />
         )}
+
+        {/* Centered Test Result Modal (DBeaver-style) */}
+        <AnimatePresence>
+          {(testing || testResult) && (
+            <div className="test-result-overlay" onClick={() => !testing && closeTestResult()}>
+              <motion.div
+                className="test-result-modal"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="test-result-header">Connection Test</div>
+                <div className="test-result-body">
+                  {testing ? (
+                    <div className="test-result-loading">
+                      <div className="spinner" />
+                      <span>Testing connection to {testDbInfo?.label}...</span>
+                    </div>
+                  ) : testResult ? (
+                    <>
+                      <div className={`test-result-icon ${testResult.ok ? "success" : "error"}`}>
+                        {testResult.ok ? "✓" : "✗"}
+                      </div>
+                      <div className="test-result-status">
+                        {testResult.ok ? "Connected" : "Connection Failed"}
+                        {testResult.elapsed != null && (
+                          <span className="test-result-time"> ({testResult.elapsed} ms)</span>
+                        )}
+                      </div>
+                      {testResult.ok && testResult.conn ? (
+                        <div className="test-result-details">
+                          <div className="test-result-row">
+                            <span className="test-result-label">Server:</span>
+                            <span>{testDbInfo?.label}</span>
+                          </div>
+                          <div className="test-result-row">
+                            <span className="test-result-label">Host:</span>
+                            <span>{testResult.conn.host}:{testResult.conn.port}</span>
+                          </div>
+                          <div className="test-result-row">
+                            <span className="test-result-label">Database:</span>
+                            <span>{testResult.conn.database}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="test-result-error-msg">{testResult.message}</div>
+                      )}
+                    </>
+                  ) : null}
+                </div>
+                {!testing && (
+                  <div className="test-result-footer">
+                    <button type="button" className="btn btn-primary" onClick={closeTestResult}>OK</button>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </PageTransition>
   );
