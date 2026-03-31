@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 
 // Fade up on scroll into view
 export function FadeIn({
@@ -82,6 +82,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
 // Modal with backdrop animation
 export function ModalWrapper({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
   return (
     <AnimatePresence>
       <motion.div

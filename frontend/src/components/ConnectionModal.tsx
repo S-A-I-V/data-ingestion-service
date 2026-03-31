@@ -2,12 +2,13 @@ import { useState } from "react";
 import { ModalWrapper, motion } from "./Motion";
 import { DB_TYPES, EMPTY_CONNECTION_FORM, MODAL_TABS } from "../constants/database";
 import DbIcon from "./DbIcon";
+import DbPicker from "./DbPicker";
 import api from "../api";
 import MainTab from "./connection-form/MainTab";
 import SshTab from "./connection-form/SshTab";
 import SslTab from "./connection-form/SslTab";
 import AdvancedTab from "./connection-form/AdvancedTab";
-import type { ConnectionForm } from "../types";
+import type { ConnectionForm, DbType } from "../types";
 
 interface Props {
   onClose: () => void;
@@ -22,9 +23,15 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
   const [tab, setTab] = useState("main");
   const [connectBy, setConnectBy] = useState<"host" | "url">("host");
   const [saving, setSaving] = useState(false);
+  const [showPicker, setShowPicker] = useState(!editId && !initialData?.db_type);
 
   const isEditing = editId != null;
   const dbInfo = DB_TYPES.find((d) => d.value === form.db_type);
+
+  const handleDbSelect = (db: DbType) => {
+    setForm({ ...form, db_type: db.value, port: db.defaultPort });
+    setShowPicker(false);
+  };
 
   const save = async () => {
     if (!form.name.trim()) return alert("Connection name is required");
@@ -61,15 +68,28 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
     setSaving(false);
   };
 
+  if (showPicker) {
+    return (
+      <ModalWrapper onClose={onClose}>
+        <DbPicker onSelect={handleDbSelect} onCancel={onClose} />
+      </ModalWrapper>
+    );
+  }
+
   return (
     <ModalWrapper onClose={onClose}>
       <div className="modal-header">
         <span className="modal-header-title">
           <DbIcon icon={dbInfo?.icon || ""} size={20} /> {isEditing ? "Edit" : "New"} Connection — {dbInfo?.label}
         </span>
-        <button type="button" className="close-btn" onClick={onClose}>
-          ✕
-        </button>
+        <div className="modal-header-actions">
+          {!isEditing && (
+            <button type="button" className="btn btn-sm" onClick={() => setShowPicker(true)}>
+              ← Change DB
+            </button>
+          )}
+          <button type="button" className="close-btn" onClick={onClose}>✕</button>
+        </div>
       </div>
       <div className="modal-body">
         <div className="modal-sidebar">
@@ -106,9 +126,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
           Test Connection
         </motion.button>
         <div className="modal-footer-actions">
-          <button type="button" className="btn" onClick={onClose}>
-            Cancel
-          </button>
+          <button type="button" className="btn" onClick={onClose}>Cancel</button>
           <motion.button
             type="button"
             className="btn btn-primary"

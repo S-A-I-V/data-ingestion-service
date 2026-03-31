@@ -1,6 +1,4 @@
 import { motion } from "framer-motion";
-import { DB_TYPES } from "../../constants/database";
-import DbIcon from "../DbIcon";
 import type { ConnectionForm } from "../../types";
 
 interface Props {
@@ -11,28 +9,8 @@ interface Props {
 }
 
 export default function MainTab({ form, setForm, connectBy, setConnectBy }: Props) {
-  const handleType = (t: string) => {
-    const d = DB_TYPES.find((x) => x.value === t);
-    setForm({ ...form, db_type: t, port: d?.defaultPort || 5432 });
-  };
-
   return (
     <>
-      <div className="db-type-grid">
-        {DB_TYPES.map((t) => (
-          <motion.button
-            type="button"
-            key={t.value}
-            className={`db-type-btn ${form.db_type === t.value ? "active" : ""}`}
-            onClick={() => handleType(t.value)}
-            whileHover={{ y: -3 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <DbIcon icon={t.icon} size={28} />
-            {t.label}
-          </motion.button>
-        ))}
-      </div>
       <div className="form-section">Connection</div>
       <div className="form-row">
         <label>Connect by:</label>

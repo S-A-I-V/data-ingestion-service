@@ -49,11 +49,25 @@ export interface Problem {
   highlight: boolean;
 }
 
+export type DbCategory =
+  | "Popular"
+  | "SQL"
+  | "NoSQL"
+  | "Analytical"
+  | "Cloud"
+  | "Timeseries"
+  | "Hadoop / BigData"
+  | "Embedded"
+  | "Files"
+  | "Search"
+  | "Graph";
+
 export interface DbType {
   value: string;
   label: string;
   defaultPort: number;
   icon: string;
+  category: DbCategory[];
 }
 
 export interface ConnectionForm {
