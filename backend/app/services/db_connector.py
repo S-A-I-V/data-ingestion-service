@@ -4,6 +4,9 @@ Database connector abstraction. Each DB type implements a common interface:
   - list_tables(): return list of table names
   - list_columns(table): return list of {name, type, nullable}
   - insert_rows(table, columns, rows): bulk insert
+
+Most SQL databases use SQLAlchemy dialects via SQLAlchemyConnector.
+Specialty databases (ClickHouse, etc.) have native connectors.
 """
 
 from abc import ABC, abstractmethod
@@ -11,6 +14,8 @@ from typing import List, Dict, Any
 
 from app.models.connection import DBConnection
 
+
+# ─── Base ────────────────────────────────────────────────────────────────────
 
 class BaseConnector(ABC):
     def __init__(self, conn: DBConnection):
@@ -29,59 +34,261 @@ class BaseConnector(ABC):
     def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int: ...
 
 
-class PostgresConnector(BaseConnector):
+# ─── Generic SQLAlchemy connector ────────────────────────────────────────────
+
+class SQLAlchemyConnector(BaseConnector):
+    """Base for any DB reachable via a SQLAlchemy connection URL."""
+
+    def _url(self) -> str:
+        raise NotImplementedError("Subclass must implement _url()")
+
+    def _engine_kwargs(self) -> dict:
+        return {}
+
     def _engine(self):
         from sqlalchemy import create_engine
+        return create_engine(
+            self._url(),
+            connect_args={"connect_timeout": self.conn.connection_timeout or 30}
+            if "connect_timeout" not in str(self._engine_kwargs())
+            else {},
+            **self._engine_kwargs(),
+        )
 
-        pwd = f":{self.conn.password}" if self.conn.password else ""
-        url = f"postgresql://{self.conn.username}{pwd}@{self.conn.host}:{self.conn.port}/{self.conn.database}"
-        return create_engine(url, connect_args={"connect_timeout": self.conn.connection_timeout or 30})
+    # ── Schema queries (override per-dialect if needed) ──
+
+    def _test_query(self) -> str:
+        return "SELECT 1"
+
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'public' ORDER BY table_name"
+        )
+
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT column_name, data_type, is_nullable "
+            "FROM information_schema.columns "
+            "WHERE table_schema = 'public' AND table_name = :t "
+            "ORDER BY ordinal_position"
+        )
+
+    def _quote(self, name: str) -> str:
+        return f'"{name}"'
+
+    # ── Interface ──
 
     def test(self):
         from sqlalchemy import text
-
         with self._engine().connect() as c:
-            c.execute(text("SELECT 1"))
+            c.execute(text(self._test_query()))
 
     def list_tables(self) -> List[str]:
         from sqlalchemy import text
-
         with self._engine().connect() as c:
-            rows = c.execute(
-                text(
-                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name"
-                )
-            )
+            rows = c.execute(text(self._list_tables_query()))
             return [r[0] for r in rows]
 
     def list_columns(self, table: str) -> List[Dict[str, Any]]:
         from sqlalchemy import text
-
         with self._engine().connect() as c:
-            rows = c.execute(
-                text(
-                    "SELECT column_name, data_type, is_nullable FROM information_schema.columns "
-                    "WHERE table_schema = 'public' AND table_name = :t ORDER BY ordinal_position"
-                ),
-                {"t": table},
-            )
+            rows = c.execute(text(self._list_columns_query()), {"t": table})
             return [{"name": r[0], "type": r[1], "nullable": r[2] == "YES"} for r in rows]
 
     def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int:
         from sqlalchemy import text
-
         placeholders = ", ".join([f":{c}" for c in columns])
-        sql = f'INSERT INTO "{table}" ({", ".join(columns)}) VALUES ({placeholders})'
+        cols = ", ".join([self._quote(c) for c in columns])
+        sql = f"INSERT INTO {self._quote(table)} ({cols}) VALUES ({placeholders})"
         with self._engine().begin() as c:
             for row in rows:
                 c.execute(text(sql), dict(zip(columns, row)))
         return len(rows)
 
 
+# ─── PostgreSQL ──────────────────────────────────────────────────────────────
+# Driver: psycopg2-binary
+
+class PostgresConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        pwd = f":{self.conn.password}" if self.conn.password else ""
+        return f"postgresql://{self.conn.username}{pwd}@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+
+
+# ─── MySQL ───────────────────────────────────────────────────────────────────
+# Driver: pymysql
+
+class MySQLConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        ssl = "?ssl=true" if self.conn.use_ssl else ""
+        return f"mysql+pymysql://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT column_name, data_type, is_nullable "
+            "FROM information_schema.columns "
+            "WHERE table_schema = DATABASE() AND table_name = :t "
+            "ORDER BY ordinal_position"
+        )
+
+    def _quote(self, name: str) -> str:
+        return f"`{name}`"
+
+
+# ─── MariaDB ─────────────────────────────────────────────────────────────────
+# Driver: pymysql (same as MySQL)
+
+class MariaDBConnector(MySQLConnector):
+    def _url(self) -> str:
+        ssl = "?ssl=true" if self.conn.use_ssl else ""
+        return f"mariadb+pymysql://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
+
+
+# ─── SQL Server (MSSQL) ─────────────────────────────────────────────────────
+# Driver: pyodbc
+
+class MSSQLConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"mssql+pyodbc://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+            f"?driver=ODBC+Driver+17+for+SQL+Server"
+        )
+
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_type = 'BASE TABLE' ORDER BY table_name"
+        )
+
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT column_name, data_type, is_nullable "
+            "FROM information_schema.columns "
+            "WHERE table_name = :t ORDER BY ordinal_position"
+        )
+
+    def _quote(self, name: str) -> str:
+        return f"[{name}]"
+
+
+# ─── Oracle ──────────────────────────────────────────────────────────────────
+# Driver: oracledb (thin mode, no Oracle client needed)
+
+class OracleConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"oracle+oracledb://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SELECT table_name FROM user_tables ORDER BY table_name"
+
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT column_name, data_type, "
+            "CASE WHEN nullable = 'Y' THEN 'YES' ELSE 'NO' END AS is_nullable "
+            "FROM user_tab_columns WHERE table_name = UPPER(:t) ORDER BY column_id"
+        )
+
+
+# ─── Snowflake ───────────────────────────────────────────────────────────────
+# Driver: snowflake-sqlalchemy + snowflake-connector-python
+
+class SnowflakeConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        # host = account.snowflakecomputing.com → account = host minus suffix
+        account = self.conn.host.replace(".snowflakecomputing.com", "")
+        return (
+            f"snowflake://{self.conn.username}:{self.conn.password}"
+            f"@{account}/{self.conn.database}"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT column_name, data_type, is_nullable "
+            "FROM information_schema.columns "
+            "WHERE table_schema = 'PUBLIC' AND table_name = :t "
+            "ORDER BY ordinal_position"
+        )
+
+
+# ─── Amazon Redshift ─────────────────────────────────────────────────────────
+# Driver: redshift_connector via sqlalchemy-redshift
+
+class RedshiftConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"redshift+redshift_connector://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
+
+
+# ─── Google BigQuery ─────────────────────────────────────────────────────────
+# Driver: sqlalchemy-bigquery (uses application default credentials or service account)
+
+class BigQueryConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        # database field = project_id/dataset
+        return f"bigquery://{self.conn.database}"
+
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT table_name FROM INFORMATION_SCHEMA.TABLES "
+            "ORDER BY table_name"
+        )
+
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT column_name, data_type, is_nullable "
+            "FROM INFORMATION_SCHEMA.COLUMNS "
+            "WHERE table_name = @t ORDER BY ordinal_position"
+        )
+
+
+# ─── SQLite ──────────────────────────────────────────────────────────────────
+# Driver: built-in (sqlite3)
+
+class SQLiteConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        # database field = file path
+        return f"sqlite:///{self.conn.database}"
+
+    def _list_tables_query(self) -> str:
+        return "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+
+    def _list_columns_query(self) -> str:
+        # SQLite doesn't support information_schema; use pragma via raw query
+        return "SELECT name, type, CASE WHEN \"notnull\" = 0 THEN 'YES' ELSE 'NO' END FROM pragma_table_info(:t)"
+
+
+# ─── CockroachDB ─────────────────────────────────────────────────────────────
+# Driver: psycopg2 (PostgreSQL wire protocol)
+
+class CockroachDBConnector(PostgresConnector):
+    def _url(self) -> str:
+        ssl = "?sslmode=verify-full" if self.conn.use_ssl else "?sslmode=disable"
+        pwd = f":{self.conn.password}" if self.conn.password else ""
+        return (
+            f"cockroachdb://{self.conn.username}{pwd}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
+        )
+
+
+# ─── ClickHouse ──────────────────────────────────────────────────────────────
+# Driver: clickhouse-connect (native, not SQLAlchemy)
+
 class ClickHouseConnector(BaseConnector):
     def _client(self):
         import clickhouse_connect
-
         return clickhouse_connect.get_client(
             host=self.conn.host,
             port=self.conn.port,
@@ -115,125 +322,413 @@ class ClickHouseConnector(BaseConnector):
         return len(rows)
 
 
-class SybaseConnector(BaseConnector):
-    """Stub — requires pyodbc + FreeTDS driver installed."""
+# ─── Vertica ─────────────────────────────────────────────────────────────────
+# Driver: vertica-python via sqlalchemy-vertica
 
-    def test(self):
-        raise NotImplementedError("Sybase connector requires pyodbc + FreeTDS. Configure and implement.")
-
-    def list_tables(self) -> List[str]:
-        raise NotImplementedError("Sybase connector not yet implemented")
-
-    def list_columns(self, table: str) -> List[Dict[str, Any]]:
-        raise NotImplementedError("Sybase connector not yet implemented")
-
-    def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int:
-        raise NotImplementedError("Sybase connector not yet implemented")
+class VerticaConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"vertica+vertica_python://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
 
 
-class MySQLConnector(BaseConnector):
-    """Requires pymysql: pip install pymysql"""
+# ─── Teradata ────────────────────────────────────────────────────────────────
+# Driver: teradatasqlalchemy + teradatasql
 
-    def _engine(self):
-        from sqlalchemy import create_engine
+class TeradataConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"teradatasql://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}/{self.conn.database}"
+        )
 
-        ssl = "?ssl=true" if self.conn.use_ssl else ""
-        url = f"mysql+pymysql://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}{ssl}"
-        return create_engine(url)
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT TableName FROM DBC.TablesV "
+            "WHERE DatabaseName = DATABASE AND TableKind = 'T' ORDER BY TableName"
+        )
 
-    def test(self):
-        from sqlalchemy import text
-
-        with self._engine().connect() as c:
-            c.execute(text("SELECT 1"))
-
-    def list_tables(self) -> List[str]:
-        from sqlalchemy import text
-
-        with self._engine().connect() as c:
-            rows = c.execute(text("SHOW TABLES"))
-            return [r[0] for r in rows]
-
-    def list_columns(self, table: str) -> List[Dict[str, Any]]:
-        from sqlalchemy import text
-
-        with self._engine().connect() as c:
-            rows = c.execute(
-                text(
-                    "SELECT column_name, data_type, is_nullable FROM information_schema.columns "
-                    "WHERE table_schema = DATABASE() AND table_name = :t ORDER BY ordinal_position"
-                ),
-                {"t": table},
-            )
-            return [{"name": r[0], "type": r[1], "nullable": r[2] == "YES"} for r in rows]
-
-    def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int:
-        from sqlalchemy import text
-
-        placeholders = ", ".join([f":{c}" for c in columns])
-        sql = f"INSERT INTO `{table}` ({', '.join(columns)}) VALUES ({placeholders})"
-        with self._engine().begin() as c:
-            for row in rows:
-                c.execute(text(sql), dict(zip(columns, row)))
-        return len(rows)
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT ColumnName, ColumnType, "
+            "CASE WHEN Nullable = 'Y' THEN 'YES' ELSE 'NO' END "
+            "FROM DBC.ColumnsV WHERE DatabaseName = DATABASE AND TableName = :t "
+            "ORDER BY ColumnId"
+        )
 
 
-class MSSQLConnector(BaseConnector):
-    """Requires pyodbc: pip install pyodbc"""
+# ─── Exasol ──────────────────────────────────────────────────────────────────
+# Driver: sqlalchemy-exasol + pyexasol
 
-    def _engine(self):
-        from sqlalchemy import create_engine
+class ExasolConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"exa+pyodbc://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
 
-        url = f"mssql+pyodbc://{self.conn.username}:{self.conn.password}@{self.conn.host}:{self.conn.port}/{self.conn.database}?driver=ODBC+Driver+17+for+SQL+Server"
-        return create_engine(url)
 
-    def test(self):
-        from sqlalchemy import text
+# ─── SAP HANA ────────────────────────────────────────────────────────────────
+# Driver: sqlalchemy-hana + hdbcli
 
-        with self._engine().connect() as c:
-            c.execute(text("SELECT 1"))
+class SAPHANAConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"hana+hdbcli://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}"
+        )
 
-    def list_tables(self) -> List[str]:
-        from sqlalchemy import text
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT table_name FROM tables "
+            "WHERE schema_name = CURRENT_SCHEMA ORDER BY table_name"
+        )
 
-        with self._engine().connect() as c:
-            rows = c.execute(
-                text(
-                    "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' ORDER BY table_name"
-                )
-            )
-            return [r[0] for r in rows]
+    def _list_columns_query(self) -> str:
+        return (
+            "SELECT column_name, data_type_name, is_nullable "
+            "FROM table_columns WHERE schema_name = CURRENT_SCHEMA AND table_name = :t "
+            "ORDER BY position"
+        )
 
-    def list_columns(self, table: str) -> List[Dict[str, Any]]:
-        from sqlalchemy import text
 
-        with self._engine().connect() as c:
-            rows = c.execute(
-                text(
-                    "SELECT column_name, data_type, is_nullable FROM information_schema.columns "
-                    "WHERE table_name = :t ORDER BY ordinal_position"
-                ),
-                {"t": table},
-            )
-            return [{"name": r[0], "type": r[1], "nullable": r[2] == "YES"} for r in rows]
+# ─── Firebird ────────────────────────────────────────────────────────────────
+# Driver: sqlalchemy-firebird + firebird-driver
 
-    def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int:
-        from sqlalchemy import text
+class FirebirdConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"firebird+firebird://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
 
-        placeholders = ", ".join([f":{c}" for c in columns])
-        sql = f"INSERT INTO [{table}] ({', '.join(columns)}) VALUES ({placeholders})"
-        with self._engine().begin() as c:
-            for row in rows:
-                c.execute(text(sql), dict(zip(columns, row)))
-        return len(rows)
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT TRIM(rdb$relation_name) FROM rdb$relations "
+            "WHERE rdb$system_flag = 0 AND rdb$view_blr IS NULL "
+            "ORDER BY rdb$relation_name"
+        )
 
+
+# ─── DuckDB ──────────────────────────────────────────────────────────────────
+# Driver: duckdb_engine
+
+class DuckDBConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return f"duckdb:///{self.conn.database}"
+
+    def _list_tables_query(self) -> str:
+        return "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main' ORDER BY table_name"
+
+
+# ─── Apache Hive ─────────────────────────────────────────────────────────────
+# Driver: pyhive
+
+class HiveConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"hive://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+
+# ─── Presto / Trino ──────────────────────────────────────────────────────────
+# Driver: sqlalchemy-trino / pyhive[presto]
+
+class PrestoConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"presto://{self.conn.username}@{self.conn.host}:{self.conn.port}"
+            f"/{self.conn.database}"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+
+class TrinoConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"trino://{self.conn.username}@{self.conn.host}:{self.conn.port}"
+            f"/{self.conn.database}"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+
+# ─── Apache Spark SQL ────────────────────────────────────────────────────────
+# Driver: pyhive[hive]
+
+class SparkConnector(HiveConnector):
+    pass
+
+
+# ─── Apache Drill ────────────────────────────────────────────────────────────
+# Driver: sqlalchemy-drill
+
+class DrillConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return f"drill+sadrill://{self.conn.host}:{self.conn.port}/{self.conn.database}?use_ssl={self.conn.use_ssl}"
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+
+# ─── Elasticsearch / OpenSearch ──────────────────────────────────────────────
+# Driver: elasticsearch-dbapi
+
+class ElasticsearchConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        scheme = "https" if self.conn.use_ssl else "http"
+        return (
+            f"elasticsearch+{scheme}://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+
+class OpenSearchConnector(ElasticsearchConnector):
+    pass
+
+
+# ─── Databricks ──────────────────────────────────────────────────────────────
+# Driver: databricks-sql-connector + sqlalchemy-databricks
+
+class DatabricksConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        # host = workspace URL, database = catalog/schema, jdbc_url has http_path
+        return (
+            f"databricks://token:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+
+# ─── TiDB ────────────────────────────────────────────────────────────────────
+# Driver: pymysql (MySQL wire protocol)
+
+class TiDBConnector(MySQLConnector):
+    pass
+
+
+# ─── YugabyteDB ──────────────────────────────────────────────────────────────
+# Driver: psycopg2 (PostgreSQL wire protocol)
+
+class YugabyteConnector(PostgresConnector):
+    pass
+
+
+# ─── OceanBase ───────────────────────────────────────────────────────────────
+# Driver: pymysql (MySQL-compatible mode)
+
+class OceanBaseConnector(MySQLConnector):
+    pass
+
+
+# ─── StarRocks ───────────────────────────────────────────────────────────────
+# Driver: pymysql (MySQL wire protocol)
+
+class StarRocksConnector(MySQLConnector):
+    pass
+
+
+# ─── TimescaleDB ─────────────────────────────────────────────────────────────
+# Driver: psycopg2 (PostgreSQL extension)
+
+class TimescaleDBConnector(PostgresConnector):
+    pass
+
+
+# ─── Greenplum ───────────────────────────────────────────────────────────────
+# Driver: psycopg2 (PostgreSQL wire protocol)
+
+class GreenplumConnector(PostgresConnector):
+    pass
+
+
+# ─── Amazon Athena ───────────────────────────────────────────────────────────
+# Driver: pyathena
+
+class AthenaConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        # database = schema, host = region, jdbc_url = s3 staging dir
+        return (
+            f"awsathena+rest://@athena.{self.conn.host}.amazonaws.com:443"
+            f"/{self.conn.database}?s3_staging_dir={self.conn.jdbc_url or ''}"
+        )
+
+    def _list_tables_query(self) -> str:
+        return "SHOW TABLES"
+
+
+# ─── Google Spanner ──────────────────────────────────────────────────────────
+# Driver: sqlalchemy-spanner
+
+class SpannerConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        # database = projects/PROJECT/instances/INSTANCE/databases/DB
+        return f"spanner+spanner:///{self.conn.database}"
+
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = '' ORDER BY table_name"
+        )
+
+
+# ─── Azure SQL ───────────────────────────────────────────────────────────────
+# Driver: pyodbc (same as MSSQL)
+
+class AzureSQLConnector(MSSQLConnector):
+    pass
+
+
+# ─── MonetDB ─────────────────────────────────────────────────────────────────
+# Driver: sqlalchemy-monetdb + pymonetdb
+
+class MonetDBConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"monetdb://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
+
+
+# ─── DB2 ─────────────────────────────────────────────────────────────────────
+# Driver: ibm_db_sa + ibm_db
+
+class DB2Connector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"db2+ibm_db://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
+
+
+# ─── Sybase ──────────────────────────────────────────────────────────────────
+# Driver: pyodbc
+
+class SybaseConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        return (
+            f"sybase+pyodbc://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+            f"?driver=FreeTDS"
+        )
+
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT name FROM sysobjects WHERE type = 'U' ORDER BY name"
+        )
+
+
+# ─── Materialize ─────────────────────────────────────────────────────────────
+# Driver: psycopg2 (PostgreSQL wire protocol)
+
+class MaterializeConnector(PostgresConnector):
+    pass
+
+
+# ─── CrateDB ────────────────────────────────────────────────────────────────
+# Driver: sqlalchemy-cratedb + crate
+
+class CrateDBConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        scheme = "https" if self.conn.use_ssl else "http"
+        return f"crate://{self.conn.host}:{self.conn.port}/?schema={self.conn.database}"
+
+    def _list_tables_query(self) -> str:
+        return (
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema NOT IN ('sys', 'information_schema', 'pg_catalog', 'blob') "
+            "ORDER BY table_name"
+        )
+
+
+# ─── Cloudberry / Databend / Netezza / Informix ─────────────────────────────
+# These use PostgreSQL or ODBC wire protocols
+
+class CloudberryConnector(PostgresConnector):
+    pass
+
+
+class DatabendConnector(SQLAlchemyConnector):
+    def _url(self) -> str:
+        scheme = "https" if self.conn.use_ssl else "http"
+        return (
+            f"databend://{self.conn.username}:{self.conn.password}"
+            f"@{self.conn.host}:{self.conn.port}/{self.conn.database}"
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONNECTOR REGISTRY
+# ═══════════════════════════════════════════════════════════════════════════════
 
 CONNECTORS = {
+    # Popular / SQL
     "postgres": PostgresConnector,
-    "clickhouse": ClickHouseConnector,
-    "sybase": SybaseConnector,
     "mysql": MySQLConnector,
+    "mariadb": MariaDBConnector,
     "mssql": MSSQLConnector,
+    "oracle": OracleConnector,
+    "db2": DB2Connector,
+    "sybase": SybaseConnector,
+    "sqlite": SQLiteConnector,
+    "firebird": FirebirdConnector,
+
+    # Cloud
+    "snowflake": SnowflakeConnector,
+    "redshift": RedshiftConnector,
+    "bigquery": BigQueryConnector,
+    "athena": AthenaConnector,
+    "azuresql": AzureSQLConnector,
+    "databricks": DatabricksConnector,
+    "spanner": SpannerConnector,
+
+    # Analytical
+    "clickhouse": ClickHouseConnector,
+    "vertica": VerticaConnector,
+    "teradata": TeradataConnector,
+    "exasol": ExasolConnector,
+    "saphana": SAPHANAConnector,
+    "greenplum": GreenplumConnector,
+    "monetdb": MonetDBConnector,
+    "materialize": MaterializeConnector,
+    "starrocks": StarRocksConnector,
+    "cratedb": CrateDBConnector,
+    "cloudberry": CloudberryConnector,
+    "databend": DatabendConnector,
+    "duckdb": DuckDBConnector,
+
+    # Hadoop / BigData
+    "hive": HiveConnector,
+    "presto": PrestoConnector,
+    "trino": TrinoConnector,
+    "spark": SparkConnector,
+    "drill": DrillConnector,
+
+    # Timeseries
+    "timescaledb": TimescaleDBConnector,
+
+    # NoSQL / NewSQL
+    "cockroachdb": CockroachDBConnector,
+    "tidb": TiDBConnector,
+    "yugabyte": YugabyteConnector,
+    "oceanbase": OceanBaseConnector,
+
+    # Search
+    "elasticsearch": ElasticsearchConnector,
+    "opensearch": OpenSearchConnector,
 }
 
 
