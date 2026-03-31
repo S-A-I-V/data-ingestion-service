@@ -13,7 +13,7 @@ export default function CtaBanner() {
             NOW
           </h2>
           <div className="cta-banner-text">
-            <p>
+            <p className="cta-banner-cta">
               Data ingestion is full of problems worth solving.
               <br />
               Now, they're all in one place.
