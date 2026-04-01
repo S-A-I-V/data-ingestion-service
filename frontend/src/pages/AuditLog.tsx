@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api";
 import { PageTransition, FadeIn, motion } from "../components/Motion";
+import HistoryIcon from "@mui/icons-material/History";
 import type { AuditLog as Log } from "../types";
 
 export default function AuditLog() {
@@ -31,10 +32,10 @@ export default function AuditLog() {
 
         <FadeIn delay={0.1}>
           <div className="panel">
-            <div className="panel-header">📋 Execution History</div>
+            <div className="panel-header"><HistoryIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execution History</div>
             {logs.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-icon">📋</div>
+                <div className="empty-icon"><HistoryIcon sx={{ fontSize: 40 }} /></div>
                 <div className="empty-title">No operations yet</div>
                 <div className="empty-desc">Run a data transfer to see it here.</div>
               </div>

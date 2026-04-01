@@ -1,6 +1,9 @@
 import { Stagger, StaggerItem, HoverCard, motion } from "./Motion";
 import { DB_TYPES } from "../constants/database";
 import DbIcon from "./DbIcon";
+import StorageIcon from "@mui/icons-material/Storage";
+import LockIcon from "@mui/icons-material/Lock";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import type { Connection } from "../types";
 
 interface Props {
@@ -14,7 +17,7 @@ export default function ConnectionList({ connections, onTest, onDelete, onEdit }
   if (connections.length === 0) {
     return (
       <div className="empty-state">
-        <div className="empty-icon">🗄️</div>
+        <div className="empty-icon"><StorageIcon sx={{ fontSize: 40 }} /></div>
         <div className="empty-title">No connections yet</div>
         <div className="empty-desc">Add a database connection to get started.</div>
       </div>
@@ -28,13 +31,13 @@ export default function ConnectionList({ connections, onTest, onDelete, onEdit }
         return (
           <StaggerItem key={c.id}>
             <HoverCard className="conn-card">
-              <div className="conn-icon"><DbIcon icon={info?.icon || "🗄️"} size={24} /></div>
+              <div className="conn-icon"><DbIcon icon={info?.icon || ""} size={24} /></div>
               <div className="conn-info">
                 <div className="conn-name">{c.name}</div>
                 <div className="conn-detail">
                   {info?.label} · {c.host}:{c.port}/{c.database}
-                  {c.use_ssl && " · 🔒"}
-                  {c.ssh_enabled && " · 🔑"}
+                  {c.use_ssl && <><span> · </span><LockIcon sx={{ fontSize: 14, verticalAlign: "middle" }} /></>}
+                  {c.ssh_enabled && <><span> · </span><VpnKeyIcon sx={{ fontSize: 14, verticalAlign: "middle" }} /></>}
                 </div>
               </div>
               <div className="conn-actions">

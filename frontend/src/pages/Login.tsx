@@ -1,7 +1,9 @@
+import BoltIcon from "@mui/icons-material/Bolt";
+
 export default function Login() {
   return (
     <div className="login-page">
-      <div className="login-logo">⚡</div>
+      <div className="login-logo"><BoltIcon sx={{ fontSize: 48 }} /></div>
       <h1>NFC Data Ingestion</h1>
       <p>Connect your databases, upload CSVs, and ingest data with AI-powered confidence.</p>
       <a href="/api/auth/login" className="btn btn-google">

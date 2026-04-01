@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { DB_TYPES, DB_CATEGORIES } from "../constants/database";
 import DbIcon from "./DbIcon";
+import CloseIcon from "@mui/icons-material/Close";
 import type { DbCategory, DbType } from "../types";
 
 interface Props {
@@ -32,7 +33,7 @@ export default function DbPicker({ onSelect, onCancel }: Props) {
           <h3 className="db-picker-title">Select your database</h3>
           <p className="db-picker-subtitle">Find your database driver in the list below.</p>
         </div>
-        <button type="button" className="db-picker-close" onClick={onCancel}>✕</button>
+        <button type="button" className="db-picker-close" title="Close" onClick={onCancel}><CloseIcon sx={{ fontSize: 18 }} /></button>
       </div>
 
       <div className="db-picker-search">

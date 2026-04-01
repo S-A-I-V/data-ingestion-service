@@ -8,7 +8,19 @@ import MainTab from "./connection-form/MainTab";
 import SshTab from "./connection-form/SshTab";
 import SslTab from "./connection-form/SslTab";
 import AdvancedTab from "./connection-form/AdvancedTab";
+import SettingsEthernetIcon from "@mui/icons-material/SettingsEthernet";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import LockIcon from "@mui/icons-material/Lock";
+import TuneIcon from "@mui/icons-material/Tune";
+import CloseIcon from "@mui/icons-material/Close";
 import type { ConnectionForm, DbType } from "../types";
+
+const TAB_ICONS: Record<string, React.ReactNode> = {
+  settings_ethernet: <SettingsEthernetIcon sx={{ fontSize: 16 }} />,
+  vpn_key: <VpnKeyIcon sx={{ fontSize: 16 }} />,
+  lock: <LockIcon sx={{ fontSize: 16 }} />,
+  tune: <TuneIcon sx={{ fontSize: 16 }} />,
+};
 
 interface Props {
   onClose: () => void;
@@ -113,7 +125,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
               ← Change DB
             </button>
           )}
-          <button type="button" className="close-btn" onClick={onClose}>✕</button>
+          <button type="button" className="close-btn" title="Close" onClick={onClose}><CloseIcon sx={{ fontSize: 18 }} /></button>
         </div>
       </div>
       <div className="modal-body">
@@ -126,7 +138,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
               whileHover={{ x: 3 }}
               transition={{ duration: 0.15 }}
             >
-              <span>{t.icon}</span> {t.label}
+              <span>{TAB_ICONS[t.icon] || t.icon}</span> {t.label}
             </motion.div>
           ))}
         </div>

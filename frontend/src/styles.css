@@ -1828,3 +1828,196 @@ a:hover {
   .cta-banner { padding: 60px 30px; }
   .cta-banner-inner { flex-direction: column; gap: 30px; }
 }
+
+/* ── Execution Stats Panel ─────────────────────────────────────────── */
+
+.exec-stats-panel {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.exec-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.exec-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.exec-stat-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.exec-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.exec-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.exec-stat-warn .exec-stat-value {
+  color: #f59e0b;
+}
+
+/* ── Ingest Locked State (disable all interactions during execution) ──── */
+
+.ingest-locked {
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.ingest-locked .btn-primary {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.panel-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.panel-fieldset:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.3);
+  transition: opacity 0.3s, filter 0.3s;
+}
+
+/* ── Execution Action Bar ──────────────────────────────────────────── */
+
+.exec-action-bar {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.exec-spinner-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exec-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Pre-execution File Stats ──────────────────────────────────────── */
+
+.pre-stats {
+  border: 1px solid var(--accent);
+  margin-bottom: 16px;
+}
+
+/* ── Stats Section Labels ──────────────────────────────────────────── */
+
+.stats-section-label {
+  padding: 8px 16px 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* ── Stat Card Variants ────────────────────────────────────────────── */
+
+.exec-stat-card.accent .exec-stat-value {
+  color: var(--accent);
+}
+
+.exec-stat-card.success {
+  border-color: #22c55e33;
+  background: #22c55e08;
+}
+
+.exec-stat-card.success .exec-stat-value {
+  color: #22c55e;
+}
+
+.exec-stat-card.warn {
+  border-color: #f59e0b33;
+  background: #f59e0b08;
+}
+
+.exec-stat-card.warn .exec-stat-value {
+  color: #f59e0b;
+}
+
+.exec-stat-card.danger {
+  border-color: #ef444433;
+  background: #ef444408;
+}
+
+.exec-stat-card.danger .exec-stat-value {
+  color: #ef4444;
+}
+
+/* ── Mapper layout helpers ─────────────────────────────────────────── */
+
+.mapper-badge {
+  margin-left: auto;
+}
+
+.mapper-col-label {
+  flex: 1;
+}
+
+.mapper-arrow-spacer {
+  width: 30px;
+}
+
+.mapper-csv-name {
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+
+.mapper-select {
+  flex: 1;
+}
+
+/* ── CSV Preview ───────────────────────────────────────────────────── */
+
+.csv-preview-panel {
+  margin-top: 16px;
+}
+
+.csv-preview-scroll {
+  overflow: auto;
+}

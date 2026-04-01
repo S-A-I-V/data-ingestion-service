@@ -146,8 +146,8 @@ export const EMPTY_CONNECTION_FORM: ConnectionForm = {
 };
 
 export const MODAL_TABS = [
-  { id: "main", label: "General", icon: "🔌" },
-  { id: "ssh", label: "SSH Tunnel", icon: "🔑" },
-  { id: "ssl", label: "SSL / TLS", icon: "🔒" },
-  { id: "advanced", label: "Advanced", icon: "⚙️" },
+  { id: "main", label: "General", icon: "settings_ethernet" },
+  { id: "ssh", label: "SSH Tunnel", icon: "vpn_key" },
+  { id: "ssl", label: "SSL / TLS", icon: "lock" },
+  { id: "advanced", label: "Advanced", icon: "tune" },
 ];
