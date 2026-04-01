@@ -79,7 +79,10 @@ export default function Ingest() {
     fd.append("operation", operation);
     try {
       const r = await api.post("/ingestion/execute", fd);
-      setStatus({ ok: true, msg: `Inserted ${r.data.rows_inserted} rows` });
+      const msg = r.data.rows_skipped
+        ? `Inserted ${r.data.rows_inserted} rows (${r.data.rows_skipped} duplicates skipped)`
+        : `Inserted ${r.data.rows_inserted} rows`;
+      setStatus({ ok: true, msg });
     } catch (e: any) {
       setStatus({ ok: false, msg: e.response?.data?.detail || "Failed" });
     }
@@ -140,6 +143,7 @@ export default function Ingest() {
                 <label>Operation:</label>
                 <select title="Operation" value={operation} onChange={(e) => setOperation(e.target.value)}>
                   <option value="INSERT">INSERT</option>
+                  <option value="INSERT_SKIP">INSERT (Skip Duplicates)</option>
                   <option value="UPDATE">UPDATE</option>
                   <option value="UPSERT">UPSERT</option>
                 </select>

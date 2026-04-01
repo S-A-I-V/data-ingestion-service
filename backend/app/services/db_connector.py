@@ -33,6 +33,15 @@ class BaseConnector(ABC):
     @abstractmethod
     def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int: ...
 
+    def insert_rows_skip_existing(
+        self, table: str, columns: List[str], rows: List[List[Any]], key_columns: List[str]
+    ) -> Dict[str, int]:
+        """Insert only rows whose key_columns values don't already exist in the table.
+        Returns {"inserted": N, "skipped": M}."""
+        # Default: just insert all (subclasses override for real dedup)
+        count = self.insert_rows(table, columns, rows)
+        return {"inserted": count, "skipped": 0}
+
 
 # ─── Generic SQLAlchemy connector ────────────────────────────────────────────
 
@@ -110,6 +119,37 @@ class SQLAlchemyConnector(BaseConnector):
             for row in rows:
                 c.execute(text(sql), dict(zip(columns, row)))
         return len(rows)
+
+    def insert_rows_skip_existing(
+        self, table: str, columns: List[str], rows: List[List[Any]], key_columns: List[str]
+    ) -> Dict[str, int]:
+        from sqlalchemy import text
+
+        if not rows:
+            return {"inserted": 0, "skipped": 0}
+
+        # Build key column indices
+        key_indices = [columns.index(k) for k in key_columns]
+
+        # Fetch existing key combinations from the table
+        key_cols_quoted = ", ".join([self._quote(k) for k in key_columns])
+        existing_keys = set()
+        with self._engine().connect() as c:
+            result = c.execute(text(f"SELECT {key_cols_quoted} FROM {self._quote(table)}"))
+            for r in result:
+                existing_keys.add(tuple(str(v) for v in r))
+
+        # Filter out rows that already exist
+        new_rows = []
+        for row in rows:
+            key = tuple(str(row[i]) for i in key_indices)
+            if key not in existing_keys:
+                new_rows.append(row)
+
+        skipped = len(rows) - len(new_rows)
+        if new_rows:
+            self.insert_rows(table, columns, new_rows)
+        return {"inserted": len(new_rows), "skipped": skipped}
 
 
 # ─── PostgreSQL ──────────────────────────────────────────────────────────────
@@ -322,6 +362,35 @@ class ClickHouseConnector(BaseConnector):
         client.insert(f"{self.conn.database}.{table}", rows, column_names=columns)
         client.close()
         return len(rows)
+
+    def insert_rows_skip_existing(
+        self, table: str, columns: List[str], rows: List[List[Any]], key_columns: List[str]
+    ) -> Dict[str, int]:
+        if not rows:
+            return {"inserted": 0, "skipped": 0}
+
+        client = self._client()
+        key_indices = [columns.index(k) for k in key_columns]
+
+        # Fetch existing key combinations
+        key_cols_str = ", ".join(key_columns)
+        result = client.query(f"SELECT {key_cols_str} FROM {self.conn.database}.{table}")
+        existing_keys = set()
+        for r in result.result_rows:
+            existing_keys.add(tuple(str(v) for v in r))
+
+        # Filter
+        new_rows = []
+        for row in rows:
+            key = tuple(str(row[i]) for i in key_indices)
+            if key not in existing_keys:
+                new_rows.append(row)
+
+        skipped = len(rows) - len(new_rows)
+        if new_rows:
+            client.insert(f"{self.conn.database}.{table}", new_rows, column_names=columns)
+        client.close()
+        return {"inserted": len(new_rows), "skipped": skipped}
 
 
 # ─── Vertica ─────────────────────────────────────────────────────────────────

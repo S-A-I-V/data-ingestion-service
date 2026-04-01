@@ -75,7 +75,19 @@ async def execute_ingestion(
     )
 
     try:
-        count = connector.insert_rows(table_name, db_cols, rows)
+        if operation == "INSERT_SKIP":
+            # Use all mapped columns as composite key for dedup
+            result = connector.insert_rows_skip_existing(table_name, db_cols, rows, db_cols)
+            count = result["inserted"]
+            skipped = result["skipped"]
+            audit.row_count = count
+            audit.query_preview = (
+                f"{operation} INTO {table_name} ({', '.join(db_cols)}) — "
+                f"{count} inserted, {skipped} skipped (of {len(rows)} total)"
+            )
+        else:
+            count = connector.insert_rows(table_name, db_cols, rows)
+            skipped = 0
         audit.status = "success"
         audit.row_count = count
     except Exception as e:
@@ -87,4 +99,4 @@ async def execute_ingestion(
 
     db.add(audit)
     db.commit()
-    return {"ok": True, "rows_inserted": count}
+    return {"ok": True, "rows_inserted": count, "rows_skipped": skipped}
