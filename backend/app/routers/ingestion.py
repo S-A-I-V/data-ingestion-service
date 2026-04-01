@@ -59,8 +59,7 @@ async def preview_csv(file: UploadFile = File(...)):
     total_rows = 0
     for row in reader:
         total_rows += 1
-        if len(rows) < 10:
-            rows.append(row)
+        rows.append(row)
 
     return {
         "headers": headers,

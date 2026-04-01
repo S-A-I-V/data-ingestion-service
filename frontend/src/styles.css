@@ -2020,4 +2020,264 @@ a:hover {
 
 .csv-preview-scroll {
   overflow: auto;
+  max-height: 480px;
+}
+
+/* ── Clear All Button ──────────────────────────────────────────────── */
+
+.btn-clear-all {
+  margin-left: auto;
+  color: #ef4444;
+  border-color: #ef444444;
+}
+
+.btn-clear-all:hover {
+  background: #ef444418;
+  border-color: #ef4444;
+}
+
+/* ── Table Loading Spinner ─────────────────────────────────────────── */
+
+.select-loading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.form-row {
+  position: relative;
+}
+
+.field-spinner {
+  position: absolute;
+  right: 24px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  pointer-events: none;
+}
+
+/* ── CSV Preview Toolbar ───────────────────────────────────────────── */
+
+.csv-toolbar {
+  display: flex;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.csv-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 300px;
+  min-width: 160px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  transition: border-color 0.2s;
+}
+
+.csv-search-wrap:focus-within {
+  border-color: var(--accent);
+}
+
+.csv-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text);
+  font-size: 0.8rem;
+  width: 100%;
+  font-family: inherit;
+}
+
+.csv-filter-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.csv-filter-select {
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-filter-input {
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  width: 180px;
+  transition: border-color 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-filter-input:focus {
+  border-color: var(--accent);
+}
+
+/* ── Sortable Table Headers ────────────────────────────────────────── */
+
+.csv-sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.csv-sortable-th:hover {
+  color: var(--accent);
+}
+
+.csv-th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.csv-no-results {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── CSV Clear Filter Button ───────────────────────────────────────── */
+
+.csv-clear-filter {
+  white-space: nowrap;
+  font-family: inherit;
+  height: 40px;
+  align-self: center;
+}
+
+/* ── CSV Pagination ────────────────────────────────────────────────── */
+
+.csv-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.csv-page-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.csv-page-size-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csv-page-size-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.csv-page-size-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.csv-page-info {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+}
+
+.csv-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.csv-page-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.csv-page-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.csv-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.csv-page-current {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  padding: 0 6px;
+}
+
+/* ── Sticky CSV Preview Headers ────────────────────────────────────── */
+
+.csv-preview-panel .data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #151518;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── CSV Table Cell Overflow ───────────────────────────────────────── */
+
+.csv-preview-panel .data-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.csv-preview-panel .data-table td,
+.csv-preview-panel .data-table th {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
