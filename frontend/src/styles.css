@@ -1148,7 +1148,7 @@ a:hover {
 }
 .test-result-row {
   display: flex;
-  justify-content: space-between;
+  gap: 8px;
   padding: 4px 0;
   font-size: 13px;
   color: var(--text-secondary);
@@ -1156,6 +1156,7 @@ a:hover {
 .test-result-label {
   font-weight: 600;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 .test-result-error-msg {
   width: 100%;
