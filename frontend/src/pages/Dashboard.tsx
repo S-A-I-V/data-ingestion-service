@@ -4,6 +4,8 @@ import { PageTransition, FadeIn, motion, AnimatePresence } from "../components/M
 import ConnectionList from "../components/ConnectionList";
 import ConnectionModal from "../components/ConnectionModal";
 import { DB_TYPES } from "../constants/database";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import type { Connection } from "../types";
 
 interface TestResult {
@@ -104,7 +106,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
           >
-            {toast.ok ? "✓" : "✗"} {toast.msg}
+            {toast.ok ? <CheckCircleIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> : <CancelIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} />} {toast.msg}
           </motion.div>
         )}
 
@@ -150,7 +152,7 @@ export default function Dashboard() {
                   ) : testResult ? (
                     <>
                       <div className={`test-result-icon ${testResult.ok ? "success" : "error"}`}>
-                        {testResult.ok ? "✓" : "✗"}
+                        {testResult.ok ? <CheckCircleIcon sx={{ fontSize: 32 }} /> : <CancelIcon sx={{ fontSize: 32 }} />}
                       </div>
                       <div className="test-result-status">
                         {testResult.ok ? "Connected" : "Connection Failed"}

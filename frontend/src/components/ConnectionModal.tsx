@@ -13,6 +13,8 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import LockIcon from "@mui/icons-material/Lock";
 import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import type { ConnectionForm, DbType } from "../types";
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
@@ -199,7 +201,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
                 ) : testResult ? (
                   <>
                     <div className={`test-result-icon ${testResult.ok ? "success" : "error"}`}>
-                      {testResult.ok ? "✓" : "✗"}
+                      {testResult.ok ? <CheckCircleIcon sx={{ fontSize: 32 }} /> : <CancelIcon sx={{ fontSize: 32 }} />}
                     </div>
                     <div className="test-result-status">
                       {testResult.ok ? "Connected" : "Connection Failed"}

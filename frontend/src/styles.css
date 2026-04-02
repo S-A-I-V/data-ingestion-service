@@ -332,7 +332,7 @@ a:hover {
   font-weight: 600;
   color: var(--text-primary);
 }
-.modal-header .close-btn {
+.close-btn {
   background: var(--bg-glass);
   border: 1px solid var(--border);
   color: var(--text-secondary);
@@ -346,10 +346,13 @@ a:hover {
   font-size: 14px;
   transition: var(--transition);
 }
-.modal-header .close-btn:hover {
+.close-btn:hover {
   background: var(--danger-bg);
   color: var(--danger);
   border-color: rgba(239, 68, 68, 0.2);
+}
+.modal-header .close-btn {
+  /* inherits from .close-btn above */
 }
 .modal-body {
   display: flex;
@@ -670,53 +673,108 @@ a:hover {
 }
 
 /* ===== CONNECTION LIST ===== */
-.conn-card {
-  display: flex;
-  align-items: center;
+/* ===== CONNECTION GRID ===== */
+
+.conn-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border);
+  padding: 20px;
+}
+
+.conn-grid-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 24px 16px 16px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   transition: var(--transition);
   cursor: default;
 }
-.conn-card:last-child {
-  border-bottom: none;
-}
-.conn-card:hover {
+
+.conn-grid-card:hover {
+  border-color: var(--border-hover);
   background: var(--bg-glass-hover);
+  box-shadow: var(--shadow-md);
 }
-.conn-card .conn-icon {
-  width: 40px;
-  height: 40px;
+
+.conn-grid-icon {
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-md);
   background: var(--bg-glass);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  margin-bottom: 4px;
 }
-.conn-card .conn-info {
-  flex: 1;
-}
-.conn-card .conn-info .conn-name {
-  font-weight: 600;
+
+.conn-grid-name {
+  font-weight: 700;
   font-size: 14px;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
-.conn-card .conn-info .conn-detail {
+
+.conn-grid-type {
   font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 2px;
+  color: var(--accent);
+  font-weight: 500;
 }
-.conn-card .conn-actions {
+
+.conn-grid-host {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.conn-grid-badges {
   display: flex;
   gap: 6px;
+  min-height: 20px;
+}
+
+.conn-grid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg-glass-active);
+  color: var(--text-secondary);
+}
+
+.conn-grid-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
   opacity: 0;
   transition: var(--transition);
 }
-.conn-card:hover .conn-actions {
+
+.conn-grid-card:hover .conn-grid-actions {
   opacity: 1;
+}
+
+@media (max-width: 1024px) {
+  .conn-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .conn-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .conn-grid { grid-template-columns: 1fr; }
 }
 
 /* ===== DATA TABLE ===== */
@@ -2280,4 +2338,98 @@ a:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ── Audit Log Table Cells ─────────────────────────────────────────── */
+
+.audit-nowrap {
+  white-space: nowrap;
+}
+
+.audit-details-cell {
+  position: relative;
+  max-width: 220px;
+}
+
+.audit-details-text {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.audit-details-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.audit-details-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Audit Detail Modal ────────────────────────────────────────────── */
+
+.audit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audit-modal {
+  background: var(--bg-base);
+  border: 1px solid rgba(15, 177, 178, 0.25);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(15, 177, 178, 0.12),
+    0 0 60px rgba(15, 177, 178, 0.06);
+}
+
+.audit-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.audit-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.audit-modal-body {
+  padding: 20px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  user-select: text;
+  -webkit-user-select: text;
 }

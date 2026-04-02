@@ -1,9 +1,12 @@
-import { Stagger, StaggerItem, HoverCard, motion } from "./Motion";
+import { motion } from "./Motion";
 import { DB_TYPES } from "../constants/database";
 import DbIcon from "./DbIcon";
 import StorageIcon from "@mui/icons-material/Storage";
 import LockIcon from "@mui/icons-material/Lock";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import EditIcon from "@mui/icons-material/Edit";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type { Connection } from "../types";
 
 interface Props {
@@ -25,54 +28,73 @@ export default function ConnectionList({ connections, onTest, onDelete, onEdit }
   }
 
   return (
-    <Stagger>
-      {connections.map((c) => {
+    <div className="conn-grid">
+      {connections.map((c, i) => {
         const info = DB_TYPES.find((d) => d.value === c.db_type);
         return (
-          <StaggerItem key={c.id}>
-            <HoverCard className="conn-card">
-              <div className="conn-icon"><DbIcon icon={info?.icon || ""} size={24} /></div>
-              <div className="conn-info">
-                <div className="conn-name">{c.name}</div>
-                <div className="conn-detail">
-                  {info?.label} · {c.host}:{c.port}/{c.database}
-                  {c.use_ssl && <><span> · </span><LockIcon sx={{ fontSize: 14, verticalAlign: "middle" }} /></>}
-                  {c.ssh_enabled && <><span> · </span><VpnKeyIcon sx={{ fontSize: 14, verticalAlign: "middle" }} /></>}
-                </div>
-              </div>
-              <div className="conn-actions">
-                <motion.button
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => onEdit(c)}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Edit
-                </motion.button>
-                <motion.button
-                  type="button"
-                  className="btn btn-sm btn-success"
-                  onClick={() => onTest(c.id)}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Test
-                </motion.button>
-                <motion.button
-                  type="button"
-                  className="btn btn-sm btn-danger"
-                  onClick={() => onDelete(c.id)}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Delete
-                </motion.button>
-              </div>
-            </HoverCard>
-          </StaggerItem>
+          <motion.div
+            key={c.id}
+            className="conn-grid-card"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05, duration: 0.3 }}
+            whileHover={{ y: -4, transition: { duration: 0.15 } }}
+          >
+            <div className="conn-grid-icon">
+              <DbIcon icon={info?.icon || ""} size={40} />
+            </div>
+            <div className="conn-grid-name">{c.name}</div>
+            <div className="conn-grid-type">{info?.label}</div>
+            <div className="conn-grid-host">
+              {c.host}:{c.port}/{c.database}
+            </div>
+            <div className="conn-grid-badges">
+              {c.use_ssl && (
+                <span className="conn-grid-badge">
+                  <LockIcon sx={{ fontSize: 12 }} /> SSL
+                </span>
+              )}
+              {c.ssh_enabled && (
+                <span className="conn-grid-badge">
+                  <VpnKeyIcon sx={{ fontSize: 12 }} /> SSH
+                </span>
+              )}
+            </div>
+            <div className="conn-grid-actions">
+              <motion.button
+                type="button"
+                className="btn btn-sm"
+                title="Edit"
+                onClick={() => onEdit(c)}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <EditIcon sx={{ fontSize: 14, mr: 0.3 }} /> Edit
+              </motion.button>
+              <motion.button
+                type="button"
+                className="btn btn-sm btn-success"
+                title="Test connection"
+                onClick={() => onTest(c.id)}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <PlayArrowIcon sx={{ fontSize: 14, mr: 0.3 }} /> Test
+              </motion.button>
+              <motion.button
+                type="button"
+                className="btn btn-sm btn-danger"
+                title="Delete"
+                onClick={() => onDelete(c.id)}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+              </motion.button>
+            </div>
+          </motion.div>
         );
       })}
-    </Stagger>
+    </div>
   );
 }
