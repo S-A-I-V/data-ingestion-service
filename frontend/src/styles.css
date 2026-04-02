@@ -19,16 +19,16 @@
   --text-primary: #f0f0f5;
   --text-secondary: #71717a;
   --text-muted: #52525b;
-  --accent: #6366f1;
-  --accent-light: #818cf8;
-  --accent-glow: rgba(99, 102, 241, 0.15);
+  --accent: #0fb1b2;
+  --accent-light: #3dd8d9;
+  --accent-glow: rgba(15, 177, 178, 0.15);
   --success: #22c55e;
   --success-bg: rgba(34, 197, 94, 0.1);
   --danger: #ef4444;
   --danger-bg: rgba(239, 68, 68, 0.1);
   --warning: #f59e0b;
-  --gradient-1: linear-gradient(135deg, #6366f1, #8b5cf6);
-  --gradient-2: linear-gradient(135deg, #06b6d4, #6366f1);
+  --gradient-1: linear-gradient(135deg, #0fb1b2, #0d9e9f);
+  --gradient-2: linear-gradient(135deg, #06b6d4, #0fb1b2);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -36,7 +36,7 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-glow: 0 0 20px rgba(15, 177, 178, 0.15);
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --font: "Fira Code", "JetBrains Mono", "Courier New", monospace;
 }
@@ -59,8 +59,8 @@ body::before {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 0%, rgba(15, 177, 178, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(15, 177, 178, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 70%);
 }
 
@@ -188,10 +188,10 @@ a:hover {
   background: var(--gradient-1);
   color: #fff;
   border: none;
-  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 12px rgba(15, 177, 178, 0.3);
 }
 .btn-primary:hover {
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 20px rgba(15, 177, 178, 0.4);
 }
 .btn-danger {
   background: var(--danger-bg);
@@ -383,7 +383,7 @@ a:hover {
 .modal-sidebar-item.active {
   background: var(--accent-glow);
   color: var(--accent-light);
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(15, 177, 178, 0.2);
 }
 .modal-content {
   flex: 1;
@@ -569,7 +569,7 @@ a:hover {
 .db-picker-cat.active {
   background: var(--accent-glow);
   color: var(--accent-light);
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(15, 177, 178, 0.2);
 }
 .db-picker-grid-wrap {
   flex: 1;
@@ -849,8 +849,8 @@ a:hover {
 
 /* ===== AI PANEL ===== */
 .ai-panel {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(139, 92, 246, 0.06));
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: linear-gradient(135deg, rgba(15, 177, 178, 0.06), rgba(15, 177, 178, 0.06));
+  border: 1px solid rgba(15, 177, 178, 0.15);
   border-radius: var(--radius-lg);
   padding: 16px 20px;
   margin-top: 16px;
@@ -893,7 +893,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   font-size: 28px;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 32px rgba(15, 177, 178, 0.3);
   animation: float 3s ease-in-out infinite;
 }
 @keyframes float {
@@ -1860,7 +1860,7 @@ a:hover {
 
 .exec-stat-card:hover {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(15, 177, 178, 0.1);
 }
 
 .exec-stat-value {
