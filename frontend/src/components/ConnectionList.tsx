@@ -35,9 +35,6 @@ export default function ConnectionList({ connections, onTest, onDelete, onEdit }
           <motion.div
             key={c.id}
             className="conn-grid-card"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.3 }}
             whileHover={{ y: -4, transition: { duration: 0.15 } }}
           >
             <div className="conn-grid-icon">
