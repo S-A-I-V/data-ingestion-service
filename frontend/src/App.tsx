@@ -15,13 +15,17 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  useEffect(() => {
+  const checkAuth = () => {
+    const token = localStorage.getItem("token");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     api
-      .get("/auth/me")
+      .get("/auth/me", { headers })
       .then((r) => setUser(r.data))
-      .catch(() => setUser(null))
+      .catch(() => { setUser(null); localStorage.removeItem("token"); })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { checkAuth(); }, []);
 
   if (loading)
     return (
@@ -29,7 +33,7 @@ export default function App() {
         <div className="loader" />
       </div>
     );
-  if (!user) return <Login />;
+  if (!user) return <Login onLogin={checkAuth} />;
 
   return (
     <>

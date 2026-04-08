@@ -11,5 +11,6 @@ class User(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
     picture = Column(String, nullable=True)
+    password_hash = Column(String, nullable=True)  # salt:hash for email/password auth
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
