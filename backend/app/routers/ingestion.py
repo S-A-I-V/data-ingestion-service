@@ -14,6 +14,10 @@ from app.models.connection import DBConnection
 from app.models.audit import AuditLog
 from app.routers.auth import get_current_user
 from app.services.db_connector import get_connector
+from app.services.validators import (
+    validate_identifier, validate_identifiers, validate_operation,
+    validate_csv_upload,
+)
 
 router = APIRouter(prefix="/api/ingestion", tags=["ingestion"])
 
@@ -48,10 +52,21 @@ def _format_bytes(b: int) -> str:
 
 @router.post("/preview")
 async def preview_csv(file: UploadFile = File(...)):
-    """Return first 10 rows + headers and file-level stats from uploaded CSV."""
+    """Return rows + headers and file-level stats from uploaded CSV."""
+    try:
+        validate_csv_upload(file.filename or "", file.size or 0)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large (max 50 MB)")
+
     file_size_bytes = len(content)
-    text = content.decode("utf-8-sig")
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="File is not valid UTF-8 text")
     reader = csv.DictReader(io.StringIO(text))
     headers = reader.fieldnames or []
 
@@ -96,15 +111,45 @@ async def execute_ingestion(
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
 
+    # ── Validate operation ──
+    try:
+        operation = validate_operation(operation)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # ── Validate table name ──
+    try:
+        table_name = validate_identifier(table_name, "table name")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     mapping = json.loads(column_mapping)
     mapping = {k: v for k, v in mapping.items() if v}
     if not mapping:
         raise HTTPException(status_code=400, detail="No columns mapped")
 
+    # ── Validate column names ──
+    try:
+        db_cols_raw = [mapping[c] for c in mapping.keys()]
+        validate_identifiers(db_cols_raw, "column name")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # ── Validate file upload ──
+    try:
+        validate_csv_upload(file.filename or "", file.size or 0)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     # ── Read & validate CSV in chunks (memory-efficient) ──
     content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large (max 50 MB)")
     file_size_bytes = len(content)
-    text = content.decode("utf-8-sig")
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="File is not valid UTF-8 text")
     reader = csv.DictReader(io.StringIO(text))
 
     csv_cols = list(mapping.keys())

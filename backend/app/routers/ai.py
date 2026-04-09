@@ -1,21 +1,48 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 
 from app.config import settings
 from app.models.user import User
 from app.routers.auth import get_current_user
+from app.services.validators import validate_identifier, validate_operation
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 
 class AnalyzeRequest(BaseModel):
-    operation: str  # INSERT, UPDATE, etc.
+    operation: str
     table_name: str
     columns: list[str]
     row_count: int
     db_type: str
     sample_data: Optional[list[dict]] = None
+
+    @field_validator("operation")
+    @classmethod
+    def check_op(cls, v: str) -> str:
+        return validate_operation(v)
+
+    @field_validator("table_name")
+    @classmethod
+    def check_table(cls, v: str) -> str:
+        return validate_identifier(v, "table name")
+
+    @field_validator("row_count")
+    @classmethod
+    def check_rows(cls, v: int) -> int:
+        if v < 0 or v > 100_000_000:
+            raise ValueError("Invalid row count")
+        return v
+
+    @field_validator("columns")
+    @classmethod
+    def check_cols(cls, v: list[str]) -> list[str]:
+        if len(v) > 500:
+            raise ValueError("Too many columns")
+        for c in v:
+            validate_identifier(c, "column")
+        return v
 
 
 @router.post("/analyze")
