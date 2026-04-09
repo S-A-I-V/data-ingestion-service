@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Ingest from "./pages/Ingest";
 import AuditLog from "./pages/AuditLog";
 import Nav from "./components/Nav";
+import PublicNav from "./components/PublicNav";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -33,8 +34,35 @@ export default function App() {
         <div className="loader" />
       </div>
     );
-  if (!user) return <Login onLogin={checkAuth} />;
 
+  // Login page — show public nav + login form
+  if (location.pathname === "/login") {
+    if (user) return <Navigate to="/connections" />;
+    return (
+      <>
+        <PublicNav />
+        <Login onLogin={checkAuth} />
+      </>
+    );
+  }
+
+  // Public pages (Home) — show public nav
+  if (!user) {
+    return (
+      <>
+        <PublicNav />
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/" element={<Navigate to="/home" />} />
+            <Route path="*" element={<Navigate to="/home" />} />
+          </Routes>
+        </AnimatePresence>
+      </>
+    );
+  }
+
+  // Authenticated pages
   return (
     <>
       <Nav user={user} />
@@ -44,8 +72,8 @@ export default function App() {
           <Route path="/connections" element={<Dashboard />} />
           <Route path="/ingest" element={<Ingest />} />
           <Route path="/audit" element={<AuditLog />} />
-          <Route path="/" element={<Navigate to="/home" />} />
-          <Route path="*" element={<Navigate to="/home" />} />
+          <Route path="/" element={<Navigate to="/connections" />} />
+          <Route path="*" element={<Navigate to="/connections" />} />
         </Routes>
       </AnimatePresence>
     </>
