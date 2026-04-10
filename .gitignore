@@ -1,7 +1,38 @@
+# Environment & secrets
 .env
+*.env.local
+
+# Python
 __pycache__/
 *.pyc
-.DS_Store
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Node
 node_modules/
 dist/
 .vite/
+
+# IDE
+.vscode/
+.kiro/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs & databases
+*.log
+*.sqlite
+*.db
+
+# Generated CSVs (user data)
+users/*.csv
