@@ -8,8 +8,13 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Ingest from "./pages/Ingest";
 import AuditLog from "./pages/AuditLog";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
 import PublicNav from "./components/PublicNav";
+import Footer from "./components/Footer";
+import CookieConsent from "./components/CookieConsent";
+import PageLoader from "./components/PageLoader";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,6 +32,7 @@ export default function App() {
   };
 
   useEffect(() => { checkAuth(); }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
 
   if (loading)
     return (
@@ -35,47 +41,59 @@ export default function App() {
       </div>
     );
 
-  // Login page — show public nav + login form
+  // Login page
   if (location.pathname === "/login") {
     if (user) return <Navigate to="/connections" />;
     return (
       <>
         <PublicNav />
+        <PageLoader />
         <Login onLogin={checkAuth} />
+        <CookieConsent />
       </>
     );
   }
 
-  // Public pages (Home) — show public nav
+  // Public (not logged in)
   if (!user) {
     return (
       <>
         <PublicNav />
+        <PageLoader />
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/home" element={<Home />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/" element={<Navigate to="/home" />} />
             <Route path="*" element={<Navigate to="/home" />} />
           </Routes>
         </AnimatePresence>
+        <Footer />
+        <CookieConsent />
       </>
     );
   }
 
-  // Authenticated pages
+  // Authenticated
   return (
     <>
       <Nav user={user} />
+      <PageLoader />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/home" element={<Home />} />
           <Route path="/connections" element={<Dashboard />} />
           <Route path="/ingest" element={<Ingest />} />
           <Route path="/audit" element={<AuditLog />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/" element={<Navigate to="/connections" />} />
           <Route path="*" element={<Navigate to="/connections" />} />
         </Routes>
       </AnimatePresence>
+      <Footer />
+      <CookieConsent />
     </>
   );
 }

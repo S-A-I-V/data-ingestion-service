@@ -3,7 +3,7 @@ import io
 import json
 import os
 import time
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
 import psutil
@@ -18,10 +18,18 @@ from app.services.validators import (
     validate_identifier, validate_identifiers, validate_operation,
     validate_csv_upload,
 )
+from app.routers.auth import limiter
 
 router = APIRouter(prefix="/api/ingestion", tags=["ingestion"])
 
-CHUNK_SIZE = 1000  # rows per chunk for memory-efficient parsing
+CHUNK_SIZE = 1000
+
+
+def _seal_audit(audit: AuditLog, db):
+    """Seal an audit log entry with hash chain integrity."""
+    last = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
+    prev_hash = last.record_hash if last else None
+    audit.seal(prev_hash)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -88,7 +96,9 @@ async def preview_csv(file: UploadFile = File(...)):
 # ── Execute endpoint ─────────────────────────────────────────────────────────
 
 @router.post("/execute")
+@limiter.limit("20/minute")
 async def execute_ingestion(
+    request: Request,
     file: UploadFile = File(...),
     connection_id: int = Form(...),
     table_name: str = Form(...),
@@ -230,6 +240,7 @@ async def execute_ingestion(
     except Exception as e:
         audit.status = "failed"
         audit.error_message = str(e)
+        _seal_audit(audit, db)
         db.add(audit)
         db.commit()
         raise HTTPException(status_code=500, detail=str(e))
@@ -250,6 +261,7 @@ async def execute_ingestion(
     )
     memory_delta = post_snap["rss"] - pre_snap["rss"]
 
+    _seal_audit(audit, db)
     db.add(audit)
     db.commit()
 

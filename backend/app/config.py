@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     SECRET_KEY: str = "change-me"
+    ENCRYPTION_KEY: str = "change-me-encryption-key"
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/ingestion_service"
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""

@@ -116,7 +116,7 @@ export default function Login({ onLogin }: Props) {
                 <label className="auth-checkbox">
                   <Checkbox checked={agreed} onChange={(e) => setAgreed(e.target.checked)} size="small"
                     sx={{ color: "rgba(255,255,255,0.25)", "&.Mui-checked": { color: "#0fb1b2" }, p: 0, mr: 1 }} />
-                  <span>I agree to the <a href="#" className="auth-link">Terms & Conditions</a></span>
+                  <span>I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="auth-link">Terms & Conditions</a></span>
                 </label>
               )}
 

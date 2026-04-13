@@ -2715,3 +2715,182 @@ a:hover {
   background: rgba(15, 177, 178, 0.15);
   color: #3dd8d9;
 }
+
+/* ── Legal Pages ───────────────────────────────────────────────────── */
+
+.legal-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 80px;
+  padding-bottom: 60px;
+}
+
+.legal-page h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.legal-page h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 28px 0 8px;
+}
+
+.legal-page p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 12px;
+}
+
+.legal-page a {
+  color: var(--accent);
+}
+
+.legal-updated {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────── */
+
+.site-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--border);
+  padding: 12px 40px;
+  background: rgba(10, 10, 15, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 50;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-brand {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.footer-copy {
+  font-weight: 400;
+}
+
+.footer-links {
+  display: flex;
+  gap: 0;
+}
+
+.footer-links a {
+  font-size: 12px;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.15s;
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+}
+
+.footer-links a:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.footer-links a:first-child {
+  padding-left: 0;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+/* ── Cookie Consent Banner ─────────────────────────────────────────── */
+
+.cookie-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: rgba(12, 12, 20, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-width: 560px;
+  width: calc(100% - 40px);
+}
+
+.cookie-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.cookie-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cookie-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.cookie-accept {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.cookie-accept:hover {
+  opacity: 0.9;
+}
+
+/* ── Page Loader Bar ───────────────────────────────────────────────── */
+
+.page-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  z-index: 9999;
+  transform-origin: left;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* ── Footer spacing — prevent content overlap ──────────────────────── */
+
+body {
+  padding-bottom: 52px;
+}
