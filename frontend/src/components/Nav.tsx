@@ -8,15 +8,6 @@ interface Props {
   user: { name: string; picture: string; email: string };
 }
 
-function getInitials(name: string, email: string): string {
-  if (name && name.trim().length > 1) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.trim().slice(0, 2).toUpperCase();
-  }
-  return email.slice(0, 2).toUpperCase();
-}
-
 function getDisplayName(name: string, email: string): string {
   if (name && name.trim().length > 1) return name.trim().split(/\s+/)[0];
   return email.split("@")[0];
@@ -29,7 +20,9 @@ export default function Nav({ user }: Props) {
 
   const logout = () => {
     localStorage.removeItem("token");
-    fetch("/api/auth/logout", { method: "POST", credentials: "include" }).then(() => window.location.reload());
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      .catch(() => {})
+      .finally(() => window.location.reload());
   };
 
   const goHome = () => {
@@ -55,19 +48,23 @@ export default function Nav({ user }: Props) {
       </Link>
       <div className="nav-right">
         <div className="nav-tabs">
-          <Link to="/home" className={`nav-tab ${loc.pathname === "/home" ? "active" : ""}`} onClick={goHome}>Home</Link>
-          <Link to="/connections" className={`nav-tab ${loc.pathname === "/connections" ? "active" : ""}`}>Database</Link>
-          <Link to="/ingest" className={`nav-tab ${loc.pathname === "/ingest" ? "active" : ""}`}>Data Transfer</Link>
-          <Link to="/audit" className={`nav-tab ${loc.pathname === "/audit" ? "active" : ""}`}>Audit Log</Link>
+          <Link to="/home" className={`nav-tab ${loc.pathname === "/home" ? "active" : ""}`} onClick={goHome}>
+            Home
+          </Link>
+          <Link to="/connections" className={`nav-tab ${loc.pathname === "/connections" ? "active" : ""}`}>
+            Database
+          </Link>
+          <Link to="/ingest" className={`nav-tab ${loc.pathname === "/ingest" ? "active" : ""}`}>
+            Data Transfer
+          </Link>
+          <Link to="/audit" className={`nav-tab ${loc.pathname === "/audit" ? "active" : ""}`}>
+            Audit Log
+          </Link>
         </div>
 
         {/* User Menu */}
         <div className="nav-user-menu" ref={menuRef}>
-          <button
-            type="button"
-            className="nav-user-trigger"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
+          <button type="button" className="nav-user-trigger" onClick={() => setMenuOpen(!menuOpen)}>
             <span className="nav-username">{getDisplayName(user.name, user.email)}</span>
           </button>
 

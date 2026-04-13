@@ -28,13 +28,17 @@ const COLUMNS = [
 
 const muiFieldSx = {
   "& .MuiOutlinedInput-root": {
-    color: "var(--text-primary)", fontSize: "0.8rem", fontFamily: "inherit",
+    color: "var(--text-primary)",
+    fontSize: "0.8rem",
+    fontFamily: "inherit",
     "& fieldset": { borderColor: "var(--border)" },
     "&:hover fieldset": { borderColor: "var(--border-hover)" },
     "&.Mui-focused fieldset": { borderColor: "var(--accent)" },
   },
   "& .MuiInputLabel-root": {
-    color: "var(--text-secondary)", fontSize: "0.8rem", fontFamily: "inherit",
+    color: "var(--text-secondary)",
+    fontSize: "0.8rem",
+    fontFamily: "inherit",
     "&.Mui-focused": { color: "var(--accent)" },
   },
   "& .MuiSvgIcon-root": { color: "var(--text-secondary)" },
@@ -62,13 +66,23 @@ export default function AuditLog() {
   const [detailText, setDetailText] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const refresh = () => api.get("/audit").then((r) => setLogs(r.data));
-  useEffect(() => { refresh(); }, []);
+  const refresh = () =>
+    api
+      .get("/audit")
+      .then((r) => setLogs(r.data))
+      .catch(() => {});
+  useEffect(() => {
+    refresh();
+  }, []);
 
   const handleSort = (col: string) => {
     setPage(0);
-    if (sortCol === col) { setSortAsc(!sortAsc); }
-    else { setSortCol(col); setSortAsc(true); }
+    if (sortCol === col) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortCol(col);
+      setSortAsc(true);
+    }
   };
 
   const processed = useMemo(() => {
@@ -76,9 +90,7 @@ export default function AuditLog() {
 
     if (search) {
       const q = search.toLowerCase();
-      rows = rows.filter((l) =>
-        COLUMNS.some((c) => getCellValue(l, c.key).toLowerCase().includes(q))
-      );
+      rows = rows.filter((l) => COLUMNS.some((c) => getCellValue(l, c.key).toLowerCase().includes(q)));
     }
 
     if (filterCol && filterVal) {
@@ -90,7 +102,8 @@ export default function AuditLog() {
       rows.sort((a, b) => {
         const va = getCellValue(a, sortCol);
         const vb = getCellValue(b, sortCol);
-        const na = Number(va), nb = Number(vb);
+        const na = Number(va),
+          nb = Number(vb);
         if (!isNaN(na) && !isNaN(nb)) return sortAsc ? na - nb : nb - na;
         return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
       });
@@ -133,7 +146,9 @@ export default function AuditLog() {
 
             {logs.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-icon"><HistoryIcon sx={{ fontSize: 40 }} /></div>
+                <div className="empty-icon">
+                  <HistoryIcon sx={{ fontSize: 40 }} />
+                </div>
                 <div className="empty-title">No operations yet</div>
                 <div className="empty-desc">Run a data transfer to see it here.</div>
               </div>
@@ -146,7 +161,10 @@ export default function AuditLog() {
                     variant="outlined"
                     size="small"
                     value={search}
-                    onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setPage(0);
+                    }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -163,12 +181,20 @@ export default function AuditLog() {
                       variant="outlined"
                       size="small"
                       value={filterCol}
-                      onChange={(e) => { setFilterCol(e.target.value); setFilterVal(""); setPage(0); }}
+                      onChange={(e) => {
+                        setFilterCol(e.target.value);
+                        setFilterVal("");
+                        setPage(0);
+                      }}
                       sx={{ minWidth: 220, ...muiFieldSx }}
                     >
-                      <MenuItem value=""><em>None</em></MenuItem>
+                      <MenuItem value="">
+                        <em>None</em>
+                      </MenuItem>
                       {COLUMNS.map((c) => (
-                        <MenuItem key={c.key} value={c.key}>{c.label}</MenuItem>
+                        <MenuItem key={c.key} value={c.key}>
+                          {c.label}
+                        </MenuItem>
                       ))}
                     </TextField>
                     {filterCol && (
@@ -177,7 +203,10 @@ export default function AuditLog() {
                         variant="outlined"
                         size="small"
                         value={filterVal}
-                        onChange={(e) => { setFilterVal(e.target.value); setPage(0); }}
+                        onChange={(e) => {
+                          setFilterVal(e.target.value);
+                          setPage(0);
+                        }}
                         sx={{ width: 280, ...muiFieldSx }}
                       />
                     )}
@@ -185,7 +214,11 @@ export default function AuditLog() {
                       <button
                         type="button"
                         className="btn btn-sm csv-clear-filter"
-                        onClick={() => { setSearch(""); setFilterCol(""); setFilterVal(""); }}
+                        onClick={() => {
+                          setSearch("");
+                          setFilterCol("");
+                          setFilterVal("");
+                        }}
                       >
                         Clear
                       </button>
@@ -199,18 +232,15 @@ export default function AuditLog() {
                     <thead>
                       <tr>
                         {COLUMNS.map((c) => (
-                          <th
-                            key={c.key}
-                            className="csv-sortable-th"
-                            onClick={() => handleSort(c.key)}
-                          >
+                          <th key={c.key} className="csv-sortable-th" onClick={() => handleSort(c.key)}>
                             <span className="csv-th-content">
                               {c.label}
-                              {sortCol === c.key && (
-                                sortAsc
-                                  ? <ArrowUpwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
-                                  : <ArrowDownwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
-                              )}
+                              {sortCol === c.key &&
+                                (sortAsc ? (
+                                  <ArrowUpwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
+                                ) : (
+                                  <ArrowDownwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
+                                ))}
                             </span>
                           </th>
                         ))}
@@ -234,7 +264,9 @@ export default function AuditLog() {
                             <td className="audit-nowrap">{new Date(l.executed_at).toLocaleString()}</td>
                             <td>{l.user_email}</td>
                             <td>{l.connection_name}</td>
-                            <td><span className="badge badge-info">{l.operation}</span></td>
+                            <td>
+                              <span className="badge badge-info">{l.operation}</span>
+                            </td>
                             <td>{l.table_name}</td>
                             <td>{l.row_count}</td>
                             <td>
@@ -247,7 +279,10 @@ export default function AuditLog() {
                                 type="button"
                                 className="audit-details-btn"
                                 title="View full details"
-                                onClick={() => { setDetailText(getDetail(l)); setCopied(false); }}
+                                onClick={() => {
+                                  setDetailText(getDetail(l));
+                                  setCopied(false);
+                                }}
                               >
                                 <ZoomInIcon sx={{ fontSize: 16 }} />
                               </button>
@@ -269,7 +304,10 @@ export default function AuditLog() {
                           key={s}
                           type="button"
                           className={`csv-page-size-btn ${pageSize === s ? "active" : ""}`}
-                          onClick={() => { setPageSize(s); setPage(0); }}
+                          onClick={() => {
+                            setPageSize(s);
+                            setPage(0);
+                          }}
                         >
                           {s}
                         </button>
@@ -279,11 +317,36 @@ export default function AuditLog() {
                       {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalFiltered)} of {totalFiltered}
                     </div>
                     <div className="csv-page-nav">
-                      <button type="button" className="csv-page-btn" disabled={page === 0} onClick={() => setPage(0)}>««</button>
-                      <button type="button" className="csv-page-btn" disabled={page === 0} onClick={() => setPage(page - 1)}>‹</button>
-                      <span className="csv-page-current">{page + 1} / {totalPages}</span>
-                      <button type="button" className="csv-page-btn" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>›</button>
-                      <button type="button" className="csv-page-btn" disabled={page >= totalPages - 1} onClick={() => setPage(totalPages - 1)}>»»</button>
+                      <button type="button" className="csv-page-btn" disabled={page === 0} onClick={() => setPage(0)}>
+                        ««
+                      </button>
+                      <button
+                        type="button"
+                        className="csv-page-btn"
+                        disabled={page === 0}
+                        onClick={() => setPage(page - 1)}
+                      >
+                        ‹
+                      </button>
+                      <span className="csv-page-current">
+                        {page + 1} / {totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        className="csv-page-btn"
+                        disabled={page >= totalPages - 1}
+                        onClick={() => setPage(page + 1)}
+                      >
+                        ›
+                      </button>
+                      <button
+                        type="button"
+                        className="csv-page-btn"
+                        disabled={page >= totalPages - 1}
+                        onClick={() => setPage(totalPages - 1)}
+                      >
+                        »»
+                      </button>
                     </div>
                   </div>
                 )}
@@ -318,24 +381,22 @@ export default function AuditLog() {
                       setTimeout(() => setCopied(false), 2000);
                     }}
                   >
-                    {copied
-                      ? <><CheckIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Copied</>
-                      : <><ContentCopyIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Copy</>
-                    }
+                    {copied ? (
+                      <>
+                        <CheckIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <ContentCopyIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Copy
+                      </>
+                    )}
                   </button>
-                  <button
-                    type="button"
-                    className="close-btn"
-                    title="Close"
-                    onClick={() => setDetailText(null)}
-                  >
+                  <button type="button" className="close-btn" title="Close" onClick={() => setDetailText(null)}>
                     <CloseIcon sx={{ fontSize: 18 }} />
                   </button>
                 </div>
               </div>
-              <div className="audit-modal-body">
-                {detailText}
-              </div>
+              <div className="audit-modal-body">{detailText}</div>
             </motion.div>
           </div>
         )}

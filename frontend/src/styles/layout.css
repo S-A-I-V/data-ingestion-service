@@ -258,3 +258,35 @@
     transform: rotate(360deg);
   }
 }
+
+/* ── Error Fallback ────────────────────────────────────────────────── */
+
+.error-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  text-align: center;
+  color: var(--text-primary);
+  padding: 40px;
+}
+
+.error-fallback-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.error-fallback h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.error-fallback p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 400px;
+  font-family: "JetBrains Mono", monospace;
+}

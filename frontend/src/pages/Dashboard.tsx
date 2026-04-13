@@ -23,8 +23,14 @@ export default function Dashboard() {
   const [testing, setTesting] = useState<Connection | null>(null);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
-  const load = () => api.get("/connections").then((r) => setConns(r.data));
-  useEffect(() => { load(); }, []);
+  const load = () =>
+    api
+      .get("/connections")
+      .then((r) => setConns(r.data))
+      .catch(() => setToast({ ok: false, msg: "Failed to load connections" }));
+  useEffect(() => {
+    load();
+  }, []);
   useEffect(() => {
     if (toast) {
       const t = setTimeout(() => setToast(null), 4000);
@@ -84,7 +90,10 @@ export default function Dashboard() {
             <motion.button
               type="button"
               className="btn btn-primary"
-              onClick={() => { setEditConn(null); setShowModal(true); }}
+              onClick={() => {
+                setEditConn(null);
+                setShowModal(true);
+              }}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
             >
@@ -95,7 +104,15 @@ export default function Dashboard() {
 
         <FadeIn delay={0.1}>
           <div className="panel">
-            <ConnectionList connections={conns} onTest={testConn} onDelete={del} onEdit={(c) => { setEditConn(c); setShowModal(true); }} />
+            <ConnectionList
+              connections={conns}
+              onTest={testConn}
+              onDelete={del}
+              onEdit={(c) => {
+                setEditConn(c);
+                setShowModal(true);
+              }}
+            />
           </div>
         </FadeIn>
 
@@ -106,27 +123,39 @@ export default function Dashboard() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
           >
-            {toast.ok ? <CheckCircleIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> : <CancelIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} />} {toast.msg}
+            {toast.ok ? (
+              <CheckCircleIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} />
+            ) : (
+              <CancelIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} />
+            )}{" "}
+            {toast.msg}
           </motion.div>
         )}
 
         {showModal && (
           <ConnectionModal
-            onClose={() => { setShowModal(false); setEditConn(null); }}
+            onClose={() => {
+              setShowModal(false);
+              setEditConn(null);
+            }}
             onSaved={load}
             onToast={setToast}
             editId={editConn?.id}
-            initialData={editConn ? {
-              name: editConn.name,
-              db_type: editConn.db_type,
-              host: editConn.host,
-              port: editConn.port,
-              database: editConn.database,
-              username: editConn.username,
-              use_ssl: editConn.use_ssl,
-              ssh_enabled: editConn.ssh_enabled,
-              connection_timeout: editConn.connection_timeout,
-            } : undefined}
+            initialData={
+              editConn
+                ? {
+                    name: editConn.name,
+                    db_type: editConn.db_type,
+                    host: editConn.host,
+                    port: editConn.port,
+                    database: editConn.database,
+                    username: editConn.username,
+                    use_ssl: editConn.use_ssl,
+                    ssh_enabled: editConn.ssh_enabled,
+                    connection_timeout: editConn.connection_timeout,
+                  }
+                : undefined
+            }
           />
         )}
 
@@ -152,7 +181,11 @@ export default function Dashboard() {
                   ) : testResult ? (
                     <>
                       <div className={`test-result-icon ${testResult.ok ? "success" : "error"}`}>
-                        {testResult.ok ? <CheckCircleIcon sx={{ fontSize: 32 }} /> : <CancelIcon sx={{ fontSize: 32 }} />}
+                        {testResult.ok ? (
+                          <CheckCircleIcon sx={{ fontSize: 32 }} />
+                        ) : (
+                          <CancelIcon sx={{ fontSize: 32 }} />
+                        )}
                       </div>
                       <div className="test-result-status">
                         {testResult.ok ? "Connected" : "Connection Failed"}
@@ -168,7 +201,9 @@ export default function Dashboard() {
                           </div>
                           <div className="test-result-row">
                             <span className="test-result-label">Host:</span>
-                            <span>{testResult.conn.host}:{testResult.conn.port}</span>
+                            <span>
+                              {testResult.conn.host}:{testResult.conn.port}
+                            </span>
                           </div>
                           <div className="test-result-row">
                             <span className="test-result-label">Database:</span>
@@ -183,7 +218,9 @@ export default function Dashboard() {
                 </div>
                 {!testing && (
                   <div className="test-result-footer">
-                    <button type="button" className="btn btn-primary" onClick={closeTestResult}>OK</button>
+                    <button type="button" className="btn btn-primary" onClick={closeTestResult}>
+                      OK
+                    </button>
                   </div>
                 )}
               </motion.div>
