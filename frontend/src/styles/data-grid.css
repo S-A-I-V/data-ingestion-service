@@ -1,0 +1,760 @@
+/* ── Execution Stats Panel ─────────────────────────────────────────── */
+
+.exec-stats-panel {
+  margin-top: 16px;
+  background: rgba(12, 12, 20, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.exec-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.exec-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.exec-stat-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 177, 178, 0.1);
+}
+
+.exec-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.exec-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.exec-stat-warn .exec-stat-value {
+  color: #f59e0b;
+}
+
+/* ── Ingest Locked State (disable all interactions during execution) ──── */
+
+.ingest-locked {
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.ingest-locked .btn-primary {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.panel-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.panel-fieldset:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.3);
+  transition:
+    opacity 0.3s,
+    filter 0.3s;
+}
+
+/* ── Execution Action Bar ──────────────────────────────────────────── */
+
+.exec-action-bar {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.exec-spinner-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exec-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Pre-execution File Stats ──────────────────────────────────────── */
+
+.pre-stats {
+  border: 1px solid var(--accent);
+  margin-bottom: 16px;
+}
+
+/* ── Stats Section Labels ──────────────────────────────────────────── */
+
+.stats-section-label {
+  padding: 8px 16px 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* ── Stat Card Variants ────────────────────────────────────────────── */
+
+.exec-stat-card.accent .exec-stat-value {
+  color: var(--accent);
+}
+
+.exec-stat-card.success {
+  border-color: #22c55e33;
+  background: #22c55e08;
+}
+
+.exec-stat-card.success .exec-stat-value {
+  color: #22c55e;
+}
+
+.exec-stat-card.warn {
+  border-color: #f59e0b33;
+  background: #f59e0b08;
+}
+
+.exec-stat-card.warn .exec-stat-value {
+  color: #f59e0b;
+}
+
+.exec-stat-card.danger {
+  border-color: #ef444433;
+  background: #ef444408;
+}
+
+.exec-stat-card.danger .exec-stat-value {
+  color: #ef4444;
+}
+
+/* ── Mapper layout helpers ─────────────────────────────────────────── */
+
+.mapper-badge {
+  margin-left: auto;
+}
+
+.mapper-col-label {
+  flex: 1;
+}
+
+.mapper-arrow-spacer {
+  width: 30px;
+}
+
+.mapper-csv-name {
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+}
+
+.mapper-select {
+  flex: 1;
+}
+
+/* ── CSV Preview ───────────────────────────────────────────────────── */
+
+.csv-preview-panel {
+  margin-top: 16px;
+}
+
+.csv-preview-scroll {
+  overflow: auto;
+  max-height: 480px;
+}
+
+/* ── Clear All Button ──────────────────────────────────────────────── */
+
+.btn-clear-all {
+  margin-left: auto;
+  color: #ef4444;
+  border-color: #ef444444;
+}
+
+.btn-clear-all:hover {
+  background: #ef444418;
+  border-color: #ef4444;
+}
+
+/* ── Table Loading Spinner ─────────────────────────────────────────── */
+
+.select-loading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.form-row {
+  position: relative;
+}
+
+.field-spinner {
+  position: absolute;
+  right: 24px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  pointer-events: none;
+}
+
+/* ── CSV Preview Toolbar ───────────────────────────────────────────── */
+
+.csv-toolbar {
+  display: flex;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.csv-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 300px;
+  min-width: 160px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  transition: border-color 0.2s;
+}
+
+.csv-search-wrap:focus-within {
+  border-color: var(--accent);
+}
+
+.csv-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text);
+  font-size: 0.8rem;
+  width: 100%;
+  font-family: inherit;
+}
+
+.csv-filter-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.csv-filter-select {
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-filter-input {
+  font-size: 0.8rem;
+  font-family: inherit;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  width: 180px;
+  transition: border-color 0.2s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-filter-input:focus {
+  border-color: var(--accent);
+}
+
+/* ── Sortable Table Headers ────────────────────────────────────────── */
+
+.csv-sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.csv-sortable-th:hover {
+  color: var(--accent);
+}
+
+.csv-th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.csv-no-results {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── CSV Clear Filter Button ───────────────────────────────────────── */
+
+.csv-clear-filter {
+  white-space: nowrap;
+  font-family: inherit;
+  height: 40px;
+  align-self: center;
+}
+
+/* ── CSV Pagination ────────────────────────────────────────────────── */
+
+.csv-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.csv-page-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.csv-page-size-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csv-page-size-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.csv-page-size-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.csv-page-info {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+}
+
+.csv-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.csv-page-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  padding: 3px 8px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.csv-page-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.csv-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.csv-page-current {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  padding: 0 6px;
+}
+
+/* ── Sticky CSV Preview Headers ────────────────────────────────────── */
+
+.csv-preview-panel .data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #151518;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── CSV Table Cell Overflow ───────────────────────────────────────── */
+
+.csv-preview-panel .data-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.csv-preview-panel .data-table td,
+.csv-preview-panel .data-table th {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Audit Log Table Cells ─────────────────────────────────────────── */
+
+.audit-nowrap {
+  white-space: nowrap;
+}
+
+.audit-details-cell {
+  position: relative;
+  max-width: 220px;
+}
+
+.audit-details-text {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.audit-details-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.audit-details-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Audit Detail Modal ────────────────────────────────────────────── */
+
+.audit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audit-modal {
+  background: var(--bg-base);
+  border: 1px solid rgba(15, 177, 178, 0.25);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(15, 177, 178, 0.12),
+    0 0 60px rgba(15, 177, 178, 0.06);
+}
+
+.audit-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.audit-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.audit-modal-body {
+  padding: 20px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ── Nav Layout Helpers ────────────────────────────────────────────── */
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-brand-link {
+  text-decoration: none;
+}
+
+/* ── Nav Sign In Button ────────────────────────────────────────────── */
+
+.nav-signin-btn {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.nav-signin-btn:hover {
+  background: rgba(15, 177, 178, 0.15);
+  color: #3dd8d9;
+}
+
+/* ── Legal Pages ───────────────────────────────────────────────────── */
+
+.legal-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-top: 80px;
+  padding-bottom: 60px;
+}
+
+.legal-page h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.legal-page h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 28px 0 8px;
+}
+
+.legal-page p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 12px;
+}
+
+.legal-page a {
+  color: var(--accent);
+}
+
+.legal-updated {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────── */
+
+.site-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--border);
+  padding: 12px 40px;
+  background: rgba(10, 10, 15, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 50;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-brand {
+  font-size: 12px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.footer-copy {
+  font-weight: 400;
+}
+
+.footer-links {
+  display: flex;
+  gap: 0;
+}
+
+.footer-links a {
+  font-size: 12px;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.15s;
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+}
+
+.footer-links a:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.footer-links a:first-child {
+  padding-left: 0;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+/* ── Cookie Consent Banner ─────────────────────────────────────────── */
+
+.cookie-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: rgba(12, 12, 20, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-width: 560px;
+  width: calc(100% - 40px);
+}
+
+.cookie-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.cookie-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cookie-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.cookie-accept {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.cookie-accept:hover {
+  opacity: 0.9;
+}
+
+/* ── Page Loader Bar ───────────────────────────────────────────────── */
+
+.page-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  z-index: 9999;
+  transform-origin: left;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* ── Footer spacing — prevent content overlap ──────────────────────── */
+
+body {
+  padding-bottom: 52px;
+}
