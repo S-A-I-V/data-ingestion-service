@@ -1,17 +1,24 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, field_validator
+import logging
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, field_validator
+from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.models.user import User
 from app.models.connection import DBConnection
-from app.routers.auth import get_current_user
+from app.models.user import User
+from app.routers.auth import get_current_user, limiter
 from app.services.db_connector import get_connector
 from app.services.validators import (
-    validate_db_type, validate_host, validate_port,
-    validate_identifier, sanitize_string,
+    sanitize_string,
+    validate_db_type,
+    validate_host,
+    validate_identifier,
+    validate_port,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/connections", tags=["connections"])
 
@@ -95,7 +102,10 @@ class ConnectionOut(BaseModel):
 
 
 @router.post("/", response_model=ConnectionOut)
-def create_connection(body: ConnectionCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def create_connection(
+    body: ConnectionCreate, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
     if not body.host.strip():
         raise HTTPException(status_code=400, detail="Host is required")
     if not body.database.strip():
@@ -114,7 +124,10 @@ def list_connections(user: User = Depends(get_current_user), db: Session = Depen
 
 
 @router.delete("/{conn_id}")
-def delete_connection(conn_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def delete_connection(
+    conn_id: int, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
@@ -124,19 +137,48 @@ def delete_connection(conn_id: int, user: User = Depends(get_current_user), db: 
 
 
 @router.put("/{conn_id}", response_model=ConnectionOut)
-def update_connection(conn_id: int, body: ConnectionCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def update_connection(
+    conn_id: int,
+    body: ConnectionCreate,
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
-    for key, value in body.model_dump().items():
-        setattr(conn, key, value)
+    updatable_fields = [
+        "name",
+        "db_type",
+        "host",
+        "port",
+        "database",
+        "username",
+        "password",
+        "use_ssl",
+        "ssh_enabled",
+        "ssh_host",
+        "ssh_port",
+        "ssh_username",
+        "ssh_password",
+        "connection_timeout",
+        "jdbc_url",
+    ]
+    data = body.model_dump()
+    for key in updatable_fields:
+        if key in data:
+            setattr(conn, key, data[key])
     db.commit()
     db.refresh(conn)
     return conn
 
 
 @router.post("/{conn_id}/test")
-def test_connection(conn_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def test_connection(
+    conn_id: int, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
@@ -145,26 +187,49 @@ def test_connection(conn_id: int, user: User = Depends(get_current_user), db: Se
         connector.test()
         return {"ok": True, "message": "Connection successful"}
     except Exception as e:
-        return {"ok": False, "message": str(e)}
+        logger.error(f"Connection test failed for conn_id={conn_id} user={user.id}: {e}")
+        return {"ok": False, "message": "Connection test failed. Check your credentials and network settings."}
 
 
 @router.get("/{conn_id}/tables")
-def list_tables(conn_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def list_tables(conn_id: int, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
-    connector = get_connector(conn)
-    return connector.list_tables()
+    try:
+        connector = get_connector(conn)
+        return connector.list_tables()
+    except Exception as e:
+        logger.error(f"list_tables failed for conn_id={conn_id} user={user.id}: {e}")
+        raise HTTPException(
+            status_code=502, detail="Failed to retrieve tables. Check that the database is reachable."
+        ) from e
 
 
 @router.get("/{conn_id}/tables/{table_name}/columns")
-def list_columns(conn_id: int, table_name: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def list_columns(
+    conn_id: int,
+    table_name: str,
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     try:
         table_name = validate_identifier(table_name, "table name")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
-    connector = get_connector(conn)
-    return connector.list_columns(table_name)
+    try:
+        connector = get_connector(conn)
+        return connector.list_columns(table_name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.error(f"list_columns failed for conn_id={conn_id} table={table_name} user={user.id}: {e}")
+        raise HTTPException(
+            status_code=502, detail="Failed to retrieve columns. Check that the database is reachable."
+        ) from e

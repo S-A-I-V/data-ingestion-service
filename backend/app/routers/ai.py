@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, field_validator
 from typing import Optional
+
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel, field_validator
 
 from app.config import settings
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, limiter
 from app.services.validators import validate_identifier, validate_operation
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -46,7 +47,8 @@ class AnalyzeRequest(BaseModel):
 
 
 @router.post("/analyze")
-async def analyze_query(body: AnalyzeRequest, user: User = Depends(get_current_user)):
+@limiter.limit("20/minute")
+async def analyze_query(request: Request, body: AnalyzeRequest, user: User = Depends(get_current_user)):
     """AI-powered query analysis: optimization, risk, cost estimation."""
     if not settings.OPENAI_API_KEY:
         return _stub_analysis(body)
@@ -64,7 +66,11 @@ async def analyze_query(body: AnalyzeRequest, user: User = Depends(get_current_u
                     "messages": [
                         {
                             "role": "system",
-                            "content": "You are a database expert. Analyze the proposed query and provide: 1) Risk assessment 2) Optimization suggestions 3) Estimated cost/time 4) Potential issues. Be concise.",
+                            "content": (
+                                "You are a database expert. Analyze the proposed query and provide: "
+                                "1) Risk assessment 2) Optimization suggestions "
+                                "3) Estimated cost/time 4) Potential issues. Be concise."
+                            ),
                         },
                         {"role": "user", "content": prompt},
                     ],

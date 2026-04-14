@@ -1,24 +1,28 @@
 import csv
 import io
 import json
+import logging
 import os
 import time
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
-from sqlalchemy.orm import Session
 
 import psutil
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import User
-from app.models.connection import DBConnection
 from app.models.audit import AuditLog
-from app.routers.auth import get_current_user
+from app.models.connection import DBConnection
+from app.models.user import User
+from app.routers.auth import get_current_user, limiter
 from app.services.db_connector import get_connector
 from app.services.validators import (
-    validate_identifier, validate_identifiers, validate_operation,
     validate_csv_upload,
+    validate_identifier,
+    validate_identifiers,
+    validate_operation,
 )
-from app.routers.auth import limiter
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ingestion", tags=["ingestion"])
 
@@ -33,6 +37,7 @@ def _seal_audit(audit: AuditLog, db):
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _snap_resources():
     """Capture a snapshot of current process resource usage."""
@@ -58,13 +63,19 @@ def _format_bytes(b: int) -> str:
 
 # ── Preview endpoint ─────────────────────────────────────────────────────────
 
+
 @router.post("/preview")
-async def preview_csv(file: UploadFile = File(...)):
+@limiter.limit("30/minute")
+async def preview_csv(
+    request: Request,
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+):
     """Return rows + headers and file-level stats from uploaded CSV."""
     try:
         validate_csv_upload(file.filename or "", file.size or 0)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     content = await file.read()
     if len(content) > 50 * 1024 * 1024:
@@ -73,8 +84,8 @@ async def preview_csv(file: UploadFile = File(...)):
     file_size_bytes = len(content)
     try:
         text = content.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="File is not valid UTF-8 text")
+    except UnicodeDecodeError as e:
+        raise HTTPException(status_code=400, detail="File is not valid UTF-8 text") from e
     reader = csv.DictReader(io.StringIO(text))
     headers = reader.fieldnames or []
 
@@ -95,6 +106,7 @@ async def preview_csv(file: UploadFile = File(...)):
 
 # ── Execute endpoint ─────────────────────────────────────────────────────────
 
+
 @router.post("/execute")
 @limiter.limit("20/minute")
 async def execute_ingestion(
@@ -113,11 +125,7 @@ async def execute_ingestion(
     wall_start = time.time()
 
     # ── Validate connection ──
-    conn = (
-        db.query(DBConnection)
-        .filter(DBConnection.id == connection_id, DBConnection.created_by == user.id)
-        .first()
-    )
+    conn = db.query(DBConnection).filter(DBConnection.id == connection_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
 
@@ -125,13 +133,13 @@ async def execute_ingestion(
     try:
         operation = validate_operation(operation)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     # ── Validate table name ──
     try:
         table_name = validate_identifier(table_name, "table name")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     mapping = json.loads(column_mapping)
     mapping = {k: v for k, v in mapping.items() if v}
@@ -143,13 +151,13 @@ async def execute_ingestion(
         db_cols_raw = [mapping[c] for c in mapping.keys()]
         validate_identifiers(db_cols_raw, "column name")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     # ── Validate file upload ──
     try:
         validate_csv_upload(file.filename or "", file.size or 0)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     # ── Read & validate CSV in chunks (memory-efficient) ──
     content = await file.read()
@@ -158,8 +166,8 @@ async def execute_ingestion(
     file_size_bytes = len(content)
     try:
         text = content.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="File is not valid UTF-8 text")
+    except UnicodeDecodeError as e:
+        raise HTTPException(status_code=400, detail="File is not valid UTF-8 text") from e
     reader = csv.DictReader(io.StringIO(text))
 
     csv_cols = list(mapping.keys())
@@ -168,7 +176,6 @@ async def execute_ingestion(
     rows = []
     total_parsed = 0
     error_rows = 0
-    schema_errors = 0
     empty_cells = 0
     parse_start = time.time()
 
@@ -198,9 +205,7 @@ async def execute_ingestion(
     peak_rss = max(peak_rss, current_rss)
 
     # ── Data size estimation ──
-    data_size_bytes = sum(
-        sum(len(cell.encode("utf-8")) for cell in row) for row in rows
-    )
+    data_size_bytes = sum(sum(len(cell.encode("utf-8")) for cell in row) for row in rows)
 
     valid_rows = len(rows)
     validation_score = round((valid_rows / total_parsed) * 100, 1) if total_parsed else 0
@@ -243,7 +248,7 @@ async def execute_ingestion(
         _seal_audit(audit, db)
         db.add(audit)
         db.commit()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
     ingestion_elapsed = time.time() - ingestion_start
 
@@ -255,10 +260,7 @@ async def execute_ingestion(
 
     # ── Compute final metrics ──
     throughput = round(count / ingestion_elapsed, 1) if ingestion_elapsed > 0 else 0
-    cpu_time_used = (
-        (post_snap["cpu_user"] - pre_snap["cpu_user"])
-        + (post_snap["cpu_system"] - pre_snap["cpu_system"])
-    )
+    cpu_time_used = (post_snap["cpu_user"] - pre_snap["cpu_user"]) + (post_snap["cpu_system"] - pre_snap["cpu_system"])
     memory_delta = post_snap["rss"] - pre_snap["rss"]
 
     _seal_audit(audit, db)

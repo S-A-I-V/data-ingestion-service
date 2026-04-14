@@ -18,11 +18,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "script-src 'self'; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https: blob:; "
-            "connect-src 'self' https://api.openai.com https://accounts.google.com https://github.com https://api.github.com; "
+            "connect-src 'self' https://api.openai.com "
+            "https://accounts.google.com https://github.com https://api.github.com; "
             "frame-ancestors 'none';"
         )
         return response

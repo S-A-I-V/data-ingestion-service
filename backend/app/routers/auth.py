@@ -10,23 +10,36 @@ Authentication router — hardened with:
   - No secrets exposed to frontend
 """
 
+import logging
 import re
 import secrets
 from datetime import datetime, timedelta
 
 import bcrypt
+from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from authlib.integrations.starlette_client import OAuth
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr
-from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
+
+
+def _mask_email(email: str) -> str:
+    """Mask email for safe logging: 'user@example.com' -> 'u***@example.com'."""
+    try:
+        local, domain = email.rsplit("@", 1)
+        return f"{local[0]}***@{domain}" if local else f"***@{domain}"
+    except (ValueError, IndexError):
+        return "***"
+
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 limiter = Limiter(key_func=get_remote_address)
@@ -70,6 +83,7 @@ def _verify_password(password: str, hashed: str) -> bool:
     if ":" in hashed and not hashed.startswith("$2"):
         # Legacy PBKDF2 format: salt:hash — migrate on next login
         import hashlib
+
         salt, stored = hashed.split(":", 1)
         return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000).hex() == stored
     return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
@@ -113,6 +127,7 @@ def _record_failed_login(user: User, db: Session) -> None:
     user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
     if user.failed_login_attempts >= LOCKOUT_THRESHOLD:
         user.locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+        logger.warning(f"Account locked for user_id={user.id} after {LOCKOUT_THRESHOLD} failed attempts")
     db.commit()
 
 
@@ -126,16 +141,15 @@ def _reset_failed_login(user: User, db: Session) -> None:
 
 # ── Auth dependency ──────────────────────────────────────────────────────────
 
+
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    token = request.cookies.get("token") or request.headers.get(
-        "Authorization", ""
-    ).replace("Bearer ", "")
+    token = request.cookies.get("token") or request.headers.get("Authorization", "").replace("Bearer ", "")
     if not token:
         raise HTTPException(401, "Not authenticated")
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-    except JWTError:
-        raise HTTPException(401, "Invalid or expired token")
+    except JWTError as exc:
+        raise HTTPException(401, "Invalid or expired token") from exc
     user = db.query(User).filter(User.id == payload["sub"]).first()
     if not user:
         raise HTTPException(401, "User not found")
@@ -143,6 +157,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
 
 
 # ── Request models ───────────────────────────────────────────────────────────
+
 
 class RegisterRequest(BaseModel):
     first_name: str
@@ -167,6 +182,7 @@ class ResetConfirmBody(BaseModel):
 
 # ── Email/Password endpoints ─────────────────────────────────────────────────
 
+
 @router.post("/register")
 @limiter.limit("5/minute")
 async def register(request: Request, body: RegisterRequest, db: Session = Depends(get_db)):
@@ -190,13 +206,12 @@ async def register(request: Request, body: RegisterRequest, db: Session = Depend
     db.add(user)
     db.commit()
 
-    # TODO: Send verification email with verify_token
-    # For now, auto-verify in dev
-    user.email_verified = True
-    db.commit()
+    # Email verification required — token is stored for email delivery
+    # In production, send verification email with verify_token here
+    logger.info(f"New user registered: user_id={user.id}, email verification pending")
 
     token = _create_token(user.id, user.email)
-    return {"token": token, "user": {"id": user.id, "email": user.email, "name": user.name}}
+    return {"token": token, "user": {"id": user.id, "email": user.email, "name": user.name, "email_verified": False}}
 
 
 @router.post("/login/email")
@@ -213,6 +228,7 @@ async def login_email(request: Request, body: LoginRequest, db: Session = Depend
 
     if not _verify_password(body.password, user.password_hash):
         _record_failed_login(user, db)
+        logger.warning(f"Failed login attempt for email={_mask_email(body.email)}")
         raise HTTPException(401, generic_error)
 
     # Migrate legacy PBKDF2 hash to bcrypt on successful login
@@ -225,7 +241,8 @@ async def login_email(request: Request, body: LoginRequest, db: Session = Depend
 
 
 @router.get("/verify-email")
-async def verify_email(token: str, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+async def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email_verify_token == token).first()
     if not user:
         raise HTTPException(400, "Invalid verification token")
@@ -239,6 +256,7 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
 
 
 # ── Password Reset ───────────────────────────────────────────────────────────
+
 
 @router.post("/forgot-password")
 @limiter.limit("3/minute")
@@ -260,8 +278,13 @@ async def reset_password(request: Request, body: ResetConfirmBody, db: Session =
     _validate_password(body.password)
     user = db.query(User).filter(User.password_reset_token == body.token).first()
     if not user:
+        logger.warning("Invalid password reset token attempted")
         raise HTTPException(400, "Invalid reset token")
     if user.password_reset_expires and user.password_reset_expires < datetime.utcnow():
+        # Invalidate expired token
+        user.password_reset_token = None
+        user.password_reset_expires = None
+        db.commit()
         raise HTTPException(400, "Reset token expired")
     user.password_hash = _hash_password(body.password)
     user.password_reset_token = None
@@ -273,6 +296,7 @@ async def reset_password(request: Request, body: ResetConfirmBody, db: Session =
 
 
 # ── Google OAuth ─────────────────────────────────────────────────────────────
+
 
 @router.get("/login")
 async def login(request: Request):
@@ -301,11 +325,14 @@ async def callback(request: Request, db: Session = Depends(get_db)):
 
     app_token = _create_token(user.id, user.email)
     response = RedirectResponse(url=settings.FRONTEND_URL)
-    response.set_cookie("token", app_token, httponly=True, secure=True, max_age=TOKEN_EXPIRY_HOURS * 3600, samesite="lax")
+    response.set_cookie(
+        "token", app_token, httponly=True, secure=True, max_age=TOKEN_EXPIRY_HOURS * 3600, samesite="lax"
+    )
     return response
 
 
 # ── GitHub OAuth ─────────────────────────────────────────────────────────────
+
 
 @router.get("/github/login")
 async def github_login(request: Request):
@@ -343,11 +370,14 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
 
     app_token = _create_token(user.id, user.email)
     response = RedirectResponse(url=settings.FRONTEND_URL)
-    response.set_cookie("token", app_token, httponly=True, secure=True, max_age=TOKEN_EXPIRY_HOURS * 3600, samesite="lax")
+    response.set_cookie(
+        "token", app_token, httponly=True, secure=True, max_age=TOKEN_EXPIRY_HOURS * 3600, samesite="lax"
+    )
     return response
 
 
 # ── Session endpoints ────────────────────────────────────────────────────────
+
 
 @router.get("/me")
 async def me(user: User = Depends(get_current_user)):
