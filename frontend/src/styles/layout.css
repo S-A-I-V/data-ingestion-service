@@ -240,9 +240,6 @@
   color: var(--text-muted);
   z-index: 100;
 }
-/* body {
-  padding-bottom: 32px;
-} */
 
 /* ===== LOADER ===== */
 .loader {
