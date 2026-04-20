@@ -25,17 +25,19 @@ users/       → Legacy standalone scripts
 cd backend
 cp .env.example .env   # fill in credentials
 pip3 install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 ```
 
 ### Frontend
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --port 5173
 ```
 
 App runs at http://localhost:5173, API at http://localhost:8000.
+
+> **Note:** The frontend Vite config proxies all `/api` requests to `http://localhost:8000`, so the backend must be running first.
 
 ## Google OAuth Setup
 
