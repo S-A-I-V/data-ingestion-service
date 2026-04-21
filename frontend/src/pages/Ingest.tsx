@@ -39,22 +39,44 @@ export default function Ingest() {
       .catch(() => {});
   }, []);
   useEffect(() => {
-    if (connId) {
-      setTablesLoading(true);
+    if (!connId) {
       setTables([]);
-      api
-        .get(`/connections/${connId}/tables`)
-        .then((r) => setTables(r.data))
-        .catch(() => setStatus({ ok: false, msg: "Failed to load tables" }))
-        .finally(() => setTablesLoading(false));
+      setTablesLoading(false);
+      return;
     }
+    const abortCtrl = new AbortController();
+    setTablesLoading(true);
+    setTables([]);
+    setTable("");
+    setDbCols([]);
+    api
+      .get(`/connections/${connId}/tables`, { signal: abortCtrl.signal })
+      .then((r) => {
+        if (!abortCtrl.signal.aborted) setTables(r.data);
+      })
+      .catch((err) => {
+        if (!abortCtrl.signal.aborted) setStatus({ ok: false, msg: "Failed to load tables" });
+      })
+      .finally(() => {
+        if (!abortCtrl.signal.aborted) setTablesLoading(false);
+      });
+    return () => abortCtrl.abort();
   }, [connId]);
   useEffect(() => {
-    if (connId && table)
-      api
-        .get(`/connections/${connId}/tables/${table}/columns`)
-        .then((r) => setDbCols(r.data))
-        .catch(() => {});
+    if (!connId || !table) {
+      setDbCols([]);
+      return;
+    }
+    const abortCtrl = new AbortController();
+    api
+      .get(`/connections/${connId}/tables/${table}/columns`, { signal: abortCtrl.signal })
+      .then((r) => {
+        if (!abortCtrl.signal.aborted) setDbCols(r.data);
+      })
+      .catch((err) => {
+        if (!abortCtrl.signal.aborted) setDbCols([]);
+      });
+    return () => abortCtrl.abort();
   }, [connId, table]);
   useEffect(() => {
     if (status) {
@@ -189,9 +211,7 @@ export default function Ingest() {
                     title="Connection"
                     value={connId || ""}
                     onChange={(e) => {
-                      setConnId(+e.target.value);
-                      setTable("");
-                      setDbCols([]);
+                      setConnId(+e.target.value || null);
                     }}
                   >
                     <option value="">Choose a connection...</option>
