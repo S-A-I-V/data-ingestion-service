@@ -46,6 +46,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [showPicker, setShowPicker] = useState(!editId && !initialData?.db_type);
+  const [tempConnId, setTempConnId] = useState<number | null>(null);
 
   const isEditing = editId != null;
   const dbInfo = DB_TYPES.find((d) => d.value === form.db_type);
@@ -64,6 +65,8 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
     try {
       if (isEditing) {
         await api.put(`/connections/${editId}`, form);
+      } else if (tempConnId) {
+        await api.put(`/connections/${tempConnId}`, form);
       } else {
         await api.post("/connections/", form);
       }
@@ -82,12 +85,15 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
     setTestResult(null);
     const start = Date.now();
     try {
-      let connId = editId;
+      let connId = editId ?? tempConnId;
       if (!connId) {
-        // Save first, then test
         const r = await api.post("/connections/", form);
         connId = r.data.id;
-        onSaved();
+        setTempConnId(connId);
+        onSaved(); // refresh list so the card appears
+      } else if (!isEditing) {
+        // Subsequent test clicks — update the existing temp record with latest form values
+        await api.put(`/connections/${connId}`, form);
       }
       const tr = await api.post(`/connections/${connId}/test`);
       const elapsed = Date.now() - start;
@@ -127,7 +133,9 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
               ← Change DB
             </button>
           )}
-          <button type="button" className="close-btn" title="Close" onClick={onClose}><CloseIcon sx={{ fontSize: 18 }} /></button>
+          <button type="button" className="close-btn" title="Close" onClick={onClose}>
+            <CloseIcon sx={{ fontSize: 18 }} />
+          </button>
         </div>
       </div>
       <div className="modal-body">
@@ -165,7 +173,9 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
           {testing ? "Testing..." : "Test Connection"}
         </motion.button>
         <div className="modal-footer-actions">
-          <button type="button" className="btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="btn" onClick={onClose}>
+            Cancel
+          </button>
           <motion.button
             type="button"
             className="btn btn-primary"
@@ -217,7 +227,9 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
                         </div>
                         <div className="test-result-row">
                           <span className="test-result-label">Host:</span>
-                          <span>{form.host}:{form.port}</span>
+                          <span>
+                            {form.host}:{form.port}
+                          </span>
                         </div>
                         <div className="test-result-row">
                           <span className="test-result-label">Database:</span>
