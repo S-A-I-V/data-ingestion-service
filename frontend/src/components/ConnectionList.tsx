@@ -1,6 +1,7 @@
 import { motion } from "./Motion";
 import { DB_TYPES } from "../constants/database";
 import DbIcon from "./DbIcon";
+import ConnectionStatusBadge, { type ConnStatus } from "./ConnectionStatusBadge";
 import StorageIcon from "@mui/icons-material/Storage";
 import LockIcon from "@mui/icons-material/Lock";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
@@ -11,16 +12,19 @@ import type { Connection } from "../types";
 
 interface Props {
   connections: Connection[];
+  statuses: Record<number, ConnStatus>;
   onTest: (id: number) => void;
   onDelete: (id: number) => void;
   onEdit: (conn: Connection) => void;
 }
 
-export default function ConnectionList({ connections, onTest, onDelete, onEdit }: Props) {
+export default function ConnectionList({ connections, statuses, onTest, onDelete, onEdit }: Props) {
   if (connections.length === 0) {
     return (
       <div className="empty-state">
-        <div className="empty-icon"><StorageIcon sx={{ fontSize: 40 }} /></div>
+        <div className="empty-icon">
+          <StorageIcon sx={{ fontSize: 40 }} />
+        </div>
         <div className="empty-title">No connections yet</div>
         <div className="empty-desc">Add a database connection to get started.</div>
       </div>
@@ -32,11 +36,8 @@ export default function ConnectionList({ connections, onTest, onDelete, onEdit }
       {connections.map((c, i) => {
         const info = DB_TYPES.find((d) => d.value === c.db_type);
         return (
-          <motion.div
-            key={c.id}
-            className="conn-grid-card"
-            whileHover={{ y: -4, transition: { duration: 0.15 } }}
-          >
+          <motion.div key={c.id} className="conn-grid-card">
+            <ConnectionStatusBadge status={statuses[c.id] ?? "unknown"} />
             <div className="conn-grid-icon">
               <DbIcon icon={info?.icon || ""} size={40} />
             </div>

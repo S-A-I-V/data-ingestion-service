@@ -7,6 +7,7 @@ import { DB_TYPES } from "../constants/database";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import type { Connection } from "../types";
+import type { ConnStatus } from "../components/ConnectionStatusBadge";
 
 interface TestResult {
   ok: boolean;
@@ -17,6 +18,7 @@ interface TestResult {
 
 export default function Dashboard() {
   const [conns, setConns] = useState<Connection[]>([]);
+  const [connStatuses, setConnStatuses] = useState<Record<number, ConnStatus>>({});
   const [showModal, setShowModal] = useState(false);
   const [editConn, setEditConn] = useState<Connection | null>(null);
   const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -47,14 +49,17 @@ export default function Dashboard() {
     try {
       const r = await api.post(`/connections/${id}/test`);
       const elapsed = Date.now() - start;
+      const ok = r.data.ok as boolean;
+      setConnStatuses((prev) => ({ ...prev, [id]: ok ? "ok" : "error" }));
       setTestResult({
-        ok: r.data.ok,
-        message: r.data.ok ? "Connection successful" : r.data.message,
+        ok,
+        message: ok ? "Connection successful" : r.data.message,
         elapsed,
         conn,
       });
     } catch (e: any) {
       const elapsed = Date.now() - start;
+      setConnStatuses((prev) => ({ ...prev, [id]: "error" }));
       setTestResult({
         ok: false,
         message: e.response?.data?.detail || "Connection failed",
@@ -106,6 +111,7 @@ export default function Dashboard() {
           <div className="panel">
             <ConnectionList
               connections={conns}
+              statuses={connStatuses}
               onTest={testConn}
               onDelete={del}
               onEdit={(c) => {

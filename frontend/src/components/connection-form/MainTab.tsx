@@ -48,14 +48,31 @@ export default function MainTab({ form, setForm, connectBy, setConnectBy }: Prop
               <input
                 value={form.host}
                 onChange={(e) => setForm({ ...form, host: e.target.value })}
+                onBlur={(e) => {
+                  // Auto-parse if user pastes a full host string like "host:5432/dbname"
+                  const raw = e.target.value.trim().replace(/[/:]+$/, ""); // strip trailing : or /
+                  const match = raw.match(/^([^:/]+)(?::(\d+))?(?:\/(.+))?$/);
+                  if (match) {
+                    const [, parsedHost, parsedPort, parsedDb] = match;
+                    setForm({
+                      ...form,
+                      host: parsedHost,
+                      ...(parsedPort ? { port: parseInt(parsedPort, 10) } : {}),
+                      ...(parsedDb ? { database: parsedDb } : {}),
+                    });
+                  }
+                }}
                 placeholder="localhost"
               />
               <span className="input-hint">Port</span>
               <input
                 className="input-short"
                 type="number"
-                value={form.port}
-                onChange={(e) => setForm({ ...form, port: +e.target.value })}
+                value={form.port || ""}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setForm({ ...form, port: isNaN(val) ? 0 : val });
+                }}
                 placeholder="Port"
               />
             </div>

@@ -4,20 +4,53 @@ Prevents SQL injection, command injection, and unsafe file uploads.
 """
 
 import re
-from typing import List
 
 # Max CSV file size: 50 MB
 MAX_CSV_SIZE_BYTES = 50 * 1024 * 1024
 
 # Allowed DB types (whitelist)
 ALLOWED_DB_TYPES = {
-    "postgres", "mysql", "mariadb", "mssql", "oracle", "db2", "sybase",
-    "sqlite", "firebird", "azuresql", "snowflake", "redshift", "bigquery",
-    "athena", "databricks", "spanner", "clickhouse", "vertica", "teradata",
-    "exasol", "saphana", "greenplum", "monetdb", "materialize", "starrocks",
-    "cratedb", "cloudberry", "databend", "duckdb", "hive", "presto", "trino",
-    "spark", "drill", "timescaledb", "cockroachdb", "tidb", "yugabyte",
-    "oceanbase", "elasticsearch", "opensearch",
+    "postgres",
+    "mysql",
+    "mariadb",
+    "mssql",
+    "oracle",
+    "db2",
+    "sybase",
+    "sqlite",
+    "firebird",
+    "azuresql",
+    "snowflake",
+    "redshift",
+    "bigquery",
+    "athena",
+    "databricks",
+    "spanner",
+    "clickhouse",
+    "vertica",
+    "teradata",
+    "exasol",
+    "saphana",
+    "greenplum",
+    "monetdb",
+    "materialize",
+    "starrocks",
+    "cratedb",
+    "cloudberry",
+    "databend",
+    "duckdb",
+    "hive",
+    "presto",
+    "trino",
+    "spark",
+    "drill",
+    "timescaledb",
+    "cockroachdb",
+    "tidb",
+    "yugabyte",
+    "oceanbase",
+    "elasticsearch",
+    "opensearch",
 }
 
 # Allowed operations
@@ -47,7 +80,7 @@ def validate_identifier(name: str, label: str = "identifier") -> str:
     return name
 
 
-def validate_identifiers(names: List[str], label: str = "column") -> List[str]:
+def validate_identifiers(names: list[str], label: str = "column") -> list[str]:
     """Validate a list of SQL identifiers."""
     return [validate_identifier(n, label) for n in names]
 
@@ -93,7 +126,7 @@ def validate_port(port: int) -> int:
 
 
 def validate_host(host: str) -> str:
-    """Basic host validation — no spaces, no injection chars."""
+    """Basic host validation — no spaces, no injection chars, no embedded port/path."""
     host = host.strip()
     if not host:
         raise ValueError("Host cannot be empty")
@@ -101,4 +134,8 @@ def validate_host(host: str) -> str:
         raise ValueError("Host too long")
     if any(c in host for c in [";", "'", '"', "`", "\\", " ", "\n", "\r"]):
         raise ValueError(f"Invalid characters in host: '{host}'")
+    if "/" in host:
+        raise ValueError("Host must not contain a path — enter the database name in the Database field")
+    if ":" in host:
+        raise ValueError("Host must not contain a port — enter the port number in the Port field")
     return host

@@ -38,6 +38,24 @@ interface TestResult {
   elapsed?: number;
 }
 
+/** Extract a human-readable message from a FastAPI error response. */
+function extractApiError(e: any): string {
+  const detail = e?.response?.data?.detail;
+  if (!detail) return "An unexpected error occurred";
+  if (typeof detail === "string") return detail;
+  // FastAPI validation errors come as an array of {msg, loc} objects
+  if (Array.isArray(detail)) {
+    return detail
+      .map((d: any) => {
+        const field = d.loc?.slice(1).join(".") ?? "";
+        const msg = (d.msg ?? "").replace(/^Value error,\s*/i, "");
+        return field ? `${field}: ${msg}` : msg;
+      })
+      .join("\n");
+  }
+  return String(detail);
+}
+
 export default function ConnectionModal({ onClose, onSaved, onToast, editId, initialData }: Props) {
   const [form, setForm] = useState<ConnectionForm>({ ...EMPTY_CONNECTION_FORM, ...initialData });
   const [tab, setTab] = useState("main");
@@ -74,7 +92,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
       onClose();
       onToast({ ok: true, msg: isEditing ? "Connection updated" : "Connection saved" });
     } catch (e: any) {
-      alert(e.response?.data?.detail || "Failed");
+      alert(extractApiError(e));
     }
     setSaving(false);
   };
@@ -106,7 +124,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
       const elapsed = Date.now() - start;
       setTestResult({
         ok: false,
-        message: e.response?.data?.detail || "Connection failed",
+        message: extractApiError(e),
         elapsed,
       });
     }
