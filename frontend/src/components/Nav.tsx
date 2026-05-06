@@ -52,7 +52,7 @@ export default function Nav({ user }: Props) {
             Home
           </Link>
           <Link to="/connections" className={`nav-tab ${loc.pathname === "/connections" ? "active" : ""}`}>
-            Database
+            Database Connections
           </Link>
           <Link to="/ingest" className={`nav-tab ${loc.pathname === "/ingest" ? "active" : ""}`}>
             Data Transfer
