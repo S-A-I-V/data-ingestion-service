@@ -1,4 +1,5 @@
 import type { ConnectionForm } from "../../types";
+import { FormRow, Input } from "../ui";
 
 interface Props {
   form: ConnectionForm;
@@ -9,52 +10,48 @@ export default function SshTab({ form, setForm }: Props) {
   return (
     <>
       <div className="form-section">SSH Tunnel</div>
-      <div className="form-row">
-        <label>Enable:</label>
+      <FormRow label="Enable:">
         <input
           type="checkbox"
           checked={form.ssh_enabled}
           onChange={(e) => setForm({ ...form, ssh_enabled: e.target.checked })}
           title="Enable SSH"
         />
-      </div>
+      </FormRow>
       {form.ssh_enabled && (
         <>
-          <div className="form-row">
-            <label>SSH Host:</label>
+          <FormRow label="SSH Host:">
             <div className="input-group">
-              <input
+              <Input
                 value={form.ssh_host}
                 onChange={(e) => setForm({ ...form, ssh_host: e.target.value })}
                 placeholder="bastion.example.com"
               />
               <span className="input-hint">Port</span>
-              <input
-                className="input-short"
+              <Input
+                short
                 type="number"
                 value={form.ssh_port}
                 onChange={(e) => setForm({ ...form, ssh_port: +e.target.value })}
                 placeholder="Port"
               />
             </div>
-          </div>
-          <div className="form-row">
-            <label>SSH User:</label>
-            <input
+          </FormRow>
+          <FormRow label="SSH User:">
+            <Input
               value={form.ssh_username}
               onChange={(e) => setForm({ ...form, ssh_username: e.target.value })}
               placeholder="ssh_user"
             />
-          </div>
-          <div className="form-row">
-            <label>SSH Pass:</label>
-            <input
+          </FormRow>
+          <FormRow label="SSH Pass:">
+            <Input
               type="password"
               value={form.ssh_password}
               onChange={(e) => setForm({ ...form, ssh_password: e.target.value })}
               placeholder="••••••••"
             />
-          </div>
+          </FormRow>
         </>
       )}
     </>

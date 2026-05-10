@@ -1,4 +1,5 @@
 import type { ConnectionForm } from "../../types";
+import { FormRow, Input } from "../ui";
 
 interface Props {
   form: ConnectionForm;
@@ -9,16 +10,15 @@ export default function AdvancedTab({ form, setForm }: Props) {
   return (
     <>
       <div className="form-section">Options</div>
-      <div className="form-row">
-        <label>Timeout (s):</label>
-        <input
-          className="input-short"
+      <FormRow label="Timeout (s):">
+        <Input
+          short
           type="number"
           value={form.connection_timeout}
           onChange={(e) => setForm({ ...form, connection_timeout: +e.target.value })}
           placeholder="30"
         />
-      </div>
+      </FormRow>
     </>
   );
 }

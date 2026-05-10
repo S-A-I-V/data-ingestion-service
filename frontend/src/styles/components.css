@@ -239,3 +239,39 @@
   padding: 16px 24px;
   border-top: 1px solid var(--border);
 }
+
+/* ===== SPINNER SIZE VARIANTS ===== */
+.spinner-sm {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+.spinner-md {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+.spinner-lg {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+
+/* Block (centered) spinner layout */
+.spinner-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+}
+.spinner-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ===== EMPTY STATE ACTION ===== */
+.empty-action {
+  margin-top: 16px;
+}

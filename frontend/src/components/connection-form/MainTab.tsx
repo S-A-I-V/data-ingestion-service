@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
 import type { ConnectionForm } from "../../types";
+import { FormRow, Input } from "../ui";
 
 interface Props {
   form: ConnectionForm;
@@ -12,8 +12,7 @@ export default function MainTab({ form, setForm, connectBy, setConnectBy }: Prop
   return (
     <>
       <div className="form-section">Connection</div>
-      <div className="form-row">
-        <label>Connect by:</label>
+      <FormRow label="Connect by:">
         <div className="input-group">
           <label className="radio-label">
             <input type="radio" name="cby" checked={connectBy === "host"} onChange={() => setConnectBy("host")} /> Host
@@ -22,35 +21,31 @@ export default function MainTab({ form, setForm, connectBy, setConnectBy }: Prop
             <input type="radio" name="cby" checked={connectBy === "url"} onChange={() => setConnectBy("url")} /> URL
           </label>
         </div>
-      </div>
+      </FormRow>
       {connectBy === "url" ? (
-        <div className="form-row">
-          <label>URL:</label>
-          <input
+        <FormRow label="URL:">
+          <Input
             value={form.jdbc_url}
             onChange={(e) => setForm({ ...form, jdbc_url: e.target.value })}
             placeholder={`jdbc:${form.db_type}://host:${form.port}/db`}
           />
-        </div>
+        </FormRow>
       ) : (
         <>
-          <div className="form-row">
-            <label>Name:</label>
-            <input
+          <FormRow label="Name:">
+            <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="My Database"
             />
-          </div>
-          <div className="form-row">
-            <label>Host:</label>
+          </FormRow>
+          <FormRow label="Host:">
             <div className="input-group">
-              <input
+              <Input
                 value={form.host}
                 onChange={(e) => setForm({ ...form, host: e.target.value })}
                 onBlur={(e) => {
-                  // Auto-parse if user pastes a full host string like "host:5432/dbname"
-                  const raw = e.target.value.trim().replace(/[/:]+$/, ""); // strip trailing : or /
+                  const raw = e.target.value.trim().replace(/[/:]+$/, "");
                   const match = raw.match(/^([^:/]+)(?::(\d+))?(?:\/(.+))?$/);
                   if (match) {
                     const [, parsedHost, parsedPort, parsedDb] = match;
@@ -65,8 +60,8 @@ export default function MainTab({ form, setForm, connectBy, setConnectBy }: Prop
                 placeholder="localhost"
               />
               <span className="input-hint">Port</span>
-              <input
-                className="input-short"
+              <Input
+                short
                 type="number"
                 value={form.port || ""}
                 onChange={(e) => {
@@ -76,35 +71,32 @@ export default function MainTab({ form, setForm, connectBy, setConnectBy }: Prop
                 placeholder="Port"
               />
             </div>
-          </div>
-          <div className="form-row">
-            <label>Database:</label>
-            <input
+          </FormRow>
+          <FormRow label="Database:">
+            <Input
               value={form.database}
               onChange={(e) => setForm({ ...form, database: e.target.value })}
               placeholder="my_database"
             />
-          </div>
+          </FormRow>
         </>
       )}
       <div className="form-section">Authentication</div>
-      <div className="form-row">
-        <label>Username:</label>
-        <input
+      <FormRow label="Username:">
+        <Input
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
           placeholder="db_user"
         />
-      </div>
-      <div className="form-row">
-        <label>Password:</label>
-        <input
+      </FormRow>
+      <FormRow label="Password:">
+        <Input
           type="password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           placeholder="••••••••"
         />
-      </div>
+      </FormRow>
     </>
   );
 }

@@ -15,6 +15,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { Button, Spinner } from "./ui";
 import type { ConnectionForm, DbType } from "../types";
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
@@ -180,30 +181,14 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
         </div>
       </div>
       <div className="modal-footer">
-        <motion.button
-          type="button"
-          className="btn"
-          onClick={testConnection}
-          disabled={saving || testing}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          {testing ? "Testing..." : "Test Connection"}
-        </motion.button>
+        <Button onClick={testConnection} loading={testing} loadingText="Testing..." disabled={saving}>
+          Test Connection
+        </Button>
         <div className="modal-footer-actions">
-          <button type="button" className="btn" onClick={onClose}>
-            Cancel
-          </button>
-          <motion.button
-            type="button"
-            className="btn btn-primary"
-            onClick={save}
-            disabled={saving || testing}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            {saving ? "Saving..." : "Save"}
-          </motion.button>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={save} loading={saving} loadingText="Saving..." disabled={testing}>
+            Save
+          </Button>
         </div>
       </div>
 
@@ -223,8 +208,7 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
               <div className="test-result-body">
                 {testing ? (
                   <div className="test-result-loading">
-                    <div className="spinner" />
-                    <span>Testing connection to {dbInfo?.label}...</span>
+                    <Spinner inline label={`Testing connection to ${dbInfo?.label}...`} />
                   </div>
                 ) : testResult ? (
                   <>
@@ -262,9 +246,9 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
               </div>
               {!testing && (
                 <div className="test-result-footer">
-                  <button type="button" className="btn btn-primary" onClick={() => setTestResult(null)}>
+                  <Button variant="primary" onClick={() => setTestResult(null)}>
                     OK
-                  </button>
+                  </Button>
                 </div>
               )}
             </motion.div>

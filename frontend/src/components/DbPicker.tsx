@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { DB_TYPES, DB_CATEGORIES } from "../constants/database";
 import DbIcon from "./DbIcon";
+import { Button } from "./ui";
 import CloseIcon from "@mui/icons-material/Close";
 import type { DbCategory, DbType } from "../types";
 
@@ -33,11 +34,26 @@ export default function DbPicker({ onSelect, onCancel }: Props) {
           <h3 className="db-picker-title">Select your database</h3>
           <p className="db-picker-subtitle">Find your database driver in the list below.</p>
         </div>
-        <button type="button" className="db-picker-close" title="Close" onClick={onCancel}><CloseIcon sx={{ fontSize: 18 }} /></button>
+        <button type="button" className="db-picker-close" title="Close" onClick={onCancel}>
+          <CloseIcon sx={{ fontSize: 18 }} />
+        </button>
       </div>
 
       <div className="db-picker-search">
-        <svg className="db-picker-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg
+          className="db-picker-search-icon"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
         <input
           type="text"
           placeholder="Type part of database/driver name to filter"
@@ -84,7 +100,7 @@ export default function DbPicker({ onSelect, onCancel }: Props) {
       </div>
 
       <div className="db-picker-footer">
-        <button type="button" className="btn" onClick={onCancel}>Cancel</button>
+        <Button onClick={onCancel}>Cancel</Button>
       </div>
     </div>
   );

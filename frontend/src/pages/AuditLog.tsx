@@ -13,6 +13,7 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import { Button, Badge, EmptyState } from "../components/ui";
 import type { AuditLog as Log } from "../types";
 
 const COLUMNS = [
@@ -123,15 +124,9 @@ export default function AuditLog() {
           <div className="toolbar">
             <span className="toolbar-title">Audit Log</span>
             <div className="toolbar-spacer" />
-            <motion.button
-              type="button"
-              className="btn btn-sm"
-              onClick={refresh}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <Button size="sm" onClick={refresh}>
               <RefreshIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Refresh
-            </motion.button>
+            </Button>
           </div>
         </FadeIn>
 
@@ -139,19 +134,17 @@ export default function AuditLog() {
           <div className="panel">
             <div className="panel-header">
               <HistoryIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execution History
-              <span className="badge badge-info mapper-badge">
+              <Badge variant="info" className="mapper-badge">
                 {totalFiltered}/{logs.length} entries
-              </span>
+              </Badge>
             </div>
 
             {logs.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">
-                  <HistoryIcon sx={{ fontSize: 40 }} />
-                </div>
-                <div className="empty-title">No operations yet</div>
-                <div className="empty-desc">Run a data transfer to see it here.</div>
-              </div>
+              <EmptyState
+                icon={<HistoryIcon sx={{ fontSize: 40 }} />}
+                title="No operations yet"
+                description="Run a data transfer to see it here."
+              />
             ) : (
               <>
                 {/* Search & Filter */}
@@ -265,14 +258,12 @@ export default function AuditLog() {
                             <td>{l.user_email}</td>
                             <td>{l.connection_name}</td>
                             <td>
-                              <span className="badge badge-info">{l.operation}</span>
+                              <Badge variant="info">{l.operation}</Badge>
                             </td>
                             <td>{l.table_name}</td>
                             <td>{l.row_count}</td>
                             <td>
-                              <span className={`badge ${l.status === "success" ? "badge-success" : "badge-failed"}`}>
-                                {l.status}
-                              </span>
+                              <Badge variant={l.status === "success" ? "success" : "danger"}>{l.status}</Badge>
                             </td>
                             <td className="audit-details-cell">
                               <button

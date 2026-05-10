@@ -9,6 +9,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
+import { Button, Badge, Panel, PanelHeader, PanelBody, FormRow, Select } from "../components/ui";
 import type { Connection, ColInfo } from "../types";
 
 export default function Ingest() {
@@ -183,16 +184,9 @@ export default function Ingest() {
           <div className="toolbar">
             <span className="toolbar-title">Data Transfer</span>
             {hasAnyState && (
-              <motion.button
-                type="button"
-                className="btn btn-sm btn-clear-all"
-                onClick={clearAll}
-                disabled={isLocked}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-              >
+              <Button size="sm" onClick={clearAll} disabled={isLocked}>
                 <ClearAllIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> Clear All
-              </motion.button>
+              </Button>
             )}
           </div>
         </FadeIn>
@@ -200,36 +194,28 @@ export default function Ingest() {
         {/* Step 1: Select Target */}
         <FadeIn delay={0.1}>
           <fieldset disabled={isLocked} className="panel-fieldset">
-            <div className="panel">
-              <div className="panel-header">
+            <Panel>
+              <PanelHeader>
                 <span className="step-num">1</span> Select Target
-              </div>
-              <div className="panel-body">
-                <div className="form-row">
-                  <label>Connection:</label>
-                  <select
-                    title="Connection"
-                    value={connId || ""}
-                    onChange={(e) => {
-                      setConnId(+e.target.value || null);
-                    }}
-                  >
+              </PanelHeader>
+              <PanelBody>
+                <FormRow label="Connection:">
+                  <Select title="Connection" value={connId || ""} onChange={(e) => setConnId(+e.target.value || null)}>
                     <option value="">Choose a connection...</option>
                     {conns.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.db_type})
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div className="form-row">
-                  <label>Table:</label>
-                  <select
+                  </Select>
+                </FormRow>
+                <FormRow label="Table:">
+                  <Select
                     title="Table"
                     value={table}
                     onChange={(e) => setTable(e.target.value)}
                     disabled={!connId || tablesLoading}
-                    className={tablesLoading ? "select-loading" : ""}
+                    loading={tablesLoading}
                   >
                     <option value="">{tablesLoading ? "Loading tables..." : "Choose a table..."}</option>
                     {tables.map((t) => (
@@ -237,20 +223,19 @@ export default function Ingest() {
                         {t}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {tablesLoading && <span className="field-spinner" />}
-                </div>
-                <div className="form-row">
-                  <label>Operation:</label>
-                  <select title="Operation" value={operation} onChange={(e) => setOperation(e.target.value)}>
+                </FormRow>
+                <FormRow label="Operation:">
+                  <Select title="Operation" value={operation} onChange={(e) => setOperation(e.target.value)}>
                     <option value="INSERT">INSERT</option>
                     <option value="INSERT_SKIP">INSERT (Skip Duplicates)</option>
                     <option value="UPDATE">UPDATE</option>
                     <option value="UPSERT">UPSERT</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+                  </Select>
+                </FormRow>
+              </PanelBody>
+            </Panel>
           </fieldset>
         </FadeIn>
 
@@ -258,11 +243,11 @@ export default function Ingest() {
         {table && (
           <ScaleIn>
             <fieldset disabled={isLocked} className="panel-fieldset">
-              <div className="panel">
-                <div className="panel-header">
+              <Panel>
+                <PanelHeader>
                   <span className="step-num">2</span> Upload CSV
-                </div>
-                <div className="panel-body">
+                </PanelHeader>
+                <PanelBody>
                   <motion.div
                     className="file-drop"
                     onClick={() => !isLocked && fileRef.current?.click()}
@@ -291,8 +276,8 @@ export default function Ingest() {
                       if (e.target.files?.[0]) handleFile(e.target.files[0]);
                     }}
                   />
-                </div>
-              </div>
+                </PanelBody>
+              </Panel>
             </fieldset>
           </ScaleIn>
         )}
@@ -332,14 +317,14 @@ export default function Ingest() {
         {csvHeaders.length > 0 && dbCols.length > 0 && (
           <FadeIn>
             <fieldset disabled={isLocked} className="panel-fieldset">
-              <div className="panel">
-                <div className="panel-header">
+              <Panel>
+                <PanelHeader>
                   <span className="step-num">3</span> Column Mapping
-                  <span className="badge badge-info mapper-badge">
+                  <Badge variant="info" className="mapper-badge">
                     {mappedCount}/{csvHeaders.length} mapped
-                  </span>
-                </div>
-                <div className="panel-body">
+                  </Badge>
+                </PanelHeader>
+                <PanelBody>
                   <div className="mapper-header">
                     <span className="mapper-col-label">CSV Column</span>
                     <span className="mapper-arrow-spacer" />
@@ -370,8 +355,8 @@ export default function Ingest() {
                       </select>
                     </motion.div>
                   ))}
-                </div>
-              </div>
+                </PanelBody>
+              </Panel>
             </fieldset>
           </FadeIn>
         )}
@@ -384,16 +369,15 @@ export default function Ingest() {
                 <div className="ai-panel-header">
                   <AutoFixHighIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> AI Query Analysis
                 </div>
-                <motion.button
-                  type="button"
-                  className="btn btn-sm"
+                <Button
+                  size="sm"
                   onClick={analyze}
                   disabled={aiLoading || isLocked}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
+                  loading={aiLoading}
+                  loadingText="Analyzing..."
                 >
-                  {aiLoading ? "Analyzing..." : "Analyze before executing"}
-                </motion.button>
+                  Analyze before executing
+                </Button>
                 {aiResult && (
                   <motion.div
                     className="ai-result"
@@ -412,24 +396,15 @@ export default function Ingest() {
         {mappedCount > 0 && (
           <FadeIn>
             <div className="exec-action-bar">
-              <motion.button
-                type="button"
-                className="btn btn-primary"
+              <Button
+                variant="primary"
                 onClick={execute}
                 disabled={isLocked}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
+                loading={loading}
+                loadingText="Executing..."
               >
-                {loading ? (
-                  <span className="exec-spinner-wrap">
-                    <span className="exec-spinner" /> Executing...
-                  </span>
-                ) : (
-                  <>
-                    <PlayArrowIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execute {operation}
-                  </>
-                )}
-              </motion.button>
+                <PlayArrowIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execute {operation}
+              </Button>
               {status && (
                 <motion.span
                   className={`badge ${status.ok ? "badge-success" : "badge-failed"}`}

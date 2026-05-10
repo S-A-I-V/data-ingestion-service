@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../api";
-import { PageTransition, FadeIn, motion, AnimatePresence } from "../components/Motion";
+import { PageTransition, FadeIn, AnimatePresence, motion } from "../components/Motion";
 import ConnectionList from "../components/ConnectionList";
 import ConnectionModal from "../components/ConnectionModal";
 import { DB_TYPES } from "../constants/database";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { Button, Toast, useToast } from "../components/ui";
 import type { Connection } from "../types";
 import type { ConnStatus } from "../components/ConnectionStatusBadge";
 
@@ -21,7 +22,7 @@ export default function Dashboard() {
   const [connStatuses, setConnStatuses] = useState<Record<number, ConnStatus>>({});
   const [showModal, setShowModal] = useState(false);
   const [editConn, setEditConn] = useState<Connection | null>(null);
-  const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [toast, setToast] = useToast();
   const [testing, setTesting] = useState<Connection | null>(null);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
@@ -33,12 +34,6 @@ export default function Dashboard() {
   useEffect(() => {
     load();
   }, []);
-  useEffect(() => {
-    if (toast) {
-      const t = setTimeout(() => setToast(null), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [toast]);
 
   const testConn = async (id: number) => {
     const conn = conns.find((c) => c.id === id);
@@ -92,18 +87,15 @@ export default function Dashboard() {
           <div className="toolbar">
             <span className="toolbar-title">Database Connections</span>
             <div className="toolbar-spacer" />
-            <motion.button
-              type="button"
-              className="btn btn-primary"
+            <Button
+              variant="primary"
               onClick={() => {
                 setEditConn(null);
                 setShowModal(true);
               }}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
             >
               + New Connection
-            </motion.button>
+            </Button>
           </div>
         </FadeIn>
 
@@ -122,21 +114,7 @@ export default function Dashboard() {
           </div>
         </FadeIn>
 
-        {toast && (
-          <motion.div
-            className={`toast ${toast.ok ? "toast-success" : "toast-error"}`}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 40 }}
-          >
-            {toast.ok ? (
-              <CheckCircleIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} />
-            ) : (
-              <CancelIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} />
-            )}{" "}
-            {toast.msg}
-          </motion.div>
-        )}
+        <Toast toast={toast} />
 
         {showModal && (
           <ConnectionModal
@@ -224,9 +202,9 @@ export default function Dashboard() {
                 </div>
                 {!testing && (
                   <div className="test-result-footer">
-                    <button type="button" className="btn btn-primary" onClick={closeTestResult}>
+                    <Button variant="primary" onClick={closeTestResult}>
                       OK
-                    </button>
+                    </Button>
                   </div>
                 )}
               </motion.div>

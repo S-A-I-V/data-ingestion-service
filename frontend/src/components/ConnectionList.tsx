@@ -2,12 +2,13 @@ import { motion } from "./Motion";
 import { DB_TYPES } from "../constants/database";
 import DbIcon from "./DbIcon";
 import ConnectionStatusBadge, { type ConnStatus } from "./ConnectionStatusBadge";
-import StorageIcon from "@mui/icons-material/Storage";
 import LockIcon from "@mui/icons-material/Lock";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import EditIcon from "@mui/icons-material/Edit";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { Button, Badge, EmptyState } from "./ui";
+import StorageIcon from "@mui/icons-material/Storage";
 import type { Connection } from "../types";
 
 interface Props {
@@ -21,13 +22,11 @@ interface Props {
 export default function ConnectionList({ connections, statuses, onTest, onDelete, onEdit }: Props) {
   if (connections.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon">
-          <StorageIcon sx={{ fontSize: 40 }} />
-        </div>
-        <div className="empty-title">No connections yet</div>
-        <div className="empty-desc">Add a database connection to get started.</div>
-      </div>
+      <EmptyState
+        icon={<StorageIcon sx={{ fontSize: 40 }} />}
+        title="No connections yet"
+        description="Add a database connection to get started."
+      />
     );
   }
 
@@ -48,47 +47,26 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
             </div>
             <div className="conn-grid-badges">
               {c.use_ssl && (
-                <span className="conn-grid-badge">
+                <Badge>
                   <LockIcon sx={{ fontSize: 12 }} /> SSL
-                </span>
+                </Badge>
               )}
               {c.ssh_enabled && (
-                <span className="conn-grid-badge">
+                <Badge>
                   <VpnKeyIcon sx={{ fontSize: 12 }} /> SSH
-                </span>
+                </Badge>
               )}
             </div>
             <div className="conn-grid-actions">
-              <motion.button
-                type="button"
-                className="btn btn-sm"
-                title="Edit"
-                onClick={() => onEdit(c)}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <EditIcon sx={{ fontSize: 14, mr: 0.3 }} /> Edit
-              </motion.button>
-              <motion.button
-                type="button"
-                className="btn btn-sm btn-success"
-                title="Test connection"
-                onClick={() => onTest(c.id)}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <PlayArrowIcon sx={{ fontSize: 14, mr: 0.3 }} /> Test
-              </motion.button>
-              <motion.button
-                type="button"
-                className="btn btn-sm btn-danger"
-                title="Delete"
-                onClick={() => onDelete(c.id)}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
-              >
+              <Button size="sm" onClick={() => onEdit(c)}>
+                <EditIcon sx={{ fontSize: 14 }} /> Edit
+              </Button>
+              <Button size="sm" variant="success" onClick={() => onTest(c.id)}>
+                <PlayArrowIcon sx={{ fontSize: 14 }} /> Test
+              </Button>
+              <Button size="sm" variant="danger" onClick={() => onDelete(c.id)}>
                 <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-              </motion.button>
+              </Button>
             </div>
           </motion.div>
         );
