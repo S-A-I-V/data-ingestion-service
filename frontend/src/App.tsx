@@ -27,12 +27,19 @@ export default function App() {
     api
       .get("/auth/me", { headers })
       .then((r) => setUser(r.data))
-      .catch(() => { setUser(null); localStorage.removeItem("token"); })
+      .catch(() => {
+        setUser(null);
+        localStorage.removeItem("token");
+      })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { checkAuth(); }, []);
-  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
+  useEffect(() => {
+    checkAuth();
+  }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   if (loading)
     return (
@@ -62,7 +69,7 @@ export default function App() {
         <PageLoader />
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            <Route path="/home" element={<Home />} />
+            <Route path="/home" element={<Home isAuthenticated={false} />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/" element={<Navigate to="/home" />} />
@@ -82,7 +89,7 @@ export default function App() {
       <PageLoader />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/home" element={<Home />} />
+          <Route path="/home" element={<Home isAuthenticated={true} />} />
           <Route path="/connections" element={<Dashboard />} />
           <Route path="/ingest" element={<Ingest />} />
           <Route path="/audit" element={<AuditLog />} />

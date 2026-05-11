@@ -653,6 +653,26 @@
   font-weight: 600;
 }
 
+.cta-banner-btn {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 12px 28px;
+  background: var(--gradient-1);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  box-shadow: 0 2px 16px rgba(15, 177, 178, 0.35);
+  transition: var(--transition);
+}
+
+.cta-banner-btn:hover {
+  box-shadow: 0 4px 24px rgba(15, 177, 178, 0.5);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 768px) {
   .cta-banner {
     padding: 60px 30px;

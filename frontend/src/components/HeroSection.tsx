@@ -7,7 +7,11 @@ const fadeUp = (delay: number) => ({
   transition: { duration: 0.6, delay, ease: [0.4, 0, 0.2, 1] },
 });
 
-export default function HeroSection() {
+interface Props {
+  isAuthenticated: boolean;
+}
+
+export default function HeroSection({ isAuthenticated }: Props) {
   return (
     <div className="home-hero">
       <motion.div className="home-subtitle" {...fadeUp(0.1)}>
@@ -26,7 +30,7 @@ export default function HeroSection() {
         </div>
       </motion.div>
       <motion.div className="home-ctas" {...fadeUp(0.55)}>
-        <Link to="/ingest">
+        <Link to={isAuthenticated ? "/ingest" : "/login"}>
           <motion.button
             type="button"
             className="home-btn-primary"
@@ -36,16 +40,18 @@ export default function HeroSection() {
             Start Ingesting Data
           </motion.button>
         </Link>
-        <Link to="/connections">
-          <motion.button
-            type="button"
-            className="home-btn-secondary"
-            whileHover={{ scale: 1.05, borderColor: "rgba(255,255,255,0.4)" }}
-            whileTap={{ scale: 0.97 }}
-          >
-            Manage Connections
-          </motion.button>
-        </Link>
+        {isAuthenticated && (
+          <Link to="/connections">
+            <motion.button
+              type="button"
+              className="home-btn-secondary"
+              whileHover={{ scale: 1.05, borderColor: "rgba(255,255,255,0.4)" }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Manage Connections
+            </motion.button>
+          </Link>
+        )}
       </motion.div>
     </div>
   );

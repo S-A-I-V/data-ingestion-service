@@ -1,6 +1,11 @@
 import { FadeIn } from "./Motion";
+import { Link } from "react-router-dom";
 
-export default function CtaBanner() {
+interface Props {
+  isAuthenticated: boolean;
+}
+
+export default function CtaBanner({ isAuthenticated }: Props) {
   return (
     <div className="cta-banner">
       <FadeIn>
@@ -24,6 +29,9 @@ export default function CtaBanner() {
               <br />
               Start where data itches.
             </p>
+            <Link to={isAuthenticated ? "/ingest" : "/login"} className="cta-banner-btn">
+              Start Ingesting Data →
+            </Link>
           </div>
         </div>
       </FadeIn>

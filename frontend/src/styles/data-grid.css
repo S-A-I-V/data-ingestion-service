@@ -690,8 +690,9 @@
 .cookie-banner {
   position: fixed;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 24px;
+  left: auto;
+  transform: none;
   z-index: 300;
   display: flex;
   align-items: center;
@@ -703,8 +704,8 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  max-width: 560px;
-  width: calc(100% - 40px);
+  max-width: 420px;
+  width: calc(100% - 48px);
 }
 
 .cookie-content {
