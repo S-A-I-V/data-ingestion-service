@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { animate } from "framer-motion";
 import PersonIcon from "@mui/icons-material/Person";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -7,6 +8,13 @@ import LogoutIcon from "@mui/icons-material/Logout";
 interface Props {
   user: { name: string; picture: string; email: string };
 }
+
+const NAV_TABS = [
+  { label: "Home", to: "/home" },
+  { label: "Database Connections", to: "/connections" },
+  { label: "Data Transfer", to: "/ingest" },
+  { label: "Audit Log", to: "/audit" },
+];
 
 function getDisplayName(name: string, email: string): string {
   if (name && name.trim().length > 1) return name.trim().split(/\s+/)[0];
@@ -17,6 +25,12 @@ export default function Nav({ user }: Props) {
   const loc = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [hoverX, setHoverX] = useState<number | null>(null);
+  const spotlightX = useRef(0);
+  const ambienceX = useRef(0);
+
+  const activeIndex = NAV_TABS.findIndex((t) => t.to === loc.pathname);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -29,7 +43,7 @@ export default function Nav({ user }: Props) {
     if (loc.pathname === "/home") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Close menu on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
@@ -37,6 +51,67 @@ export default function Nav({ user }: Props) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Spotlight follows mouse
+  useEffect(() => {
+    const nav = tabsRef.current;
+    if (!nav) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = nav.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      setHoverX(x);
+      spotlightX.current = x;
+      nav.style.setProperty("--spotlight-x", `${x}px`);
+    };
+
+    const handleMouseLeave = () => {
+      setHoverX(null);
+      const activeEl = nav.querySelector(`[data-index="${activeIndex}"]`);
+      if (activeEl) {
+        const navRect = nav.getBoundingClientRect();
+        const itemRect = (activeEl as HTMLElement).getBoundingClientRect();
+        const targetX = itemRect.left - navRect.left + itemRect.width / 2;
+        animate(spotlightX.current, targetX, {
+          type: "spring",
+          stiffness: 200,
+          damping: 20,
+          onUpdate: (v) => {
+            spotlightX.current = v;
+            nav.style.setProperty("--spotlight-x", `${v}px`);
+          },
+        });
+      }
+    };
+
+    nav.addEventListener("mousemove", handleMouseMove);
+    nav.addEventListener("mouseleave", handleMouseLeave);
+    return () => {
+      nav.removeEventListener("mousemove", handleMouseMove);
+      nav.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, [activeIndex]);
+
+  // Ambience springs to active tab
+  useEffect(() => {
+    const nav = tabsRef.current;
+    if (!nav) return;
+    const activeEl = nav.querySelector(`[data-index="${activeIndex}"]`);
+    if (activeEl) {
+      const navRect = nav.getBoundingClientRect();
+      const itemRect = (activeEl as HTMLElement).getBoundingClientRect();
+      const targetX = itemRect.left - navRect.left + itemRect.width / 2;
+      animate(ambienceX.current, targetX, {
+        type: "spring",
+        stiffness: 200,
+        damping: 20,
+        onUpdate: (v) => {
+          ambienceX.current = v;
+          nav.style.setProperty("--ambience-x", `${v}px`);
+        },
+      });
+    }
+  }, [activeIndex]);
 
   return (
     <nav className="nav">
@@ -46,20 +121,25 @@ export default function Nav({ user }: Props) {
           NFC Data Ingestion
         </span>
       </Link>
+
       <div className="nav-right">
-        <div className="nav-tabs">
-          <Link to="/home" className={`nav-tab ${loc.pathname === "/home" ? "active" : ""}`} onClick={goHome}>
-            Home
-          </Link>
-          <Link to="/connections" className={`nav-tab ${loc.pathname === "/connections" ? "active" : ""}`}>
-            Database Connections
-          </Link>
-          <Link to="/ingest" className={`nav-tab ${loc.pathname === "/ingest" ? "active" : ""}`}>
-            Data Transfer
-          </Link>
-          <Link to="/audit" className={`nav-tab ${loc.pathname === "/audit" ? "active" : ""}`}>
-            Audit Log
-          </Link>
+        {/* Spotlight tab strip */}
+        <div className="nav-spotlight-wrap" ref={tabsRef}>
+          {NAV_TABS.map((tab, idx) => (
+            <Link
+              key={tab.to}
+              to={tab.to}
+              data-index={idx}
+              className={`nav-tab ${loc.pathname === tab.to ? "active" : ""}`}
+              onClick={tab.to === "/home" ? goHome : undefined}
+            >
+              {tab.label}
+            </Link>
+          ))}
+          {/* Spotlight layer — follows mouse */}
+          <div className={`nav-spotlight-glow${hoverX !== null ? " nav-spotlight-glow--visible" : ""}`} />
+          {/* Ambience layer — stays on active */}
+          <div className="nav-ambience-line" />
         </div>
 
         {/* User Menu */}

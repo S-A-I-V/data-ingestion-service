@@ -9,7 +9,8 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
-import { Button, Badge, Panel, PanelHeader, PanelBody, FormRow, Select } from "../components/ui";
+import { Button, Badge, Panel, PanelHeader, PanelBody, FormRow } from "../components/ui";
+import { Select } from "../components/ui/FormRow";
 import type { Connection, ColInfo } from "../types";
 
 export default function Ingest() {
@@ -183,6 +184,7 @@ export default function Ingest() {
         <FadeIn>
           <div className="toolbar">
             <span className="toolbar-title">Data Transfer</span>
+            <div className="toolbar-spacer" />
             {hasAnyState && (
               <Button size="sm" onClick={clearAll} disabled={isLocked}>
                 <ClearAllIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> Clear All

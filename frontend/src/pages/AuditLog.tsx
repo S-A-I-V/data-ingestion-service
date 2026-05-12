@@ -1,9 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../api";
 import { PageTransition, FadeIn, motion, AnimatePresence } from "../components/Motion";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import MenuItem from "@mui/material/MenuItem";
 import HistoryIcon from "@mui/icons-material/History";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -14,6 +11,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import { Button, Badge, EmptyState } from "../components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import type { AuditLog as Log } from "../types";
 
 const COLUMNS = [
@@ -26,24 +24,6 @@ const COLUMNS = [
   { key: "status", label: "Status" },
   { key: "details", label: "Details" },
 ];
-
-const muiFieldSx = {
-  "& .MuiOutlinedInput-root": {
-    color: "var(--text-primary)",
-    fontSize: "0.8rem",
-    fontFamily: "inherit",
-    "& fieldset": { borderColor: "var(--border)" },
-    "&:hover fieldset": { borderColor: "var(--border-hover)" },
-    "&.Mui-focused fieldset": { borderColor: "var(--accent)" },
-  },
-  "& .MuiInputLabel-root": {
-    color: "var(--text-secondary)",
-    fontSize: "0.8rem",
-    fontFamily: "inherit",
-    "&.Mui-focused": { color: "var(--accent)" },
-  },
-  "& .MuiSvgIcon-root": { color: "var(--text-secondary)" },
-};
 
 function getDetail(l: Log): string {
   return l.error_message || l.query_preview || "";
@@ -149,64 +129,53 @@ export default function AuditLog() {
               <>
                 {/* Search & Filter */}
                 <div className="csv-toolbar">
-                  <TextField
-                    label="Search all columns"
-                    variant="outlined"
-                    size="small"
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setPage(0);
-                    }}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon sx={{ fontSize: 16, color: "var(--text-secondary)" }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{ flex: "0 1 300px", minWidth: 160, ...muiFieldSx }}
-                  />
-                  <div className="csv-filter-wrap">
-                    <TextField
-                      select
-                      label="Filter by column"
-                      variant="outlined"
-                      size="small"
-                      value={filterCol}
+                  <div className="csv-search-wrap">
+                    <SearchIcon sx={{ fontSize: 16, color: "var(--text-secondary)" }} />
+                    <input
+                      className="csv-search-input"
+                      placeholder="Search all columns"
+                      value={search}
                       onChange={(e) => {
-                        setFilterCol(e.target.value);
+                        setSearch(e.target.value);
+                        setPage(0);
+                      }}
+                    />
+                  </div>
+                  <div className="csv-filter-wrap">
+                    <Select
+                      value={filterCol || "__none__"}
+                      onValueChange={(val) => {
+                        setFilterCol(val === "__none__" ? "" : val);
                         setFilterVal("");
                         setPage(0);
                       }}
-                      sx={{ minWidth: 220, ...muiFieldSx }}
                     >
-                      <MenuItem value="">
-                        <em>None</em>
-                      </MenuItem>
-                      {COLUMNS.map((c) => (
-                        <MenuItem key={c.key} value={c.key}>
-                          {c.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                      <SelectTrigger className="csv-select-trigger">
+                        <SelectValue placeholder="Filter by column" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">None</SelectItem>
+                        {COLUMNS.map((c) => (
+                          <SelectItem key={c.key} value={c.key}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {filterCol && (
-                      <TextField
-                        label={`Filter ${COLUMNS.find((c) => c.key === filterCol)?.label}`}
-                        variant="outlined"
-                        size="small"
+                      <input
+                        className="csv-filter-input"
+                        placeholder={`Filter ${COLUMNS.find((c) => c.key === filterCol)?.label}`}
                         value={filterVal}
                         onChange={(e) => {
                           setFilterVal(e.target.value);
                           setPage(0);
                         }}
-                        sx={{ width: 280, ...muiFieldSx }}
                       />
                     )}
                     {(search || filterCol) && (
-                      <button
-                        type="button"
-                        className="btn btn-sm csv-clear-filter"
+                      <Button
+                        size="sm"
                         onClick={() => {
                           setSearch("");
                           setFilterCol("");
@@ -214,7 +183,7 @@ export default function AuditLog() {
                         }}
                       >
                         Clear
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -362,9 +331,8 @@ export default function AuditLog() {
               <div className="audit-modal-header">
                 <span>Details</span>
                 <div className="audit-modal-actions">
-                  <button
-                    type="button"
-                    className="btn btn-sm"
+                  <Button
+                    size="sm"
                     title="Copy to clipboard"
                     onClick={() => {
                       navigator.clipboard.writeText(detailText);
@@ -374,14 +342,14 @@ export default function AuditLog() {
                   >
                     {copied ? (
                       <>
-                        <CheckIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Copied
+                        <CheckIcon sx={{ fontSize: 14 }} /> Copied
                       </>
                     ) : (
                       <>
-                        <ContentCopyIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Copy
+                        <ContentCopyIcon sx={{ fontSize: 14 }} /> Copy
                       </>
                     )}
-                  </button>
+                  </Button>
                   <button type="button" className="close-btn" title="Close" onClick={() => setDetailText(null)}>
                     <CloseIcon sx={{ fontSize: 18 }} />
                   </button>

@@ -29,9 +29,6 @@ export default function CtaBanner({ isAuthenticated }: Props) {
               <br />
               Start where data itches.
             </p>
-            <Link to={isAuthenticated ? "/ingest" : "/login"} className="cta-banner-btn">
-              Start Ingesting Data →
-            </Link>
           </div>
         </div>
       </FadeIn>

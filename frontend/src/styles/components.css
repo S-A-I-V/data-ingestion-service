@@ -1,6 +1,8 @@
 /* ===== BUTTONS ===== */
+/* Note: padding/sizing is owned by the shadcn Button component (ui/button.tsx).
+   These rules only apply to raw <button className="btn"> elements that haven't
+   been migrated to the Button component yet (e.g. pagination, csv controls). */
 .btn {
-  padding: 8px 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   cursor: pointer;
@@ -49,7 +51,6 @@
   background: rgba(34, 197, 94, 0.15);
 }
 .btn-sm {
-  padding: 6px 12px;
   font-size: 12px;
 }
 .btn-icon {
