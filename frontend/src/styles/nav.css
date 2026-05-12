@@ -174,3 +174,65 @@
   background: var(--danger-bg);
   color: var(--danger);
 }
+
+/* ===== SPOTLIGHT NAV TABS ===== */
+.nav-spotlight-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  padding: 0 4px;
+  /* CSS vars updated by JS */
+  --spotlight-x: 50%;
+  --ambience-x: 50%;
+}
+
+/* Spotlight glow — follows mouse */
+.nav-spotlight-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: radial-gradient(100px circle at var(--spotlight-x) 100%, rgba(15, 177, 178, 0.18) 0%, transparent 60%);
+}
+
+.nav-spotlight-glow--visible {
+  opacity: 1;
+}
+
+/* Ambience line — springs to active tab */
+.nav-ambience-line {
+  pointer-events: none;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  z-index: 2;
+  background: radial-gradient(60px circle at var(--ambience-x) 0%, var(--accent) 0%, transparent 100%);
+}
+
+/* Tabs sit above the glow layers */
+.nav-spotlight-wrap .nav-tab {
+  position: relative;
+  z-index: 10;
+  border-radius: 999px;
+  padding: 5px 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.nav-spotlight-wrap .nav-tab.active {
+  color: #fff;
+}
+
+.nav-spotlight-wrap .nav-tab:hover {
+  color: rgba(255, 255, 255, 0.9);
+}

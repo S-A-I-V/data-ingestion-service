@@ -1,5 +1,5 @@
 import type { ConnectionForm } from "../../types";
-import { FormRow, Input } from "../ui";
+import { FormRow, Input } from "../ui/FormRow";
 
 interface Props {
   form: ConnectionForm;
