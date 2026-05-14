@@ -22,6 +22,19 @@
   padding: revert-layer;
 }
 
+/* ── SelectTrigger (Radix combobox button) must not inherit .btn hover styles ── */
+button[role="combobox"] {
+  background: transparent;
+  border: 1px solid var(--border);
+  transform: none !important;
+}
+
+button[role="combobox"]:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-hover);
+  transform: none !important;
+}
+
 /* ── Radix UI Portal Reset ─────────────────────────────────────────────
    The * reset above strips padding/margin from Radix portal elements.
    These rules restore correct behaviour for all shadcn/Radix components

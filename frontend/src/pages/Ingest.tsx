@@ -10,7 +10,7 @@ import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
 import { Button, Badge, Panel, PanelHeader, PanelBody, FormRow } from "../components/ui";
-import { Select } from "../components/ui/FormRow";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import type { Connection, ColInfo } from "../types";
 
 export default function Ingest() {
@@ -202,38 +202,56 @@ export default function Ingest() {
               </PanelHeader>
               <PanelBody>
                 <FormRow label="Connection:">
-                  <Select title="Connection" value={connId || ""} onChange={(e) => setConnId(+e.target.value || null)}>
-                    <option value="">Choose a connection...</option>
-                    {conns.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.db_type})
-                      </option>
-                    ))}
+                  <Select
+                    value={connId ? String(connId) : "__none__"}
+                    onValueChange={(v) => setConnId(v === "__none__" ? null : +v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a connection..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Choose a connection...</SelectItem>
+                      {conns.map((c) => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name} ({c.db_type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </FormRow>
                 <FormRow label="Table:">
                   <Select
-                    title="Table"
-                    value={table}
-                    onChange={(e) => setTable(e.target.value)}
+                    value={table || "__none__"}
+                    onValueChange={(v) => setTable(v === "__none__" ? "" : v)}
                     disabled={!connId || tablesLoading}
-                    loading={tablesLoading}
                   >
-                    <option value="">{tablesLoading ? "Loading tables..." : "Choose a table..."}</option>
-                    {tables.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
+                    <SelectTrigger>
+                      <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Choose a table..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">
+                        {tablesLoading ? "Loading tables..." : "Choose a table..."}
+                      </SelectItem>
+                      {tables.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                   {tablesLoading && <span className="field-spinner" />}
                 </FormRow>
                 <FormRow label="Operation:">
-                  <Select title="Operation" value={operation} onChange={(e) => setOperation(e.target.value)}>
-                    <option value="INSERT">INSERT</option>
-                    <option value="INSERT_SKIP">INSERT (Skip Duplicates)</option>
-                    <option value="UPDATE">UPDATE</option>
-                    <option value="UPSERT">UPSERT</option>
+                  <Select value={operation} onValueChange={setOperation}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="INSERT">INSERT</SelectItem>
+                      <SelectItem value="INSERT_SKIP">INSERT (Skip Duplicates)</SelectItem>
+                      <SelectItem value="UPDATE">UPDATE</SelectItem>
+                      <SelectItem value="UPSERT">UPSERT</SelectItem>
+                    </SelectContent>
                   </Select>
                 </FormRow>
               </PanelBody>
@@ -342,19 +360,22 @@ export default function Ingest() {
                     >
                       <span className="mapper-csv-name">{h}</span>
                       <span className="mapper-arrow">→</span>
-                      <select
-                        title={`Map ${h}`}
-                        className="mapper-select"
-                        value={mapping[h] || ""}
-                        onChange={(e) => setMapping({ ...mapping, [h]: e.target.value })}
+                      <Select
+                        value={mapping[h] || "__skip__"}
+                        onValueChange={(v) => setMapping({ ...mapping, [h]: v === "__skip__" ? "" : v })}
                       >
-                        <option value="">(skip)</option>
-                        {dbCols.map((c) => (
-                          <option key={c.name} value={c.name}>
-                            {c.name} ({c.type})
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="mapper-select">
+                          <SelectValue placeholder="(skip)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__skip__">(skip)</SelectItem>
+                          {dbCols.map((c) => (
+                            <SelectItem key={c.name} value={c.name}>
+                              {c.name} ({c.type})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </motion.div>
                   ))}
                 </PanelBody>

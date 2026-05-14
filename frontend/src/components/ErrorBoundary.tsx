@@ -1,4 +1,5 @@
 import { Component, ReactNode } from "react";
+import { Button } from "./ui";
 
 interface Props {
   children: ReactNode;
@@ -29,13 +30,9 @@ export default class ErrorBoundary extends Component<Props, State> {
             <div className="error-fallback-icon">⚠</div>
             <h2>Something went wrong</h2>
             <p>{this.state.error?.message}</p>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => this.setState({ hasError: false, error: null })}
-            >
+            <Button variant="primary" onClick={() => this.setState({ hasError: false, error: null })}>
               Try again
-            </button>
+            </Button>
           </div>
         )
       );
