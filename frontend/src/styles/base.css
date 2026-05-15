@@ -117,7 +117,8 @@ button[role="combobox"]:hover {
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 20px rgba(15, 177, 178, 0.15);
-  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
+    opacity 0.15s ease, transform 0.15s ease;
   --font: "Fira Code", "JetBrains Mono", "Courier New", monospace;
 }
 
