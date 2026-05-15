@@ -41,22 +41,22 @@ export const DB_TYPES: DbType[] = [
   { value: "mssql", label: "SQL Server", defaultPort: 1433, icon: `${I}/mssql.png`, category: ["Popular", "SQL"] },
   { value: "db2", label: "DB2", defaultPort: 50000, icon: `${I}/db2.png`, category: ["SQL"] },
   { value: "sybase", label: "Sybase", defaultPort: 5000, icon: `${I}/sybase.png`, category: ["SQL"] },
-  { value: "informix", label: "Informix", defaultPort: 9089, icon: FALLBACK, category: ["SQL"] },
+  { value: "informix", label: "Informix", defaultPort: 9089, icon: `${I}/informix.png`, category: ["SQL"] },
   { value: "firebird", label: "Firebird", defaultPort: 3050, icon: `${I}/firebird.png`, category: ["SQL"] },
-  { value: "derby", label: "Derby", defaultPort: 1527, icon: FALLBACK, category: ["SQL", "Embedded"] },
-  { value: "ingres", label: "Ingres", defaultPort: 21071, icon: FALLBACK, category: ["SQL"] },
+  { value: "derby", label: "Derby", defaultPort: 1527, icon: `${I}/derby.png`, category: ["SQL", "Embedded"] },
+  { value: "ingres", label: "Ingres", defaultPort: 21071, icon: `${I}/ingres.png`, category: ["SQL"] },
   { value: "altibase", label: "Altibase", defaultPort: 20300, icon: `${I}/altibase.png`, category: ["SQL"] },
   { value: "cubrid", label: "CUBRID", defaultPort: 33000, icon: `${I}/cubrid.png`, category: ["SQL"] },
   { value: "dameng", label: "Dameng", defaultPort: 5236, icon: `${I}/dameng.png`, category: ["SQL"] },
   { value: "kingbase", label: "Kingbase", defaultPort: 54321, icon: `${I}/kingbase.png`, category: ["SQL"] },
-  { value: "gbase8s", label: "GBase 8s", defaultPort: 9088, icon: FALLBACK, category: ["SQL"] },
-  { value: "nuodb", label: "NuoDB", defaultPort: 48004, icon: FALLBACK, category: ["SQL"] },
+  { value: "gbase8s", label: "GBase 8s", defaultPort: 9088, icon: `${I}/gbase8s.png`, category: ["SQL"] },
+  { value: "nuodb", label: "NuoDB", defaultPort: 48004, icon: `${I}/nuodb.png`, category: ["SQL"] },
   { value: "babelfish", label: "Babelfish", defaultPort: 1433, icon: `${I}/babelfish.png`, category: ["SQL"] },
   { value: "enterprisedb", label: "EnterpriseDB", defaultPort: 5444, icon: `${I}/edb.png`, category: ["SQL"] },
-  { value: "iris", label: "InterSystems IRIS", defaultPort: 1972, icon: FALLBACK, category: ["SQL"] },
-  { value: "virtuoso", label: "Virtuoso", defaultPort: 1111, icon: FALLBACK, category: ["SQL"] },
-  { value: "teiid", label: "Teiid", defaultPort: 31000, icon: FALLBACK, category: ["SQL"] },
-  { value: "maxdb", label: "MaxDB", defaultPort: 7210, icon: FALLBACK, category: ["SQL"] },
+  { value: "iris", label: "InterSystems IRIS", defaultPort: 1972, icon: `${I}/iris.png`, category: ["SQL"] },
+  { value: "virtuoso", label: "Virtuoso", defaultPort: 1111, icon: `${I}/virtuoso.png`, category: ["SQL"] },
+  { value: "teiid", label: "Teiid", defaultPort: 31000, icon: `${I}/teiid.png`, category: ["SQL"] },
+  { value: "maxdb", label: "MaxDB", defaultPort: 7210, icon: `${I}/maxdb.png`, category: ["SQL"] },
 
   // ── Cloud ──
   {
@@ -104,11 +104,11 @@ export const DB_TYPES: DbType[] = [
   { value: "vertica", label: "Vertica", defaultPort: 5433, icon: `${I}/vertica.png`, category: ["Analytical"] },
   { value: "teradata", label: "Teradata", defaultPort: 1025, icon: `${I}/teradata.png`, category: ["Analytical"] },
   { value: "exasol", label: "Exasol", defaultPort: 8563, icon: `${I}/exasol.png`, category: ["Analytical"] },
-  { value: "netezza", label: "Netezza", defaultPort: 5480, icon: FALLBACK, category: ["Analytical"] },
+  { value: "netezza", label: "Netezza", defaultPort: 5480, icon: `${I}/netezza.png`, category: ["Analytical"] },
   { value: "greenplum", label: "Greenplum", defaultPort: 5432, icon: `${I}/greenplum.png`, category: ["Analytical"] },
   { value: "monetdb", label: "MonetDB", defaultPort: 50000, icon: `${I}/monetdb.png`, category: ["Analytical"] },
-  { value: "druid", label: "Apache Druid", defaultPort: 8888, icon: FALLBACK, category: ["Analytical"] },
-  { value: "kylin", label: "Apache Kylin", defaultPort: 7070, icon: FALLBACK, category: ["Analytical"] },
+  { value: "druid", label: "Apache Druid", defaultPort: 8888, icon: `${I}/apache.png`, category: ["Analytical"] },
+  { value: "kylin", label: "Apache Kylin", defaultPort: 7070, icon: `${I}/apache.png`, category: ["Analytical"] },
   { value: "starrocks", label: "StarRocks", defaultPort: 9030, icon: `${I}/starrocks.svg`, category: ["Analytical"] },
   {
     value: "materialize",
@@ -117,7 +117,7 @@ export const DB_TYPES: DbType[] = [
     icon: `${I}/materialize.png`,
     category: ["Analytical"],
   },
-  { value: "dolphindb", label: "DolphinDB", defaultPort: 8848, icon: FALLBACK, category: ["Analytical"] },
+  { value: "dolphindb", label: "DolphinDB", defaultPort: 8848, icon: `${I}/dolphindb.png`, category: ["Analytical"] },
   {
     value: "databend",
     label: "Databend",
@@ -172,13 +172,31 @@ export const DB_TYPES: DbType[] = [
 
   // ── Hadoop / BigData ──
   { value: "hive", label: "Apache Hive", defaultPort: 10000, icon: `${I}/hive.png`, category: ["Hadoop / BigData"] },
-  { value: "impala", label: "Apache Impala", defaultPort: 21050, icon: FALLBACK, category: ["Hadoop / BigData"] },
+  {
+    value: "impala",
+    label: "Apache Impala",
+    defaultPort: 21050,
+    icon: `${I}/impala.png`,
+    category: ["Hadoop / BigData"],
+  },
   { value: "spark", label: "Apache Spark", defaultPort: 10000, icon: `${I}/spark.png`, category: ["Hadoop / BigData"] },
   { value: "drill", label: "Apache Drill", defaultPort: 8047, icon: `${I}/drill.png`, category: ["Hadoop / BigData"] },
-  { value: "phoenix", label: "Apache Phoenix", defaultPort: 8765, icon: FALLBACK, category: ["Hadoop / BigData"] },
-  { value: "ignite", label: "Apache Ignite", defaultPort: 10800, icon: FALLBACK, category: ["Hadoop / BigData"] },
+  {
+    value: "phoenix",
+    label: "Apache Phoenix",
+    defaultPort: 8765,
+    icon: `${I}/phoenix.png`,
+    category: ["Hadoop / BigData"],
+  },
+  {
+    value: "ignite",
+    label: "Apache Ignite",
+    defaultPort: 10800,
+    icon: `${I}/ignite.png`,
+    category: ["Hadoop / BigData"],
+  },
   { value: "mapd", label: "MapD / HeavyDB", defaultPort: 6274, icon: FALLBACK, category: ["Hadoop / BigData"] },
-  { value: "omnisci", label: "OmniSci", defaultPort: 6274, icon: FALLBACK, category: ["Hadoop / BigData"] },
+  { value: "omnisci", label: "OmniSci", defaultPort: 6274, icon: `${I}/omnisci.png`, category: ["Hadoop / BigData"] },
 
   // ── Timeseries ──
   {
@@ -188,20 +206,20 @@ export const DB_TYPES: DbType[] = [
     icon: `${I}/timescaledb.png`,
     category: ["Timeseries"],
   },
-  { value: "tdengine", label: "TDEngine", defaultPort: 6041, icon: FALLBACK, category: ["Timeseries"] },
-  { value: "machbase", label: "Machbase", defaultPort: 5656, icon: FALLBACK, category: ["Timeseries"] },
+  { value: "tdengine", label: "TDEngine", defaultPort: 6041, icon: `${I}/tdengine.png`, category: ["Timeseries"] },
+  { value: "machbase", label: "Machbase", defaultPort: 5656, icon: `${I}/machbase.png`, category: ["Timeseries"] },
 
   // ── Embedded ──
   { value: "sqlite", label: "SQLite", defaultPort: 0, icon: `${I}/sqlite.png`, category: ["Popular", "Embedded"] },
-  { value: "h2", label: "H2", defaultPort: 9092, icon: FALLBACK, category: ["Embedded"] },
-  { value: "h2gis", label: "H2GIS", defaultPort: 9092, icon: FALLBACK, category: ["Embedded"] },
+  { value: "h2", label: "H2", defaultPort: 9092, icon: `${I}/h2.png`, category: ["Embedded"] },
+  { value: "h2gis", label: "H2GIS", defaultPort: 9092, icon: `${I}/h2gis.png`, category: ["Embedded"] },
   { value: "duckdb", label: "DuckDB", defaultPort: 0, icon: `${I}/duckdb.png`, category: ["Embedded", "Analytical"] },
   { value: "libsql", label: "LibSQL", defaultPort: 8080, icon: `${I}/libsql.png`, category: ["Embedded"] },
 
   // ── Files ──
-  { value: "csv", label: "CSV", defaultPort: 0, icon: FALLBACK, category: ["Files"] },
-  { value: "dbf", label: "DBF", defaultPort: 0, icon: FALLBACK, category: ["Files"] },
-  { value: "msaccess", label: "MS Access", defaultPort: 0, icon: FALLBACK, category: ["Files"] },
+  { value: "csv", label: "CSV", defaultPort: 0, icon: `${I}/csv.png`, category: ["Files"] },
+  { value: "dbf", label: "DBF", defaultPort: 0, icon: `${I}/dbf.png`, category: ["Files"] },
+  { value: "msaccess", label: "MS Access", defaultPort: 0, icon: `${I}/msaccess.png`, category: ["Files"] },
 
   // ── Search ──
   {
@@ -220,10 +238,10 @@ export const DB_TYPES: DbType[] = [
   },
 
   // ── Graph ──
-  { value: "orientdb", label: "OrientDB", defaultPort: 2424, icon: FALLBACK, category: ["Graph", "NoSQL"] },
+  { value: "orientdb", label: "OrientDB", defaultPort: 2424, icon: `${I}/orientdb.png`, category: ["Graph", "NoSQL"] },
 
   // ── Other ──
-  { value: "wmi", label: "WMI", defaultPort: 0, icon: FALLBACK, category: ["SQL"] },
+  { value: "wmi", label: "WMI", defaultPort: 0, icon: `${I}/wmi.png`, category: ["SQL"] },
   { value: "jdbcx", label: "JDBCX", defaultPort: 0, icon: FALLBACK, category: ["SQL"] },
 ];
 

@@ -4,7 +4,7 @@ interface Props {
 }
 
 export default function DbIcon({ icon, size = 24 }: Props) {
-  if (icon.startsWith("http")) {
+  if (icon.startsWith("http") || icon.startsWith("/")) {
     return <img src={icon} alt="" width={size} height={size} style={{ objectFit: "contain" }} />;
   }
   return <span style={{ fontSize: size }}>{icon}</span>;
