@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../api";
-import { PageTransition, FadeIn, motion, AnimatePresence } from "../components/Motion";
+import { motion, AnimatePresence } from "../components/Motion";
 import HistoryIcon from "@mui/icons-material/History";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -10,7 +10,7 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { Button, Badge, EmptyState } from "../components/ui";
+import { Button, Badge, EmptyState, Spinner } from "../components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import type { AuditLog as Log } from "../types";
 
@@ -37,6 +37,7 @@ function getCellValue(l: Log, key: string): string {
 
 export default function AuditLog() {
   const [logs, setLogs] = useState<Log[]>([]);
+  const [pageLoading, setPageLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
@@ -51,7 +52,9 @@ export default function AuditLog() {
     api
       .get("/audit")
       .then((r) => setLogs(r.data))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setPageLoading(false));
+
   useEffect(() => {
     refresh();
   }, []);
@@ -98,9 +101,9 @@ export default function AuditLog() {
   const paginated = processed.slice(page * pageSize, (page + 1) * pageSize);
 
   return (
-    <PageTransition>
+    <>
       <div className="container">
-        <FadeIn>
+        <>
           <div className="toolbar">
             <span className="toolbar-title">Audit Log</span>
             <div className="toolbar-spacer" />
@@ -108,9 +111,9 @@ export default function AuditLog() {
               <RefreshIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Refresh
             </Button>
           </div>
-        </FadeIn>
+        </>
 
-        <FadeIn delay={0.1}>
+        <>
           <div className="panel">
             <div className="panel-header">
               <HistoryIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execution History
@@ -119,7 +122,9 @@ export default function AuditLog() {
               </Badge>
             </div>
 
-            {logs.length === 0 ? (
+            {pageLoading ? (
+              <Spinner size="lg" label="Loading audit log..." />
+            ) : logs.length === 0 ? (
               <EmptyState
                 icon={<HistoryIcon sx={{ fontSize: 40 }} />}
                 title="No operations yet"
@@ -216,13 +221,8 @@ export default function AuditLog() {
                           </td>
                         </tr>
                       ) : (
-                        paginated.map((l, i) => (
-                          <motion.tr
-                            key={l.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: i * 0.01 }}
-                          >
+                        paginated.map((l) => (
+                          <tr key={l.id}>
                             <td className="audit-nowrap">{new Date(l.executed_at).toLocaleString()}</td>
                             <td>{l.user_email}</td>
                             <td>{l.connection_name}</td>
@@ -247,7 +247,7 @@ export default function AuditLog() {
                                 <ZoomInIcon sx={{ fontSize: 16 }} />
                               </button>
                             </td>
-                          </motion.tr>
+                          </tr>
                         ))
                       )}
                     </tbody>
@@ -313,7 +313,7 @@ export default function AuditLog() {
               </>
             )}
           </div>
-        </FadeIn>
+        </>
       </div>
 
       {/* Detail Popup Modal */}
@@ -360,6 +360,6 @@ export default function AuditLog() {
           </div>
         )}
       </AnimatePresence>
-    </PageTransition>
+    </>
   );
 }

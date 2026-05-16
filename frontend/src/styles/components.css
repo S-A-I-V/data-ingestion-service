@@ -1,7 +1,4 @@
 /* ===== BUTTONS ===== */
-/* Note: padding/sizing is owned by the shadcn Button component (ui/button.tsx).
-   These rules only apply to raw <button className="btn"> elements that haven't
-   been migrated to the Button component yet (e.g. pagination, csv controls). */
 .btn {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
@@ -15,6 +12,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 .btn:hover {
@@ -78,17 +76,17 @@
 
 /* ===== GLASS PANELS ===== */
 .panel {
-  background: rgba(12, 12, 20, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
+  background: rgba(15, 15, 28, 0.65);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   margin-bottom: 16px;
   overflow: hidden;
   transition: var(--transition);
 }
 .panel:hover {
-  border-color: var(--border-hover);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 .panel-header {
   padding: 14px 20px;
@@ -123,8 +121,8 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,10 +149,10 @@
 }
 
 .modal {
-  background: rgba(18, 18, 24, 0.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border);
+  background: rgba(15, 15, 28, 0.65);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-xl);
   width: 820px;
   max-height: 85vh;
@@ -192,7 +190,6 @@
   border-color: rgba(239, 68, 68, 0.2);
 }
 .modal-header .close-btn {
-  /* inherits from .close-btn above */
 }
 .modal-body {
   display: flex;

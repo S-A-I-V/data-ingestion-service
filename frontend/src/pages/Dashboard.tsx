@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../api";
-import { PageTransition, FadeIn, AnimatePresence, motion } from "../components/Motion";
+import { AnimatePresence, motion } from "../components/Motion";
 import ConnectionList from "../components/ConnectionList";
 import ConnectionModal from "../components/ConnectionModal";
 import { DB_TYPES } from "../constants/database";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Button, Toast, useToast } from "../components/ui";
+import { Button, Toast, useToast, Spinner } from "../components/ui";
 import type { Connection } from "../types";
 import type { ConnStatus } from "../components/ConnectionStatusBadge";
 
@@ -20,6 +20,7 @@ interface TestResult {
 export default function Dashboard() {
   const [conns, setConns] = useState<Connection[]>([]);
   const [connStatuses, setConnStatuses] = useState<Record<number, ConnStatus>>({});
+  const [pageLoading, setPageLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editConn, setEditConn] = useState<Connection | null>(null);
   const [toast, setToast] = useToast();
@@ -30,7 +31,9 @@ export default function Dashboard() {
     api
       .get("/connections")
       .then((r) => setConns(r.data))
-      .catch(() => setToast({ ok: false, msg: "Failed to load connections" }));
+      .catch(() => setToast({ ok: false, msg: "Failed to load connections" }))
+      .finally(() => setPageLoading(false));
+
   useEffect(() => {
     load();
   }, []);
@@ -81,9 +84,9 @@ export default function Dashboard() {
   const testDbInfo = testingConn ? DB_TYPES.find((d) => d.value === testingConn.db_type) : null;
 
   return (
-    <PageTransition>
+    <>
       <div className="container">
-        <FadeIn>
+        <>
           <div className="toolbar">
             <span className="toolbar-title">Database Connections</span>
             <div className="toolbar-spacer" />
@@ -97,22 +100,26 @@ export default function Dashboard() {
               + New Connection
             </Button>
           </div>
-        </FadeIn>
+        </>
 
-        <FadeIn delay={0.1}>
+        <>
           <div className="panel">
-            <ConnectionList
-              connections={conns}
-              statuses={connStatuses}
-              onTest={testConn}
-              onDelete={del}
-              onEdit={(c) => {
-                setEditConn(c);
-                setShowModal(true);
-              }}
-            />
+            {pageLoading ? (
+              <Spinner size="lg" label="Loading connections..." />
+            ) : (
+              <ConnectionList
+                connections={conns}
+                statuses={connStatuses}
+                onTest={testConn}
+                onDelete={del}
+                onEdit={(c) => {
+                  setEditConn(c);
+                  setShowModal(true);
+                }}
+              />
+            )}
           </div>
-        </FadeIn>
+        </>
 
         <Toast toast={toast} />
 
@@ -212,6 +219,6 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
       </div>
-    </PageTransition>
+    </>
   );
 }

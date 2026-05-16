@@ -7,6 +7,8 @@ export default function PageLoader() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (document.visibilityState === "hidden") return;
+
     setLoading(true);
     const t = setTimeout(() => setLoading(false), 400);
     return () => clearTimeout(t);

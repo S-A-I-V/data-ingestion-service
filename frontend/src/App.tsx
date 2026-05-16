@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
 import api from "./api";
 import type { User } from "./types";
 import Login from "./pages/Login";
@@ -14,11 +13,10 @@ import Nav from "./components/Nav";
 import PublicNav from "./components/PublicNav";
 import Footer from "./components/Footer";
 import CookieConsent from "./components/CookieConsent";
-import PageLoader from "./components/PageLoader";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!localStorage.getItem("token"));
   const location = useLocation();
 
   const checkAuth = () => {
@@ -37,6 +35,7 @@ export default function App() {
   useEffect(() => {
     checkAuth();
   }, []);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -48,57 +47,47 @@ export default function App() {
       </div>
     );
 
-  // Login page
   if (location.pathname === "/login") {
     if (user) return <Navigate to="/connections" />;
     return (
       <>
         <PublicNav />
-        <PageLoader />
         <Login onLogin={checkAuth} />
         <CookieConsent />
       </>
     );
   }
 
-  // Public (not logged in)
   if (!user) {
     return (
       <>
         <PublicNav />
-        <PageLoader />
-        <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/home" element={<Home isAuthenticated={false} />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/" element={<Navigate to="/home" />} />
-            <Route path="*" element={<Navigate to="/home" />} />
-          </Routes>
-        </AnimatePresence>
+        <Routes location={location}>
+          <Route path="/home" element={<Home isAuthenticated={false} />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/" element={<Navigate to="/home" />} />
+          <Route path="*" element={<Navigate to="/home" />} />
+        </Routes>
         <Footer />
         <CookieConsent />
       </>
     );
   }
 
-  // Authenticated
   return (
     <>
       <Nav user={user} />
-      <PageLoader />
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/home" element={<Home isAuthenticated={true} />} />
-          <Route path="/connections" element={<Dashboard />} />
-          <Route path="/ingest" element={<Ingest />} />
-          <Route path="/audit" element={<AuditLog />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/" element={<Navigate to="/connections" />} />
-          <Route path="*" element={<Navigate to="/connections" />} />
-        </Routes>
-      </AnimatePresence>
+      <Routes location={location}>
+        <Route path="/home" element={<Home isAuthenticated={true} />} />
+        <Route path="/connections" element={<Dashboard />} />
+        <Route path="/ingest" element={<Ingest />} />
+        <Route path="/audit" element={<AuditLog />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/" element={<Navigate to="/connections" />} />
+        <Route path="*" element={<Navigate to="/connections" />} />
+      </Routes>
       <Footer />
       <CookieConsent />
     </>

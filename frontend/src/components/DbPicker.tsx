@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+
 import { DB_TYPES, DB_CATEGORIES } from "../constants/database";
 import DbIcon from "./DbIcon";
 import { Button } from "./ui";
@@ -82,17 +82,10 @@ export default function DbPicker({ onSelect, onCancel }: Props) {
           ) : (
             <div className="db-picker-grid">
               {filtered.map((db) => (
-                <motion.button
-                  type="button"
-                  key={db.value}
-                  className="db-picker-card"
-                  onClick={() => onSelect(db)}
-                  whileHover={{ y: -4, scale: 1.03 }}
-                  whileTap={{ scale: 0.96 }}
-                >
+                <button type="button" key={db.value} className="db-picker-card" onClick={() => onSelect(db)}>
                   <DbIcon icon={db.icon} size={40} />
                   <span className="db-picker-card-label">{db.label}</span>
-                </motion.button>
+                </button>
               ))}
             </div>
           )}

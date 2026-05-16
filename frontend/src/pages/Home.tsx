@@ -10,7 +10,13 @@ interface Props {
 export default function Home({ isAuthenticated }: Props) {
   return (
     <div className="home-page">
-      <div className="home-grain" />
+      <img
+        // src="/images/bg-home.webp"
+        alt=""
+        aria-hidden="true"
+        className="home-bg-img"
+        decoding="sync"
+      />
       <HeroSection isAuthenticated={isAuthenticated} />
       <DbLogoSection />
       <div className="home-scroll-hint">↓</div>

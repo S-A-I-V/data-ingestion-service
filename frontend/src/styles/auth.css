@@ -6,20 +6,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: url("/images/signin-landscape.jpeg") center / cover no-repeat fixed;
+
+  background: #050510;
+}
+
+.auth-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("/images/signin-landscape.jpeg") center / cover no-repeat;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .auth-bg-overlay {
   position: absolute;
   inset: 0;
   background: rgba(5, 5, 10, 0.55);
+  z-index: 1;
 }
 
 .auth-floating-brand {
   position: absolute;
   top: 32px;
   left: 40px;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -40,8 +51,8 @@
   flex-direction: column;
   justify-content: center;
   background: rgba(15, 15, 25, 0.35);
-  backdrop-filter: blur(20px) saturate(1.2);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   box-shadow:

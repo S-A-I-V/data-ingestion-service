@@ -1,4 +1,3 @@
-import { motion } from "./Motion";
 import { DB_TYPES } from "../constants/database";
 import DbIcon from "./DbIcon";
 import ConnectionStatusBadge, { type ConnStatus } from "./ConnectionStatusBadge";
@@ -35,7 +34,7 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
       {connections.map((c, i) => {
         const info = DB_TYPES.find((d) => d.value === c.db_type);
         return (
-          <motion.div key={c.id} className="conn-grid-card">
+          <div key={c.id} className="conn-grid-card">
             <ConnectionStatusBadge status={statuses[c.id] ?? "unknown"} />
             <div className="conn-grid-icon">
               <DbIcon icon={info?.icon || ""} size={40} />
@@ -68,7 +67,7 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
                 <DeleteOutlineIcon sx={{ fontSize: 14 }} />
               </Button>
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>

@@ -1,9 +1,11 @@
-/* ── Execution Stats Panel ─────────────────────────────────────────── */
+/* ===== EXECUTION STATS ===== */
 
 .exec-stats-panel {
   margin-top: 16px;
-  background: rgba(12, 12, 20, 0.85);
-  border: 1px solid var(--border);
+  background: rgba(15, 15, 28, 0.65);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 12px;
   overflow: hidden;
 }

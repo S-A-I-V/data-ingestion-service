@@ -1,4 +1,4 @@
-/* ===== MODERN DARK THEME — Glassmorphism + Gradient Accents ===== */
+/* ===== BASE RESET & THEME ===== */
 
 * {
   margin: 0;
@@ -6,10 +6,6 @@
   box-sizing: border-box;
 }
 
-/* ── Tailwind utility padding/margin must win over the * reset above.
-   Tailwind v4 uses @layer utilities which has lower specificity than *.
-   This re-establishes padding for elements that use Tailwind padding classes
-   (shadcn Badge, Button internals, etc.) by bumping specificity via :where. ── */
 [class*="px-"],
 [class*="py-"],
 [class*="p-"],
@@ -17,12 +13,9 @@
 [class*="pr-"],
 [class*="pt-"],
 [class*="pb-"] {
-  /* Let Tailwind's own padding classes win — reset padding to initial so
-     the Tailwind utility layer can set it without * overriding it. */
   padding: revert-layer;
 }
 
-/* ── SelectTrigger (Radix combobox button) must not inherit .btn hover styles ── */
 button[role="combobox"] {
   background: transparent;
   border: 1px solid var(--border);
@@ -35,12 +28,6 @@ button[role="combobox"]:hover {
   transform: none !important;
 }
 
-/* ── Radix UI Portal Reset ─────────────────────────────────────────────
-   The * reset above strips padding/margin from Radix portal elements.
-   These rules restore correct behaviour for all shadcn/Radix components
-   that render into a portal (dropdowns, selects, tooltips, dialogs).
-   Scoped to ARIA roles so they only affect interactive overlay elements.
-──────────────────────────────────────────────────────────────────── */
 [role="menu"],
 [role="listbox"] {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
@@ -123,13 +110,23 @@ button[role="combobox"]:hover {
 }
 
 html {
-  background: #050510 url("/images/signin-landscape.jpeg") center / cover no-repeat fixed;
+  background: #050510;
+}
+
+html::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("/images/signin-landscape.jpeg") center / cover no-repeat;
+  opacity: 0.45;
+  z-index: -1;
+  pointer-events: none;
 }
 
 body {
   font-family: var(--font);
   font-size: 14px;
-  background: rgba(5, 5, 10, 0.82);
+  background: transparent;
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;

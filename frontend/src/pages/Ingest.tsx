@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import api from "../api";
-import { PageTransition, FadeIn, ScaleIn, motion } from "../components/Motion";
 import ExecStatsPanel, { fmtBytes, type ExecStats } from "../components/ingest/ExecStatsPanel";
 import CsvPreview from "../components/ingest/CsvPreview";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
@@ -9,12 +8,13 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
-import { Button, Badge, Panel, PanelHeader, PanelBody, FormRow } from "../components/ui";
+import { Button, Badge, Panel, PanelHeader, PanelBody, FormRow, Spinner } from "../components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import type { Connection, ColInfo } from "../types";
 
 export default function Ingest() {
   const [conns, setConns] = useState<Connection[]>([]);
+  const [connsLoading, setConnsLoading] = useState(true);
   const [connId, setConnId] = useState<number | null>(null);
   const [tables, setTables] = useState<string[]>([]);
   const [tablesLoading, setTablesLoading] = useState(false);
@@ -38,7 +38,8 @@ export default function Ingest() {
     api
       .get("/connections")
       .then((r) => setConns(r.data))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setConnsLoading(false));
   }, []);
   useEffect(() => {
     if (!connId) {
@@ -179,9 +180,9 @@ export default function Ingest() {
   const hasAnyState = connId !== null || file !== null || execStats !== null;
 
   return (
-    <PageTransition>
+    <>
       <div className={`container ${isLocked ? "ingest-locked" : ""}`}>
-        <FadeIn>
+        <>
           <div className="toolbar">
             <span className="toolbar-title">Data Transfer</span>
             <div className="toolbar-spacer" />
@@ -191,84 +192,88 @@ export default function Ingest() {
               </Button>
             )}
           </div>
-        </FadeIn>
+        </>
 
         {/* Step 1: Select Target */}
-        <FadeIn delay={0.1}>
+        <>
           <fieldset disabled={isLocked} className="panel-fieldset">
             <Panel>
               <PanelHeader>
                 <span className="step-num">1</span> Select Target
               </PanelHeader>
-              <PanelBody>
-                <FormRow label="Connection:">
-                  <Select
-                    value={connId ? String(connId) : "__none__"}
-                    onValueChange={(v) => setConnId(v === "__none__" ? null : +v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a connection..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Choose a connection...</SelectItem>
-                      {conns.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {c.name} ({c.db_type})
+              {connsLoading ? (
+                <Spinner size="lg" label="Loading connections..." />
+              ) : (
+                <PanelBody>
+                  <FormRow label="Connection:">
+                    <Select
+                      value={connId ? String(connId) : "__none__"}
+                      onValueChange={(v) => setConnId(v === "__none__" ? null : +v)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a connection..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Choose a connection...</SelectItem>
+                        {conns.map((c) => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            {c.name} ({c.db_type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormRow>
+                  <FormRow label="Table:">
+                    <Select
+                      value={table || "__none__"}
+                      onValueChange={(v) => setTable(v === "__none__" ? "" : v)}
+                      disabled={!connId || tablesLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Choose a table..."} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">
+                          {tablesLoading ? "Loading tables..." : "Choose a table..."}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormRow>
-                <FormRow label="Table:">
-                  <Select
-                    value={table || "__none__"}
-                    onValueChange={(v) => setTable(v === "__none__" ? "" : v)}
-                    disabled={!connId || tablesLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Choose a table..."} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">
-                        {tablesLoading ? "Loading tables..." : "Choose a table..."}
-                      </SelectItem>
-                      {tables.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {tablesLoading && <span className="field-spinner" />}
-                </FormRow>
-                <FormRow label="Operation:">
-                  <Select value={operation} onValueChange={setOperation}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="INSERT">INSERT</SelectItem>
-                      <SelectItem value="INSERT_SKIP">INSERT (Skip Duplicates)</SelectItem>
-                      <SelectItem value="UPDATE">UPDATE</SelectItem>
-                      <SelectItem value="UPSERT">UPSERT</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormRow>
-              </PanelBody>
+                        {tables.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {tablesLoading && <span className="field-spinner" />}
+                  </FormRow>
+                  <FormRow label="Operation:">
+                    <Select value={operation} onValueChange={setOperation}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="INSERT">INSERT</SelectItem>
+                        <SelectItem value="INSERT_SKIP">INSERT (Skip Duplicates)</SelectItem>
+                        <SelectItem value="UPDATE">UPDATE</SelectItem>
+                        <SelectItem value="UPSERT">UPSERT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormRow>
+                </PanelBody>
+              )}
             </Panel>
           </fieldset>
-        </FadeIn>
+        </>
 
         {/* Step 2: Upload CSV */}
         {table && (
-          <ScaleIn>
+          <>
             <fieldset disabled={isLocked} className="panel-fieldset">
               <Panel>
                 <PanelHeader>
                   <span className="step-num">2</span> Upload CSV
                 </PanelHeader>
                 <PanelBody>
-                  <motion.div
+                  <div
                     className="file-drop"
                     onClick={() => !isLocked && fileRef.current?.click()}
                     onDragOver={(e) => e.preventDefault()}
@@ -276,8 +281,6 @@ export default function Ingest() {
                       e.preventDefault();
                       if (!isLocked && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
                     }}
-                    whileHover={isLocked ? {} : { scale: 1.01, borderColor: "var(--accent)" }}
-                    whileTap={isLocked ? {} : { scale: 0.99 }}
                   >
                     <span className="drop-icon">
                       {file ? <InsertDriveFileIcon sx={{ fontSize: 32 }} /> : <CloudUploadIcon sx={{ fontSize: 32 }} />}
@@ -286,7 +289,7 @@ export default function Ingest() {
                     <span className="drop-hint">
                       {file ? `${csvTotalRows.toLocaleString()} rows · ${fmtBytes(csvFileSize)}` : ".csv files"}
                     </span>
-                  </motion.div>
+                  </div>
                   <input
                     ref={fileRef}
                     type="file"
@@ -299,12 +302,12 @@ export default function Ingest() {
                 </PanelBody>
               </Panel>
             </fieldset>
-          </ScaleIn>
+          </>
         )}
 
         {/* File Overview */}
         {file && csvTotalRows > 0 && (
-          <FadeIn delay={0.05}>
+          <>
             <div className="exec-stats-panel pre-stats">
               <div className="panel-header">
                 <FolderOpenIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> File Overview
@@ -330,12 +333,12 @@ export default function Ingest() {
                 </div>
               </div>
             </div>
-          </FadeIn>
+          </>
         )}
 
         {/* Step 3: Column Mapping */}
         {csvHeaders.length > 0 && dbCols.length > 0 && (
-          <FadeIn>
+          <>
             <fieldset disabled={isLocked} className="panel-fieldset">
               <Panel>
                 <PanelHeader>
@@ -350,14 +353,8 @@ export default function Ingest() {
                     <span className="mapper-arrow-spacer" />
                     <span className="mapper-col-label">Database Column</span>
                   </div>
-                  {csvHeaders.map((h, i) => (
-                    <motion.div
-                      className="mapper-row"
-                      key={h}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05, duration: 0.3 }}
-                    >
+                  {csvHeaders.map((h) => (
+                    <div className="mapper-row" key={h}>
                       <span className="mapper-csv-name">{h}</span>
                       <span className="mapper-arrow">→</span>
                       <Select
@@ -376,17 +373,17 @@ export default function Ingest() {
                           ))}
                         </SelectContent>
                       </Select>
-                    </motion.div>
+                    </div>
                   ))}
                 </PanelBody>
               </Panel>
             </fieldset>
-          </FadeIn>
+          </>
         )}
 
         {/* AI Analysis */}
         {mappedCount > 0 && (
-          <FadeIn>
+          <>
             <fieldset disabled={isLocked} className="panel-fieldset">
               <div className="ai-panel">
                 <div className="ai-panel-header">
@@ -401,23 +398,15 @@ export default function Ingest() {
                 >
                   Analyze before executing
                 </Button>
-                {aiResult && (
-                  <motion.div
-                    className="ai-result"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                  >
-                    {aiResult}
-                  </motion.div>
-                )}
+                {aiResult && <div className="ai-result">{aiResult}</div>}
               </div>
             </fieldset>
-          </FadeIn>
+          </>
         )}
 
         {/* Execute */}
         {mappedCount > 0 && (
-          <FadeIn>
+          <>
             <div className="exec-action-bar">
               <Button
                 variant="primary"
@@ -428,22 +417,14 @@ export default function Ingest() {
               >
                 <PlayArrowIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execute {operation}
               </Button>
-              {status && (
-                <motion.span
-                  className={`badge ${status.ok ? "badge-success" : "badge-failed"}`}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  {status.msg}
-                </motion.span>
-              )}
+              {status && <span className={`badge ${status.ok ? "badge-success" : "badge-failed"}`}>{status.msg}</span>}
             </div>
-          </FadeIn>
+          </>
         )}
 
         {execStats && <ExecStatsPanel stats={execStats} />}
         {csvPreview.length > 0 && <CsvPreview headers={csvHeaders} rows={csvPreview} />}
       </div>
-    </PageTransition>
+    </>
   );
 }
