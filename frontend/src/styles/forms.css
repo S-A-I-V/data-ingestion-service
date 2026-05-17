@@ -399,3 +399,137 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== CONNECTION LIST (row view) ===== */
+
+.conn-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  gap: 4px;
+}
+
+.conn-list-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.conn-list-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+/* Status tints — replace the icon overlay in list view */
+.conn-list-row--ok {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.18);
+}
+
+.conn-list-row--ok:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.conn-list-row--error {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+.conn-list-row--error:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+/* Icon column — fixed width, relative so status badge can overlay */
+.conn-list-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.conn-list-status {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  line-height: 0;
+}
+
+/* Name — own column */
+.conn-list-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 180px;
+  flex-shrink: 0;
+}
+
+/* DB type — own column */
+.conn-list-type {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+  white-space: nowrap;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+/* Host — grows to fill available space */
+.conn-list-host {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badges — fixed width so actions don't jump */
+.conn-list-badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+/* Actions — always visible in row view (no hover-reveal needed) */
+.conn-list-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .conn-list-host {
+    display: none;
+  }
+  .conn-list-badges {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .conn-list-name {
+    width: 120px;
+  }
+  .conn-list-type {
+    width: 80px;
+  }
+}

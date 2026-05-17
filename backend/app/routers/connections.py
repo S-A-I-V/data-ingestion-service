@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -96,6 +97,8 @@ class ConnectionOut(BaseModel):
     ssh_enabled: bool
     ssh_host: Optional[str] = None
     connection_timeout: int
+    last_tested_at: Optional[datetime] = None
+    last_test_ok: Optional[bool] = None
 
     class Config:
         from_attributes = True
@@ -185,9 +188,15 @@ def test_connection(
     try:
         connector = get_connector(conn)
         connector.test()
+        conn.last_test_ok = True
+        conn.last_tested_at = datetime.now(timezone.utc)
+        db.commit()
         return {"ok": True, "message": "Connection successful"}
     except Exception as e:
         logger.error(f"Connection test failed for conn_id={conn_id} user={user.id}: {e}")
+        conn.last_test_ok = False
+        conn.last_tested_at = datetime.now(timezone.utc)
+        db.commit()
         return {"ok": False, "message": "Connection test failed. Check your credentials and network settings."}
 
 

@@ -10,15 +10,18 @@ import { Button, Badge, EmptyState } from "./ui";
 import StorageIcon from "@mui/icons-material/Storage";
 import type { Connection } from "../types";
 
+export type ViewMode = "grid" | "list";
+
 interface Props {
   connections: Connection[];
   statuses: Record<number, ConnStatus>;
   onTest: (id: number) => void;
   onDelete: (id: number) => void;
   onEdit: (conn: Connection) => void;
+  view?: ViewMode;
 }
 
-export default function ConnectionList({ connections, statuses, onTest, onDelete, onEdit }: Props) {
+export default function ConnectionList({ connections, statuses, onTest, onDelete, onEdit, view = "grid" }: Props) {
   if (connections.length === 0) {
     return (
       <EmptyState
@@ -29,9 +32,67 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
     );
   }
 
+  if (view === "list") {
+    return (
+      <div className="conn-list">
+        {connections.map((c) => {
+          const info = DB_TYPES.find((d) => d.value === c.db_type);
+          const status = statuses[c.id] ?? "unknown";
+          return (
+            <div key={c.id} className={`conn-list-row conn-list-row--${status}`}>
+              {/* Icon — no status overlay in list view, row tint handles it */}
+              <div className="conn-list-icon">
+                <DbIcon icon={info?.icon || ""} size={32} />
+              </div>
+
+              {/* Name */}
+              <div className="conn-list-name">{c.name}</div>
+
+              {/* DB type — own column */}
+              <div className="conn-list-type">{info?.label}</div>
+
+              {/* Host */}
+              <div className="conn-list-host">
+                {c.host}:{c.port}/{c.database}
+              </div>
+
+              {/* Badges */}
+              <div className="conn-list-badges">
+                {c.use_ssl && (
+                  <Badge>
+                    <LockIcon sx={{ fontSize: 11 }} /> SSL
+                  </Badge>
+                )}
+                {c.ssh_enabled && (
+                  <Badge>
+                    <VpnKeyIcon sx={{ fontSize: 11 }} /> SSH
+                  </Badge>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="conn-list-actions">
+                <Button size="sm" onClick={() => onEdit(c)}>
+                  <EditIcon sx={{ fontSize: 14 }} /> Edit
+                </Button>
+                <Button size="sm" variant="success" onClick={() => onTest(c.id)}>
+                  <PlayArrowIcon sx={{ fontSize: 14 }} /> Test
+                </Button>
+                <Button size="sm" variant="danger" onClick={() => onDelete(c.id)}>
+                  <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Grid / tile view (default)
   return (
     <div className="conn-grid">
-      {connections.map((c, i) => {
+      {connections.map((c) => {
         const info = DB_TYPES.find((d) => d.value === c.db_type);
         return (
           <div key={c.id} className="conn-grid-card">

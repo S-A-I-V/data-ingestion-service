@@ -16,6 +16,8 @@ export interface Connection {
   use_ssl: boolean;
   ssh_enabled: boolean;
   connection_timeout: number;
+  last_tested_at: string | null;
+  last_test_ok: boolean | null;
 }
 
 export interface ColInfo {
