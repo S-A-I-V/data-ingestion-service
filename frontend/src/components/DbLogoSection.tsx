@@ -1,13 +1,8 @@
-/**
- * DbLogoSection — scrolling marquee of all integrated database logos.
- * Icons are served locally from /images/db-icons/ — no remote fetches.
- */
-
 import { LogoSlider } from "./ui/LogoSlider";
 
 const I = "/images/db-icons";
 
-const INTEGRATED_DBS = [
+const ALL_DBS = [
   { label: "PostgreSQL", icon: `${I}/postgresql.png` },
   { label: "ClickHouse", icon: `${I}/clickhouse.png` },
   { label: "MySQL", icon: `${I}/mysql.png` },
@@ -40,11 +35,16 @@ const INTEGRATED_DBS = [
   { label: "YugabyteDB", icon: `${I}/yugabyte.png` },
 ];
 
+const mid = Math.ceil(ALL_DBS.length / 2);
+const ROW_A = ALL_DBS.slice(0, mid);
+const ROW_B = ALL_DBS.slice(mid);
+
 export default function DbLogoSection() {
   return (
     <div className="db-logos-section">
       <p className="db-logos-section__title">Databases supported</p>
-      <LogoSlider logos={INTEGRATED_DBS} speed={80} direction="left" />
+      <LogoSlider logos={ROW_A} baseVelocity={60} direction="left" />
+      <LogoSlider logos={ROW_B} baseVelocity={60} direction="right" />
     </div>
   );
 }

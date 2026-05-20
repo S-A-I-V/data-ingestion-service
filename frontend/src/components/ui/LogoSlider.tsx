@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useRef, useEffect, useState } from "react";
+import { motion, useScroll, useVelocity, useTransform, useSpring, useAnimationFrame, wrap } from "framer-motion";
 
 interface LogoItem {
   icon: string;
@@ -7,63 +8,39 @@ interface LogoItem {
 
 interface Props {
   logos: LogoItem[];
-  /** pixels per second — default 80 */
-  speed?: number;
+  baseVelocity?: number;
   direction?: "left" | "right";
 }
 
-export function LogoSlider({ logos, speed = 80, direction = "left" }: Props) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const offsetRef = useRef(0);
-  const rafRef = useRef<number>(0);
-  const lastTimeRef = useRef<number | null>(null);
+export function LogoSlider({ logos, baseVelocity = 60, direction = "left" }: Props) {
+  const baseX = useRef(0);
+  const { scrollY } = useScroll();
+  const scrollVelocity = useVelocity(scrollY);
+  const smoothVelocity = useSpring(scrollVelocity, { damping: 50, stiffness: 400 });
+  const velocityFactor = useTransform(smoothVelocity, [0, 1000], [0, 5], { clamp: false });
+
+  const [x, setX] = useState(0);
+  const dirSign = direction === "left" ? -1 : 1;
+
+  const groupRef = useRef<HTMLDivElement>(null);
+  const [groupWidth, setGroupWidth] = useState(0);
 
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
+    if (!groupRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setGroupWidth(groupRef.current?.offsetWidth ?? 0);
+    });
+    ro.observe(groupRef.current);
+    return () => ro.disconnect();
+  }, [logos]);
 
-    const dir = direction === "left" ? 1 : -1;
-
-    // Reset state when effect re-runs (speed/direction change)
-    offsetRef.current = 0;
-    lastTimeRef.current = null;
-
-    function step(ts: number) {
-      if (!track) return;
-
-      if (lastTimeRef.current === null) lastTimeRef.current = ts;
-      const dt = Math.min((ts - lastTimeRef.current) / 1000, 0.1); // cap dt to avoid jumps after tab switch
-      lastTimeRef.current = ts;
-
-      // Measure the first group each frame so we always have the real width
-      const firstGroup = track.children[0] as HTMLElement | undefined;
-      const groupWidth = firstGroup ? firstGroup.offsetWidth : 0;
-
-      if (groupWidth === 0) {
-        rafRef.current = requestAnimationFrame(step);
-        return;
-      }
-
-      offsetRef.current += speed * dt * dir;
-
-      // Seamless reset: once we've scrolled one full group width, snap back
-      if (dir === 1 && offsetRef.current >= groupWidth) {
-        offsetRef.current -= groupWidth;
-      } else if (dir === -1 && offsetRef.current <= -groupWidth) {
-        offsetRef.current += groupWidth;
-      }
-
-      track.style.transform = `translateX(${-offsetRef.current}px)`;
-      rafRef.current = requestAnimationFrame(step);
-    }
-
-    rafRef.current = requestAnimationFrame(step);
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      lastTimeRef.current = null;
-    };
-  }, [speed, direction, logos]);
+  useAnimationFrame((_, delta) => {
+    if (groupWidth === 0) return;
+    const dt = delta / 1000;
+    const move = dirSign * baseVelocity * dt + dirSign * baseVelocity * velocityFactor.get() * dt;
+    baseX.current = wrap(-groupWidth, 0, baseX.current + move);
+    setX(baseX.current);
+  });
 
   const renderCards = (keyPrefix: string, ariaHidden: boolean) =>
     logos.map((db) => (
@@ -84,8 +61,10 @@ export function LogoSlider({ logos, speed = 80, direction = "left" }: Props) {
   return (
     <div className="logo-slider">
       <div className="logo-slider__container">
-        <div className="logo-slider__track" ref={trackRef}>
-          <div className="logo-slider__group">{renderCards("g0-", false)}</div>
+        <motion.div className="logo-slider__track" style={{ x }}>
+          <div className="logo-slider__group" ref={groupRef}>
+            {renderCards("g0-", false)}
+          </div>
           <div className="logo-slider__group" aria-hidden="true">
             {renderCards("g1-", true)}
           </div>
@@ -95,7 +74,7 @@ export function LogoSlider({ logos, speed = 80, direction = "left" }: Props) {
           <div className="logo-slider__group" aria-hidden="true">
             {renderCards("g3-", true)}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
