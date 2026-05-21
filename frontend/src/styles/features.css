@@ -1,0 +1,518 @@
+/* ===== FEATURES SECTION ===== */
+
+.features-section {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  padding: var(--section-y) var(--section-x);
+  background: transparent;
+}
+
+.features-heading {
+  font-family: "Silkscreen", "Courier New", monospace;
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 48px;
+  line-height: 1.1;
+}
+
+/* ===== BENTO GRID ===== */
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 280px 80px 280px;
+  gap: 16px;
+}
+
+.bento-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
+  cursor: default;
+}
+
+.bento-card:hover {
+  border-color: rgba(15, 177, 178, 0.35);
+  background: rgba(15, 177, 178, 0.04);
+}
+
+/* Card 1: Marquee — top-left, tall (rows 1-2) */
+.bento-card:nth-child(1) {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+/* Card 2: Ingestion — top-right, short (row 1) */
+.bento-card:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+/* Card 3: SQL — bottom-left, short (row 4) */
+.bento-card:nth-child(3) {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+/* Card 4: Pipeline — bottom-right, tall (rows 3-4) */
+.bento-card:nth-child(4) {
+  grid-column: 2;
+  grid-row: 2 / 4;
+}
+
+.bento-card__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 110px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 95%);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent 95%);
+  pointer-events: auto;
+  transition: transform 0.3s ease;
+}
+
+.bento-card:hover .bento-card__bg {
+  transform: scale(1.04);
+}
+
+.bento-card:nth-child(3):hover .bento-card__bg {
+  transform: none;
+}
+
+.bento-card__body {
+  position: relative;
+  z-index: 2;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform: translateY(8px);
+  transition: transform 0.3s ease;
+  background: linear-gradient(to top, rgba(10, 10, 15, 0.95) 40%, rgba(10, 10, 15, 0) 100%);
+}
+
+.bento-card:hover .bento-card__body {
+  transform: translateY(0);
+}
+
+.bento-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.bento-card__icon {
+  width: 18px;
+  height: 18px;
+  color: #0fb1b2;
+  flex-shrink: 0;
+}
+
+.bento-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.bento-card__desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.55;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.bento-card__cta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0fb1b2;
+  text-decoration: none;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    color 0.15s ease;
+}
+
+.bento-card:hover .bento-card__cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bento-card__cta:hover {
+  color: #3dd8d9;
+}
+
+@media (max-width: 700px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .bento-card:nth-child(1),
+  .bento-card:nth-child(2),
+  .bento-card:nth-child(3),
+  .bento-card:nth-child(4) {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: 320px;
+  }
+  .features-section {
+    padding: var(--section-y) 20px;
+  }
+}
+
+/* ===== CONNECTOR MARQUEE ===== */
+
+.bento-marquee {
+  padding: 20px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.bento-marquee__row {
+  overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, black 8% 92%, transparent);
+  mask: linear-gradient(90deg, transparent, black 8% 92%, transparent);
+}
+
+.bento-marquee__track {
+  display: flex;
+  will-change: transform;
+}
+
+.bento-marquee__group {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-right: 12px;
+}
+
+.bento-marquee__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+  width: 180px;
+  cursor: pointer;
+  filter: blur(0.5px);
+  transition:
+    filter 0.3s ease,
+    border-color 0.3s ease,
+    background 0.3s ease;
+}
+
+.bento-marquee__card:hover {
+  filter: blur(0);
+  border-color: rgba(15, 177, 178, 0.35);
+  background: rgba(15, 177, 178, 0.06);
+}
+
+.bento-marquee__card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bento-marquee__icon {
+  display: flex;
+  align-items: center;
+  color: #0fb1b2;
+  flex-shrink: 0;
+}
+
+.bento-marquee__filename {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Fira Code", monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bento-marquee__type {
+  font-size: 10px;
+  color: #0fb1b2;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.bento-marquee__body {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.45;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+}
+
+/* ===== INGESTION PULSE ===== */
+
+.bento-pulse {
+  padding: 24px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bento-pulse__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.bento-pulse__row--new {
+  animation: pulse-in 0.4s ease forwards;
+}
+
+@keyframes pulse-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bento-pulse__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bento-pulse__dot--success {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.bento-pulse__dot--running {
+  background: #0fb1b2;
+  box-shadow: 0 0 6px rgba(15, 177, 178, 0.6);
+  animation: dot-blink 1s ease-in-out infinite;
+}
+
+@keyframes dot-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.bento-pulse__source {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  flex: 1;
+}
+
+.bento-pulse__rows {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: "Fira Code", monospace;
+}
+
+.bento-pulse__badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bento-pulse__badge--success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.bento-pulse__badge--running {
+  background: rgba(15, 177, 178, 0.12);
+  color: #0fb1b2;
+}
+
+/* ===== PIPELINE BEAM ===== */
+
+.pipeline-beam {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.pipeline-beam__layout {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 380px;
+  height: 180px;
+  gap: 16px;
+}
+
+.pipeline-beam__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pipeline-circle {
+  z-index: 10;
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 10, 15, 0.9);
+  padding: 8px;
+  box-shadow: 0 0 16px -6px rgba(15, 177, 178, 0.4);
+}
+
+.pipeline-circle--hub {
+  width: 56px;
+  height: 56px;
+  border-color: rgba(15, 177, 178, 0.4);
+  box-shadow: 0 0 24px -4px rgba(15, 177, 178, 0.5);
+  border-radius: 12px;
+}
+
+.pipeline-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.animated-beam__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ===== SQL PREVIEW ===== */
+
+.bento-sql {
+  margin: 16px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.bento-sql__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bento-sql__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bento-sql__dot--red {
+  background: #ff5f57;
+}
+.bento-sql__dot--yellow {
+  background: #febc2e;
+}
+.bento-sql__dot--green {
+  background: #28c840;
+}
+
+.bento-sql__title {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-left: 4px;
+  font-family: "Fira Code", monospace;
+}
+
+.bento-sql__code {
+  padding: 14px;
+  font-family: "Fira Code", "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: pre-wrap;
+  min-height: 100px;
+}
+
+.sql-kw {
+  color: #0fb1b2;
+  font-weight: 600;
+}
+
+.sql-str {
+  color: #f59e0b;
+}
+
+.sql-num {
+  color: #a78bfa;
+}
+
+.bento-sql__cursor {
+  animation: cursor-blink 0.8s step-end infinite;
+  color: #0fb1b2;
+}
+
+@keyframes cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}

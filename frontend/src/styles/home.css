@@ -10,30 +10,14 @@
   background: #0a0a0f;
 }
 
-.home-bg-img {
-  position: absolute;
+.interactive-grid-canvas {
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  object-fit: cover;
-  object-position: center;
+  pointer-events: none;
   z-index: 0;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Vignette — darkens edges to frame the center */
-.home-page::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100vh;
-  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
-  z-index: 1;
-  pointer-events: none;
 }
 
 .home-grain {
@@ -316,8 +300,8 @@
   position: relative;
   z-index: 5;
   width: 100%;
-  padding: 0px 80px 100px;
-  background: #000;
+  padding: var(--section-y) var(--section-x);
+  background: transparent;
 }
 
 .problems-title {
@@ -456,7 +440,7 @@
     grid-column: span 1;
   }
   .problems-section {
-    padding: 60px 20px 80px;
+    padding: var(--section-y) 20px;
   }
 }
 
@@ -593,7 +577,7 @@
   z-index: 5;
   width: 100%;
   background: url("/images/bg-section.jpeg") center center / cover no-repeat;
-  padding: 80px 80px;
+  padding: var(--section-y) var(--section-x);
   overflow: hidden;
 }
 
@@ -658,7 +642,7 @@
 
 @media (max-width: 768px) {
   .cta-banner {
-    padding: 60px 30px;
+    padding: var(--section-y) 20px;
   }
   .cta-banner-inner {
     flex-direction: column;
@@ -734,9 +718,9 @@
 
 /* Section wrapper */
 .db-logos-section {
-  padding: 12px 0 40px;
+  padding: var(--section-y) 0;
   text-align: center;
-  background: #000;
+  background: transparent;
 }
 
 .db-logos-section__title {

@@ -1,9 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./styles/index.css";
+
+gsap.registerPlugin(useGSAP);
 
 const bgImage = new Image();
 bgImage.src = "/images/signin-landscape.jpeg";
