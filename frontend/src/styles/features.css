@@ -77,10 +77,10 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: 110px;
+  bottom: 100px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 95%);
-  mask-image: linear-gradient(to bottom, #000 40%, transparent 95%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
   pointer-events: auto;
   transition: transform 0.3s ease;
 }
@@ -272,18 +272,18 @@
 
 /* ===== INGESTION PULSE ===== */
 
-.bento-pulse {
-  padding: 24px 24px 16px;
-  display: flex;
-  flex-direction: column;
+.bento-pulse-grid {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
-.bento-pulse__row {
+.bento-pulse-card {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.03);
@@ -293,14 +293,14 @@
     transform 0.4s ease;
 }
 
-.bento-pulse__row--new {
+.bento-pulse-card--new {
   animation: pulse-in 0.4s ease forwards;
 }
 
 @keyframes pulse-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;
@@ -308,19 +308,25 @@
   }
 }
 
-.bento-pulse__dot {
-  width: 7px;
-  height: 7px;
+.bento-pulse-card__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bento-pulse-card__dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.bento-pulse__dot--success {
+.bento-pulse-card__dot--success {
   background: #22c55e;
   box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
-.bento-pulse__dot--running {
+.bento-pulse-card__dot--running {
   background: #0fb1b2;
   box-shadow: 0 0 6px rgba(15, 177, 178, 0.6);
   animation: dot-blink 1s ease-in-out infinite;
@@ -336,34 +342,48 @@
   }
 }
 
-.bento-pulse__source {
-  font-size: 13px;
+.bento-pulse-card__source {
+  font-size: 11px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.85);
-  flex: 1;
 }
 
-.bento-pulse__rows {
-  font-size: 12px;
+.bento-pulse-card__table {
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.35);
+  font-family: "Fira Code", monospace;
+  padding-left: 12px;
+}
+
+.bento-pulse-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.bento-pulse-card__rows {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
   font-family: "Fira Code", monospace;
 }
 
-.bento-pulse__badge {
-  font-size: 10px;
+.bento-pulse-card__badge {
+  font-size: 9px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 20px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
-.bento-pulse__badge--success {
+.bento-pulse-card__badge--success {
   background: rgba(34, 197, 94, 0.12);
   color: #22c55e;
 }
 
-.bento-pulse__badge--running {
+.bento-pulse-card__badge--running {
   background: rgba(15, 177, 178, 0.12);
   color: #0fb1b2;
 }
@@ -438,12 +458,21 @@
 
 /* ===== SQL PREVIEW ===== */
 
+.bento-sql-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px;
+  height: 100%;
+}
+
 .bento-sql {
-  margin: 16px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .bento-sql__bar {
@@ -480,13 +509,14 @@
 }
 
 .bento-sql__code {
-  padding: 14px;
+  padding: 12px;
   font-family: "Fira Code", "JetBrains Mono", monospace;
-  font-size: 12px;
-  line-height: 1.7;
+  font-size: 11px;
+  line-height: 1.6;
   color: rgba(255, 255, 255, 0.7);
   white-space: pre-wrap;
-  min-height: 100px;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sql-kw {
