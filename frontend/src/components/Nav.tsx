@@ -6,7 +6,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 interface Props {
-  user: { name: string; picture: string; email: string };
+  user: { name: string; picture: string; email: string; permissions?: string[] };
 }
 
 const NAV_TABS = [
@@ -15,6 +15,8 @@ const NAV_TABS = [
   { label: "Data Transfer", to: "/ingest" },
   { label: "Audit Log", to: "/audit" },
 ];
+
+const ADMIN_TABS = [{ label: "Associate Lookup", to: "/admin/associate-lookup", permission: "admin:associate_lookup" }];
 
 function getDisplayName(name: string, email: string): string {
   if (name && name.trim().length > 1) return name.trim().split(/\s+/)[0];
@@ -30,7 +32,10 @@ export default function Nav({ user }: Props) {
   const spotlightX = useRef(0);
   const ambienceX = useRef(0);
 
-  const activeIndex = NAV_TABS.findIndex((t) => t.to === loc.pathname);
+  const userPerms = user.permissions || [];
+  const visibleTabs = [...NAV_TABS, ...ADMIN_TABS.filter((t) => userPerms.includes(t.permission))];
+
+  const activeIndex = visibleTabs.findIndex((t) => t.to === loc.pathname);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -125,7 +130,7 @@ export default function Nav({ user }: Props) {
       <div className="nav-right">
         {/* Spotlight tab strip */}
         <div className="nav-spotlight-wrap" ref={tabsRef}>
-          {NAV_TABS.map((tab, idx) => (
+          {visibleTabs.map((tab, idx) => (
             <Link
               key={tab.to}
               to={tab.to}

@@ -1,7 +1,7 @@
 """Base connector classes: BaseConnector and SQLAlchemyConnector."""
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import Any
 
 from app.models.connection import DBConnection
 
@@ -14,17 +14,17 @@ class BaseConnector(ABC):
     def test(self): ...
 
     @abstractmethod
-    def list_tables(self) -> List[str]: ...
+    def list_tables(self) -> list[str]: ...
 
     @abstractmethod
-    def list_columns(self, table: str) -> List[Dict[str, Any]]: ...
+    def list_columns(self, table: str) -> list[dict[str, Any]]: ...
 
     @abstractmethod
-    def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int: ...
+    def insert_rows(self, table: str, columns: list[str], rows: list[list[Any]]) -> int: ...
 
     def insert_rows_skip_existing(
-        self, table: str, columns: List[str], rows: List[List[Any]], key_columns: List[str]
-    ) -> Dict[str, int]:
+        self, table: str, columns: list[str], rows: list[list[Any]], key_columns: list[str]
+    ) -> dict[str, int]:
         """Insert only rows whose key_columns values don't already exist."""
         count = self.insert_rows(table, columns, rows)
         return {"inserted": count, "skipped": 0}
@@ -38,6 +38,7 @@ class SQLAlchemyConnector(BaseConnector):
 
     def _safe(self, val: str) -> str:
         from urllib.parse import quote_plus
+
         return quote_plus(val or "")
 
     def _engine_kwargs(self) -> dict:
@@ -45,6 +46,7 @@ class SQLAlchemyConnector(BaseConnector):
 
     def _engine(self):
         from sqlalchemy import create_engine
+
         return create_engine(
             self._url(),
             connect_args={"connect_timeout": self.conn.connection_timeout or 30}
@@ -57,10 +59,7 @@ class SQLAlchemyConnector(BaseConnector):
         return "SELECT 1"
 
     def _list_tables_query(self) -> str:
-        return (
-            "SELECT table_name FROM information_schema.tables "
-            "WHERE table_schema = 'public' ORDER BY table_name"
-        )
+        return "SELECT table_name FROM information_schema.tables " "WHERE table_schema = 'public' ORDER BY table_name"
 
     def _list_columns_query(self) -> str:
         return (
@@ -75,42 +74,56 @@ class SQLAlchemyConnector(BaseConnector):
 
     def test(self):
         from sqlalchemy import text
+
         with self._engine().connect() as c:
             c.execute(text(self._test_query()))
 
-    def list_tables(self) -> List[str]:
+    def list_tables(self) -> list[str]:
         from sqlalchemy import text
+
         with self._engine().connect() as c:
             rows = c.execute(text(self._list_tables_query()))
             return [r[0] for r in rows]
 
-    def list_columns(self, table: str) -> List[Dict[str, Any]]:
+    def list_columns(self, table: str) -> list[dict[str, Any]]:
         from sqlalchemy import text
+
         with self._engine().connect() as c:
             rows = c.execute(text(self._list_columns_query()), {"t": table})
             return [{"name": r[0], "type": r[1], "nullable": r[2] == "YES"} for r in rows]
 
-    def insert_rows(self, table: str, columns: List[str], rows: List[List[Any]]) -> int:
+    def insert_rows(self, table: str, columns: list[str], rows: list[list[Any]]) -> int:
         from sqlalchemy import text
+
         placeholders = ", ".join([f":{c}" for c in columns])
         cols = ", ".join([self._quote(c) for c in columns])
-        sql = f"INSERT INTO {self._quote(table)} ({cols}) VALUES ({placeholders})"
+        sql = f"INSERT INTO {self._quote(table)} ({cols}) VALUES ({placeholders})"  # noqa: S608
         with self._engine().begin() as c:
             for row in rows:
                 c.execute(text(sql), dict(zip(columns, row)))
         return len(rows)
 
-    def insert_rows_skip_existing(
-        self, table: str, columns: List[str], rows: List[List[Any]], key_columns: List[str]
-    ) -> Dict[str, int]:
+    def execute_query(self, query: str, params: dict[str, Any] = None) -> list[dict[str, Any]]:
+        """Execute a read-only query and return results as list of dicts."""
         from sqlalchemy import text
+
+        with self._engine().connect() as c:
+            result = c.execute(text(query), params or {})
+            columns = list(result.keys())
+            return [dict(zip(columns, row)) for row in result.fetchall()]
+
+    def insert_rows_skip_existing(
+        self, table: str, columns: list[str], rows: list[list[Any]], key_columns: list[str]
+    ) -> dict[str, int]:
+        from sqlalchemy import text
+
         if not rows:
             return {"inserted": 0, "skipped": 0}
         key_indices = [columns.index(k) for k in key_columns]
         key_cols_quoted = ", ".join([self._quote(k) for k in key_columns])
         existing_keys = set()
         with self._engine().connect() as c:
-            result = c.execute(text(f"SELECT {key_cols_quoted} FROM {self._quote(table)}"))
+            result = c.execute(text(f"SELECT {key_cols_quoted} FROM {self._quote(table)}"))  # noqa: S608
             for r in result:
                 existing_keys.add(tuple(str(v) for v in r))
         new_rows = []

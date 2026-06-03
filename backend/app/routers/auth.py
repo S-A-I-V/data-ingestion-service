@@ -380,13 +380,17 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/me")
-async def me(user: User = Depends(get_current_user)):
+async def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.services.rbac import get_user_permissions
+
+    permissions = get_user_permissions(user.id, db)
     return {
         "id": user.id,
         "email": user.email,
         "name": user.name,
         "picture": user.picture,
         "email_verified": user.email_verified,
+        "permissions": sorted(permissions),
     }
 
 

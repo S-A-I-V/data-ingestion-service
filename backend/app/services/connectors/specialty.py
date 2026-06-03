@@ -68,3 +68,21 @@ class SybaseConnector(BaseConnector):
         c.commit()
         c.close()
         return len(rows)
+
+    def execute_query(self, query: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+        """Execute a read-only query and return results as list of dicts."""
+        c = self._connect()
+        cur = c.cursor()
+        if params:
+            # pyodbc uses ? positional params — replace :name with ? and pass values in order
+            import re
+
+            param_names = re.findall(r":(\w+)", query)
+            sql = re.sub(r":(\w+)", "?", query)
+            cur.execute(sql, [params[name] for name in param_names])
+        else:
+            cur.execute(query)
+        columns = [desc[0] for desc in cur.description]
+        rows = cur.fetchall()
+        c.close()
+        return [dict(zip(columns, row)) for row in rows]

@@ -1,14 +1,13 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from starlette.middleware.sessions import SessionMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
-from app.database import engine, Base
-from app.routers import auth, connections, ingestion, audit, ai
+from app.database import Base, engine
 from app.middleware.security import SecurityHeadersMiddleware
+from app.routers import ai, associate_lookup, audit, auth, connections, ingestion
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -36,6 +35,7 @@ app.include_router(connections.router)
 app.include_router(ingestion.router)
 app.include_router(audit.router)
 app.include_router(ai.router)
+app.include_router(associate_lookup.router)
 
 
 @app.get("/api/health")
