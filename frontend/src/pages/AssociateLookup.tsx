@@ -8,7 +8,9 @@ import { Button, Spinner } from "../components/ui";
 import { DEFAULT_VISIBLE_COLUMNS } from "../constants/associateLookup";
 
 export default function AssociateLookup() {
+  const [searchType, setSearchType] = useState<"beid" | "dmzid">("beid");
   const [beid, setBeid] = useState("");
+  const [dmzid, setDmzid] = useState("");
   const [allColumns, setAllColumns] = useState<string[]>([]);
   const [rows, setRows] = useState<any[][]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,20 +22,20 @@ export default function AssociateLookup() {
   const [colSearch, setColSearch] = useState("");
 
   const search = async () => {
-    if (!beid.trim()) return;
+    const value = searchType === "beid" ? beid.trim() : dmzid.trim();
+    if (!value) return;
     setLoading(true);
     setError(null);
     setAllColumns([]);
     setRows([]);
     setSearched(false);
-    const currentBeid = beid.trim();
-    setSearchedBeid(currentBeid);
+    setSearchedBeid(value);
     try {
-      const r = await api.get("/admin/associate-lookup", { params: { beid: Number(currentBeid) } });
+      const params = searchType === "beid" ? { beid: Number(value) } : { dmzid: value };
+      const r = await api.get("/admin/associate-lookup", { params });
       setAllColumns(r.data.columns);
       setRows(r.data.rows);
       setTotal(r.data.total);
-      // On first search, init visible columns from defaults (intersected with actual results)
       if (r.data.columns.length > 0) {
         const available = new Set(r.data.columns as string[]);
         const initial = DEFAULT_VISIBLE_COLUMNS.filter((c) => available.has(c));
@@ -94,18 +96,47 @@ export default function AssociateLookup() {
       </div>
 
       <div className="panel">
-        <div className="panel-header">Search by Business Entity ID</div>
+        <div className="panel-header">Search Associate</div>
         <div className="lookup-search-body">
           <div className="form-row">
-            <label className="lookup-label">BusinessEntityID:</label>
-            <input
-              type="number"
-              value={beid}
-              onChange={(e) => setBeid(e.target.value)}
-              placeholder="Enter Business Entity ID"
-              onKeyDown={(e) => e.key === "Enter" && search()}
-            />
-            <Button variant="primary" onClick={search} disabled={loading || !beid.trim()}>
+            <div className="lookup-toggle">
+              <button
+                type="button"
+                className={`lookup-toggle-btn${searchType === "beid" ? " active" : ""}`}
+                onClick={() => setSearchType("beid")}
+              >
+                BEID
+              </button>
+              <button
+                type="button"
+                className={`lookup-toggle-btn${searchType === "dmzid" ? " active" : ""}`}
+                onClick={() => setSearchType("dmzid")}
+              >
+                Email / DMZID
+              </button>
+            </div>
+            {searchType === "beid" ? (
+              <input
+                type="number"
+                value={beid}
+                onChange={(e) => setBeid(e.target.value)}
+                placeholder="Enter Business Entity ID"
+                onKeyDown={(e) => e.key === "Enter" && search()}
+              />
+            ) : (
+              <input
+                type="text"
+                value={dmzid}
+                onChange={(e) => setDmzid(e.target.value)}
+                placeholder="Enter email (e.g. user@company.com)"
+                onKeyDown={(e) => e.key === "Enter" && search()}
+              />
+            )}
+            <Button
+              variant="primary"
+              onClick={search}
+              disabled={loading || !(searchType === "beid" ? beid.trim() : dmzid.trim())}
+            >
               <SearchIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> Search
             </Button>
           </div>

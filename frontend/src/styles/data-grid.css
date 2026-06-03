@@ -894,6 +894,41 @@
   padding: 16px 20px;
 }
 
+.lookup-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lookup-toggle-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  background: var(--bg-glass);
+  color: var(--text-secondary);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.lookup-toggle-btn:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.lookup-toggle-btn:hover {
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+}
+
+.lookup-toggle-btn.active {
+  background: var(--accent-glow);
+  color: var(--accent-light);
+}
+
 .lookup-label {
   width: auto !important;
   padding-right: 8px;
