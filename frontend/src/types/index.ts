@@ -89,3 +89,22 @@ export interface ConnectionForm {
   connection_timeout: number;
   jdbc_url: string;
 }
+
+export interface AuditMetrics {
+  total_operations: number;
+  successful: number;
+  failed: number;
+  success_rate: number;
+  total_rows_inserted: number;
+  total_rows_skipped: number;
+  total_data_ingested_bytes: number;
+  total_time_ms: number;
+  avg_throughput_rps: number;
+  peak_throughput_rps: number;
+  avg_duration_ms: number;
+  avg_validation_score: number;
+  total_error_rows: number;
+  total_duplicates: number;
+  peak_memory_bytes: number;
+  total_cpu_time_s: number;
+}

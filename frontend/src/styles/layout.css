@@ -79,11 +79,11 @@
 .test-result-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 300;
+  z-index: 1100;
 }
 .test-result-modal {
   background: rgba(18, 18, 24, 0.97);

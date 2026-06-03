@@ -13,6 +13,86 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/audit", tags=["audit"])
 
 
+@router.get("/metrics")
+@limiter.limit("30/minute")
+def get_audit_metrics(
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Return aggregated execution metrics from the materialized view.
+    The view is refreshed CONCURRENTLY after each ingestion — reads are never blocked.
+    """
+    from sqlalchemy import text
+
+    row = db.execute(
+        text(
+            """
+            SELECT
+                total_operations,
+                successful,
+                failed,
+                success_rate,
+                total_rows_inserted,
+                total_rows_skipped,
+                total_data_ingested_bytes,
+                total_time_ms,
+                avg_throughput_rps,
+                peak_throughput_rps,
+                avg_duration_ms,
+                avg_validation_score,
+                total_error_rows,
+                total_duplicates,
+                peak_memory_bytes,
+                total_cpu_time_s
+            FROM audit_metrics_mv
+            WHERE user_id = :uid
+            """
+        ),
+        {"uid": user.id},
+    ).fetchone()
+
+    if not row:
+        return {
+            "total_operations": 0,
+            "successful": 0,
+            "failed": 0,
+            "success_rate": 0,
+            "total_rows_inserted": 0,
+            "total_rows_skipped": 0,
+            "total_data_ingested_bytes": 0,
+            "total_time_ms": 0,
+            "avg_throughput_rps": 0,
+            "peak_throughput_rps": 0,
+            "avg_duration_ms": 0,
+            "avg_validation_score": 0,
+            "total_error_rows": 0,
+            "total_duplicates": 0,
+            "peak_memory_bytes": 0,
+            "total_cpu_time_s": 0,
+        }
+
+    return {
+        "total_operations": int(row.total_operations),
+        "successful": int(row.successful),
+        "failed": int(row.failed),
+        "success_rate": float(row.success_rate or 0),
+        "total_rows_inserted": int(row.total_rows_inserted),
+        "total_rows_skipped": int(row.total_rows_skipped),
+        "total_data_ingested_bytes": int(row.total_data_ingested_bytes),
+        "total_time_ms": int(row.total_time_ms),
+        "avg_throughput_rps": float(row.avg_throughput_rps),
+        "peak_throughput_rps": float(row.peak_throughput_rps),
+        "avg_duration_ms": int(row.avg_duration_ms),
+        "avg_validation_score": float(row.avg_validation_score),
+        "total_error_rows": int(row.total_error_rows),
+        "total_duplicates": int(row.total_duplicates),
+        "peak_memory_bytes": int(row.peak_memory_bytes),
+        "total_cpu_time_s": float(row.total_cpu_time_s),
+    }
+
+
 @router.get("/")
 @limiter.limit("30/minute")
 def get_audit_logs(

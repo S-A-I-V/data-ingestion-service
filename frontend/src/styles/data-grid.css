@@ -781,3 +781,109 @@
 }
 
 /* ── Footer spacing — prevent content overlap ──────────────────────── */
+
+/* ── Audit Page Grid Layout ────────────────────────────────────────── */
+
+.audit-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.audit-analytics-panel {
+  align-self: stretch;
+}
+
+.audit-analytics-panel .panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.audit-analytics-body {
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.analytics-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex: 1;
+  min-height: 0;
+}
+
+.analytics-stat:last-child {
+  border-bottom: none;
+}
+
+.analytics-stat:hover {
+  background: var(--bg-glass-hover);
+}
+
+.analytics-stat-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.analytics-stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.analytics-stat.success .analytics-stat-value {
+  color: var(--success);
+}
+
+.analytics-stat.warn .analytics-stat-value {
+  color: var(--warning);
+}
+
+.analytics-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.audit-table-col {
+  min-width: 0; /* prevent grid blowout */
+  overflow: hidden;
+}
+
+.audit-table-col > .panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+/* Full-width container override for the audit page */
+.container.audit-container {
+  max-width: 100%;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+/* Responsive: stack on narrow viewports / high zoom */
+@media (max-width: 960px) {
+  .audit-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-analytics-panel {
+    position: static;
+  }
+}

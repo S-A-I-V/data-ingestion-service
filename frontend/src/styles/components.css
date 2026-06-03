@@ -158,6 +158,7 @@
   max-height: 85vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 .modal-header {

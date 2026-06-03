@@ -5,7 +5,8 @@ forming an immutable chain. Any tampering breaks the chain and is detectable.
 """
 
 import hashlib
-from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey
+
+from sqlalchemy import BigInteger, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -27,6 +28,22 @@ class AuditLog(Base):
     status = Column(String, nullable=False, default="success")
     error_message = Column(Text, nullable=True)
     executed_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # ── Execution Metrics ──
+    rows_inserted = Column(Integer, nullable=True)
+    rows_skipped = Column(Integer, nullable=True)
+    throughput_rps = Column(Float, nullable=True)
+    file_size_bytes = Column(BigInteger, nullable=True)
+    data_size_bytes = Column(BigInteger, nullable=True)
+    parse_time_ms = Column(Integer, nullable=True)
+    ingestion_time_ms = Column(Integer, nullable=True)
+    total_time_ms = Column(Integer, nullable=True)
+    error_rows = Column(Integer, nullable=True)
+    duplicate_count = Column(Integer, nullable=True)
+    validation_score = Column(Float, nullable=True)
+    peak_memory_bytes = Column(BigInteger, nullable=True)
+    cpu_time_s = Column(Float, nullable=True)
+
     # Hash chain fields
     prev_hash = Column(String(64), nullable=True)  # SHA-256 of previous record
     record_hash = Column(String(64), nullable=True)  # SHA-256 of this record's content

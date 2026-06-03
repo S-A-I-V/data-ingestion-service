@@ -15,6 +15,7 @@ from app.models.connection import DBConnection
 from app.models.user import User
 from app.routers.auth import get_current_user, limiter
 from app.services.db_connector import get_connector
+from app.services.metrics import refresh_metrics_view
 from app.services.validators import (
     validate_csv_upload,
     validate_identifier,
@@ -248,6 +249,7 @@ async def execute_ingestion(
         _seal_audit(audit, db)
         db.add(audit)
         db.commit()
+        refresh_metrics_view(db)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
     ingestion_elapsed = time.time() - ingestion_start
@@ -263,9 +265,27 @@ async def execute_ingestion(
     cpu_time_used = (post_snap["cpu_user"] - pre_snap["cpu_user"]) + (post_snap["cpu_system"] - pre_snap["cpu_system"])
     memory_delta = post_snap["rss"] - pre_snap["rss"]
 
+    # ── Persist metrics on audit record ──
+    audit.rows_inserted = count
+    audit.rows_skipped = skipped
+    audit.throughput_rps = throughput
+    audit.file_size_bytes = file_size_bytes
+    audit.data_size_bytes = data_size_bytes
+    audit.parse_time_ms = round(parse_elapsed * 1000)
+    audit.ingestion_time_ms = round(ingestion_elapsed * 1000)
+    audit.total_time_ms = round(wall_elapsed * 1000)
+    audit.error_rows = error_rows
+    audit.duplicate_count = duplicate_count
+    audit.validation_score = validation_score
+    audit.peak_memory_bytes = peak_rss
+    audit.cpu_time_s = round(cpu_time_used, 3)
+
     _seal_audit(audit, db)
     db.add(audit)
     db.commit()
+
+    # Refresh materialized view so analytics panel reflects latest data
+    refresh_metrics_view(db)
 
     return {
         "ok": True,
