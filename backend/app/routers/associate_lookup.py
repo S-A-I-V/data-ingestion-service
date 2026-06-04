@@ -6,6 +6,7 @@ data by businessEntityID. Requires 'admin:associate_lookup' permission.
 """
 
 import logging
+import re
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -15,6 +16,7 @@ from app.database import get_db
 from app.models.connection import DBConnection
 from app.models.user import User
 from app.routers.auth import limiter
+from app.services.connectors.specialty import SybaseConnectionError
 from app.services.db_connector import get_connector
 from app.services.rbac import require_permission
 
@@ -113,6 +115,59 @@ INNER JOIN REDACTED_DB.dbo.BusinessEntity b
 WHERE a.DMZID = :dmzid
 """
 
+# ── Input Validation ─────────────────────────────────────────────────────────
+
+# RFC 5322 compliant email regex (simplified but strict)
+_EMAIL_RE = re.compile(
+    r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
+    r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+)
+
+# Max lengths to prevent abuse
+_MAX_EMAIL_LENGTH = 254  # RFC 5321 max
+_MAX_BEID = 2_147_483_647  # 32-bit int max
+
+
+def _validate_beid(beid: int) -> None:
+    """Validate business entity ID is a positive integer within range."""
+    if beid <= 0:
+        raise HTTPException(status_code=400, detail="BEID must be a positive integer")
+    if beid > _MAX_BEID:
+        raise HTTPException(status_code=400, detail="BEID value is out of range")
+
+
+def _validate_dmzid(dmzid: str) -> str:
+    """
+    Validate and sanitize DMZID (email) input.
+    Guards against: SQL injection (redundant — params are bound), null bytes,
+    unicode homoglyph attacks, oversized input, and malformed emails.
+    """
+    # Strip whitespace
+    dmzid = dmzid.strip()
+
+    # Reject empty
+    if not dmzid:
+        raise HTTPException(status_code=400, detail="DMZID/email cannot be empty")
+
+    # Reject oversized input (DoS prevention)
+    if len(dmzid) > _MAX_EMAIL_LENGTH:
+        raise HTTPException(status_code=400, detail="Email exceeds maximum length (254 chars)")
+
+    # Reject null bytes (injection vector)
+    if "\x00" in dmzid:
+        raise HTTPException(status_code=400, detail="Invalid characters in email")
+
+    # Reject non-ASCII (homoglyph/punycode attacks) — DMZID emails are ASCII only
+    if not dmzid.isascii():
+        raise HTTPException(status_code=400, detail="Email must contain only ASCII characters")
+
+    # Validate email format
+    if not _EMAIL_RE.match(dmzid):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
+    # Normalize to lowercase
+    return dmzid.lower()
+
 
 def _find_lookup_connection(user_id: str, db: Session) -> DBConnection:
     """Find the saved connection matching the lookup target."""
@@ -150,23 +205,52 @@ def lookup_associates(
     Query associates by businessEntityID or DMZID (email) from REDACTED_DB.
     Provide either beid or dmzid.
     """
-    if not beid and not dmzid:
+    if beid is None and not dmzid:
         raise HTTPException(status_code=400, detail="Provide either 'beid' or 'dmzid' parameter")
+
+    # Validate inputs
+    if beid is not None:
+        _validate_beid(beid)
+    if dmzid:
+        dmzid = _validate_dmzid(dmzid)
 
     conn = _find_lookup_connection(user.id, db)
     connector = get_connector(conn)
 
     try:
         if dmzid:
-            results = connector.execute_query(ASSOCIATE_QUERY_BY_DMZID, {"dmzid": dmzid.strip()})
+            results = connector.execute_query(ASSOCIATE_QUERY_BY_DMZID, {"dmzid": dmzid})
         else:
             results = connector.execute_query(ASSOCIATE_QUERY_BY_BEID, {"beid": beid})
+    except SybaseConnectionError as e:
+        logger.error(f"Associate lookup connection error [{e.error_type}]: {e}")
+        # Map error types to appropriate HTTP status codes and user-friendly messages
+        status_map = {
+            "connection_refused": 503,
+            "network_unreachable": 503,
+            "timeout": 504,
+            "auth_failed": 502,
+            "driver_error": 500,
+            "connection_error": 503,
+        }
+        status_code = status_map.get(e.error_type, 503)
+        raise HTTPException(status_code=status_code, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"Associate lookup failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}") from e
+        logger.error(f"Associate lookup query failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred while querying the database. Please try again.",
+        ) from e
 
     if not results:
-        return {"columns": [], "rows": [], "total": 0}
+        search_field = "DMZID" if dmzid else "Business Entity ID"
+        search_value = dmzid if dmzid else str(beid)
+        return {
+            "columns": [],
+            "rows": [],
+            "total": 0,
+            "message": f"No associate found with {search_field}: {search_value}",
+        }
 
     columns = list(results[0].keys()) if results else []
     rows = [list(row.values()) for row in results]

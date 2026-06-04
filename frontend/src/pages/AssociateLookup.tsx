@@ -6,11 +6,13 @@ import SearchOffIcon from "@mui/icons-material/SearchOff";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import { Button, Spinner } from "../components/ui";
 import { DEFAULT_VISIBLE_COLUMNS } from "../constants/associateLookup";
+import { validateEmail, validatePositiveInt } from "../utils/validation";
 
 export default function AssociateLookup() {
   const [searchType, setSearchType] = useState<"beid" | "dmzid">("beid");
   const [beid, setBeid] = useState("");
   const [dmzid, setDmzid] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [allColumns, setAllColumns] = useState<string[]>([]);
   const [rows, setRows] = useState<any[][]>([]);
   const [loading, setLoading] = useState(false);
@@ -21,9 +23,22 @@ export default function AssociateLookup() {
   const [visibleCols, setVisibleCols] = useState<Set<string>>(new Set(DEFAULT_VISIBLE_COLUMNS));
   const [colSearch, setColSearch] = useState("");
 
+  const validateInput = (): string | null => {
+    if (searchType === "beid") {
+      return validatePositiveInt(beid, "BEID");
+    } else {
+      return validateEmail(dmzid);
+    }
+  };
+
   const search = async () => {
+    const err = validateInput();
+    if (err) {
+      setValidationError(err);
+      return;
+    }
+    setValidationError(null);
     const value = searchType === "beid" ? beid.trim() : dmzid.trim();
-    if (!value) return;
     setLoading(true);
     setError(null);
     setAllColumns([]);
@@ -42,7 +57,31 @@ export default function AssociateLookup() {
         setVisibleCols(new Set(initial.length > 0 ? initial : r.data.columns.slice(0, 8)));
       }
     } catch (e: any) {
-      setError(e.response?.data?.detail || "Lookup failed");
+      if (e.response) {
+        // Server responded with an error status
+        const status = e.response.status;
+        const detail = e.response.data?.detail;
+        if (status === 503) {
+          setError(detail || "Database server is unavailable. Check network/VPN connectivity.");
+        } else if (status === 504) {
+          setError(detail || "Connection timed out. The database server did not respond.");
+        } else if (status === 502) {
+          setError(detail || "Authentication failed with the database server.");
+        } else if (status === 404) {
+          setError(detail || "No saved connection found. Please add the connection in Database Connections first.");
+        } else if (status === 403) {
+          setError("Permission denied. You do not have access to Associate Lookup.");
+        } else if (status === 400) {
+          setError(detail || "Invalid search input.");
+        } else {
+          setError(detail || "An unexpected server error occurred. Please try again.");
+        }
+      } else if (e.request) {
+        // Request was made but no response received (network error)
+        setError("Network error — unable to reach the server. Check your internet or VPN connection.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
     setSearched(true);
     setLoading(false);
@@ -144,13 +183,29 @@ export default function AssociateLookup() {
       </div>
 
       {loading && <Spinner size="lg" label="Querying REDACTED_DB..." />}
-      {error && <div className="badge badge-failed">{error}</div>}
+      {validationError && (
+        <div
+          className="badge badge-failed"
+          style={{ display: "block", textAlign: "center", margin: "16px auto", width: "fit-content" }}
+        >
+          {validationError}
+        </div>
+      )}
+      {error && (
+        <div
+          className="badge badge-failed"
+          style={{ display: "block", textAlign: "center", margin: "16px auto", width: "fit-content" }}
+        >
+          {error}
+        </div>
+      )}
 
       {searched && !loading && !error && rows.length === 0 && (
         <div className="panel lookup-empty">
           <SearchOffIcon sx={{ fontSize: 36, opacity: 0.5 }} />
           <span>
-            No entries found for Business Entity ID: <strong className="lookup-empty-beid">{searchedBeid}</strong>
+            No entries found for {searchType === "beid" ? "Business Entity ID" : "DMZID"}:{" "}
+            <strong className="lookup-empty-beid">{searchedBeid}</strong>
           </span>
         </div>
       )}
