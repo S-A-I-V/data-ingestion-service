@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
 import api from "../api";
 import SearchIcon from "@mui/icons-material/Search";
-import DownloadIcon from "@mui/icons-material/Download";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
-import { Button, Spinner } from "../components/ui";
+import { Button, Spinner, ToggleGroup, ToggleGroupItem, DownloadButton } from "../components/ui";
 import { DEFAULT_VISIBLE_COLUMNS } from "../constants/associateLookup";
 import { validateEmail, validatePositiveInt } from "../utils/validation";
 
@@ -127,33 +126,23 @@ export default function AssociateLookup() {
       <div className="toolbar">
         <span className="toolbar-title">Associate Lookup</span>
         <div className="toolbar-spacer" />
-        {rows.length > 0 && (
-          <Button size="sm" onClick={downloadCsv}>
-            <DownloadIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Download CSV
-          </Button>
-        )}
+        {rows.length > 0 && <DownloadButton onClick={downloadCsv} label="Download" doneLabel="Done" />}
       </div>
 
       <div className="panel">
         <div className="panel-header">Search Associate</div>
         <div className="lookup-search-body">
           <div className="form-row">
-            <div className="lookup-toggle">
-              <button
-                type="button"
-                className={`lookup-toggle-btn${searchType === "beid" ? " active" : ""}`}
-                onClick={() => setSearchType("beid")}
-              >
-                BEID
-              </button>
-              <button
-                type="button"
-                className={`lookup-toggle-btn${searchType === "dmzid" ? " active" : ""}`}
-                onClick={() => setSearchType("dmzid")}
-              >
-                Email / DMZID
-              </button>
-            </div>
+            <ToggleGroup
+              type="single"
+              value={searchType}
+              onValueChange={(val) => {
+                if (val) setSearchType(val as "beid" | "dmzid");
+              }}
+            >
+              <ToggleGroupItem value="beid">BEID</ToggleGroupItem>
+              <ToggleGroupItem value="dmzid">Email / DMZID</ToggleGroupItem>
+            </ToggleGroup>
             {searchType === "beid" ? (
               <input
                 type="number"

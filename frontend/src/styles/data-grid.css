@@ -1114,3 +1114,222 @@
     position: static;
   }
 }
+
+/* ── Animated Download Button (Uiverse.io / Na3ar-17) ──────────────── */
+
+.download-btn-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.download-btn-label {
+  background-color: transparent;
+  border: 1.5px solid var(--accent, rgb(15, 177, 178));
+  display: flex;
+  align-items: center;
+  border-radius: 50px;
+  width: 110px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  padding: 3px;
+  position: relative;
+}
+
+.download-btn-label.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.download-btn-label::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  width: 5px;
+  height: 5px;
+  transition: all 0.4s ease;
+  border-radius: 100%;
+  margin: auto;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.download-btn-input {
+  display: none;
+}
+
+.download-btn-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary, #f0f0f5);
+  transition: all 0.4s ease;
+  position: absolute;
+  right: 12px;
+  bottom: 7px;
+  text-align: center;
+  font-family: inherit;
+}
+
+.download-btn-title-done {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.download-btn-circle {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background-color: var(--accent, rgb(15, 177, 178));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.4s ease;
+  position: relative;
+  box-shadow: 0 0 0 0 rgb(255, 255, 255);
+  overflow: hidden;
+}
+
+.download-btn-circle .download-btn-icon {
+  color: #fff;
+  width: 14px !important;
+  height: 14px !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+}
+
+.download-btn-circle .download-btn-square {
+  aspect-ratio: 1;
+  width: 8px;
+  border-radius: 2px;
+  background-color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+}
+
+.download-btn-circle::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  width: 100%;
+  height: 0;
+  transition: all 0.4s ease;
+}
+
+/* ── Active (downloading) state ─── */
+
+.download-btn-label.active {
+  width: 32px;
+  animation: dl-installed 0.4s ease 3.5s forwards;
+}
+
+.download-btn-label.active::before {
+  animation: dl-rotate 3s ease-in-out 0.4s forwards;
+}
+
+.download-btn-label.active .download-btn-circle {
+  animation:
+    dl-pulse 1s forwards,
+    dl-circleDelete 0.2s ease 3.5s forwards;
+  rotate: 180deg;
+}
+
+.download-btn-label.active .download-btn-circle::before {
+  animation: dl-installing 3s ease-in-out forwards;
+}
+
+.download-btn-label.active .download-btn-circle .download-btn-icon {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.download-btn-label.active .download-btn-circle .download-btn-square {
+  opacity: 1;
+  visibility: visible;
+}
+
+.download-btn-label.active .download-btn-title {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.download-btn-label.active .download-btn-title-done {
+  animation: dl-showDone 0.4s ease 3.5s forwards;
+}
+
+@keyframes dl-pulse {
+  0% {
+    scale: 0.95;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  70% {
+    scale: 1;
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+  100% {
+    scale: 0.95;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+@keyframes dl-installing {
+  from {
+    height: 0;
+  }
+  to {
+    height: 100%;
+  }
+}
+
+@keyframes dl-rotate {
+  0% {
+    transform: rotate(-90deg) translate(14px) rotate(0);
+    opacity: 1;
+    visibility: visible;
+  }
+  99% {
+    transform: rotate(270deg) translate(14px) rotate(270deg);
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes dl-installed {
+  100% {
+    width: 100px;
+    border-color: rgb(34, 197, 94);
+  }
+}
+
+@keyframes dl-circleDelete {
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes dl-showDone {
+  100% {
+    opacity: 1;
+    visibility: visible;
+    right: 32px;
+  }
+}
