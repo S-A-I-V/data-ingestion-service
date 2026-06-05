@@ -75,6 +75,7 @@ INNER JOIN REDACTED_DB.dbo.BusinessEntity b
 LEFT JOIN REDACTED_DB.dbo.BusinessEntityProduct p
     ON b.businessEntityID = p.businessEntityID
 WHERE a.businessEntityID = :beid
+    AND a.isDisabledFlag != '1'
 """
 
 ASSOCIATE_QUERY_BY_DMZID = """
@@ -123,6 +124,7 @@ INNER JOIN REDACTED_DB.dbo.BusinessEntity b
 LEFT JOIN REDACTED_DB.dbo.BusinessEntityProduct p
     ON b.businessEntityID = p.businessEntityID
 WHERE a.DMZID = :dmzid
+    AND a.isDisabledFlag != '1'
 """
 
 # ── Input Validation ─────────────────────────────────────────────────────────

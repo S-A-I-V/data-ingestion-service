@@ -230,11 +230,16 @@ export default function AssociateLookup() {
             </ToggleGroup>
             {searchType === "beid" ? (
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={beid}
-                onChange={(e) => setBeid(e.target.value)}
+                onChange={(e) => setBeid(e.target.value.replace(/[^0-9]/g, ""))}
                 placeholder="Enter Business Entity ID"
-                onKeyDown={(e) => e.key === "Enter" && search()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") search();
+                  if (e.key === " " || e.key === "." || e.key === "-" || e.key === "e") e.preventDefault();
+                }}
               />
             ) : (
               <input
