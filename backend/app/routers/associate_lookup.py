@@ -65,15 +65,10 @@ SELECT
     b.phoneNumber,
     b.lastUpdateDateTime AS businessEntityLastUpdateDateTime,
     b.status AS businessEntityStatus,
-    b.answersUID AS businessEntityAnswersUID,
-    p.productID,
-    p.numberOfUsersAuthorized,
-    p.lastUpdateDateTime AS productLastUpdateDateTime
+    b.answersUID AS businessEntityAnswersUID
 FROM REDACTED_DB.dbo.Associate a
 INNER JOIN REDACTED_DB.dbo.BusinessEntity b
     ON a.businessEntityID = b.businessEntityID
-LEFT JOIN REDACTED_DB.dbo.BusinessEntityProduct p
-    ON b.businessEntityID = p.businessEntityID
 WHERE a.businessEntityID = :beid
     AND a.isDisabledFlag != '1'
 """
@@ -114,15 +109,10 @@ SELECT
     b.phoneNumber,
     b.lastUpdateDateTime AS businessEntityLastUpdateDateTime,
     b.status AS businessEntityStatus,
-    b.answersUID AS businessEntityAnswersUID,
-    p.productID,
-    p.numberOfUsersAuthorized,
-    p.lastUpdateDateTime AS productLastUpdateDateTime
+    b.answersUID AS businessEntityAnswersUID
 FROM REDACTED_DB.dbo.Associate a
 INNER JOIN REDACTED_DB.dbo.BusinessEntity b
     ON a.businessEntityID = b.businessEntityID
-LEFT JOIN REDACTED_DB.dbo.BusinessEntityProduct p
-    ON b.businessEntityID = p.businessEntityID
 WHERE a.DMZID = :dmzid
     AND a.isDisabledFlag != '1'
 """
@@ -140,12 +130,39 @@ _MAX_EMAIL_LENGTH = 254  # RFC 5321 max
 _MAX_BEID = 2_147_483_647  # 32-bit int max
 
 
+_MAX_BEIDS_COUNT = 50  # Max number of BEIDs per request
+
+
 def _validate_beid(beid: int) -> None:
     """Validate business entity ID is a positive integer within range."""
     if beid <= 0:
         raise HTTPException(status_code=400, detail="BEID must be a positive integer")
     if beid > _MAX_BEID:
         raise HTTPException(status_code=400, detail="BEID value is out of range")
+
+
+def _parse_beids(raw: str) -> list[int]:
+    """
+    Parse a comma-separated string of BEIDs into a validated list of integers.
+    Strips spaces, ignores empty segments.
+    """
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    if not parts:
+        raise HTTPException(status_code=400, detail="No valid BEIDs provided")
+    if len(parts) > _MAX_BEIDS_COUNT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many BEIDs — maximum {_MAX_BEIDS_COUNT} per request",
+        )
+    beids: list[int] = []
+    for p in parts:
+        try:
+            val = int(p)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=f"Invalid BEID value: '{p}'") from exc
+        _validate_beid(val)
+        beids.append(val)
+    return beids
 
 
 def _validate_dmzid(dmzid: str) -> str:
@@ -208,21 +225,22 @@ def _find_lookup_connection(user_id: str, db: Session) -> DBConnection:
 @limiter.limit("30/minute")
 def lookup_associates(
     request: Request,
-    beid: Optional[int] = Query(None, description="Business Entity ID"),
+    beid: Optional[str] = Query(None, description="Business Entity ID(s), comma-separated"),
     dmzid: Optional[str] = Query(None, description="DMZID (email)"),
     user: User = Depends(require_permission("admin:associate_lookup")),
     db: Session = Depends(get_db),
 ):
     """
-    Query associates by businessEntityID or DMZID (email) from REDACTED_DB.
-    Provide either beid or dmzid.
+    Query associates by businessEntityID(s) or DMZID (email) from REDACTED_DB.
+    Provide either beid (comma-separated for multiple) or dmzid.
     """
-    if beid is None and not dmzid:
+    if not beid and not dmzid:
         raise HTTPException(status_code=400, detail="Provide either 'beid' or 'dmzid' parameter")
 
     # Validate inputs
-    if beid is not None:
-        _validate_beid(beid)
+    beids: list[int] = []
+    if beid:
+        beids = _parse_beids(beid)
     if dmzid:
         dmzid = _validate_dmzid(dmzid)
 
@@ -233,7 +251,14 @@ def lookup_associates(
         if dmzid:
             results = connector.execute_query(ASSOCIATE_QUERY_BY_DMZID, {"dmzid": dmzid})
         else:
-            results = connector.execute_query(ASSOCIATE_QUERY_BY_BEID, {"beid": beid})
+            # Build dynamic IN clause for multiple BEIDs
+            placeholders = ", ".join([f":beid{i}" for i in range(len(beids))])
+            query = ASSOCIATE_QUERY_BY_BEID.replace(
+                "a.businessEntityID = :beid",
+                f"a.businessEntityID IN ({placeholders})",
+            )
+            params = {f"beid{i}": v for i, v in enumerate(beids)}
+            results = connector.execute_query(query, params)
     except SybaseConnectionError as e:
         logger.error(f"Associate lookup connection error [{e.error_type}]: {e}")
         # Map error types to appropriate HTTP status codes and user-friendly messages
@@ -255,8 +280,8 @@ def lookup_associates(
         ) from e
 
     if not results:
-        search_field = "DMZID" if dmzid else "Business Entity ID"
-        search_value = dmzid if dmzid else str(beid)
+        search_field = "DMZID" if dmzid else "Business Entity ID(s)"
+        search_value = dmzid if dmzid else ", ".join(str(b) for b in beids)
         return {
             "columns": [],
             "rows": [],

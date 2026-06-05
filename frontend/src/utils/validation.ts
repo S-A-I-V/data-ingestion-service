@@ -20,9 +20,18 @@ export function validateEmail(value: string): string | null {
 export function validatePositiveInt(value: string, label = "Value"): string | null {
   const trimmed = value.trim();
   if (!trimmed) return `${label} is required`;
-  const num = Number(trimmed);
-  if (!Number.isFinite(num) || !Number.isInteger(num)) return `${label} must be an integer`;
-  if (num <= 0) return `${label} must be a positive integer`;
-  if (num > MAX_BEID) return `${label} is out of range`;
+  // Support comma-separated values
+  const parts = trimmed
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return `${label} is required`;
+  if (parts.length > 50) return `Maximum 50 ${label}s per request`;
+  for (const part of parts) {
+    const num = Number(part);
+    if (!Number.isFinite(num) || !Number.isInteger(num)) return `Invalid ${label}: "${part}" is not an integer`;
+    if (num <= 0) return `Invalid ${label}: "${part}" must be positive`;
+    if (num > MAX_BEID) return `Invalid ${label}: "${part}" is out of range`;
+  }
   return null;
 }

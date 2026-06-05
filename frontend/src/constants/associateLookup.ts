@@ -53,7 +53,4 @@ export const COLUMN_LABELS: Record<string, string> = {
   businessentitylastupdatedatetime: "Org Updated",
   businessentitystatus: "Org Status",
   businessentityanswersuid: "Org UID",
-  productid: "Product ID",
-  numberofusersauthorized: "Users Authorized",
-  productlastupdatedatetime: "Product Updated",
 };

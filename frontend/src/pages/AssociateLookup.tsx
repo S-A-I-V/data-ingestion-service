@@ -53,7 +53,7 @@ export default function AssociateLookup() {
     setSearched(false);
     setSearchedBeid(value);
     try {
-      const params = searchType === "beid" ? { beid: Number(value) } : { dmzid: value };
+      const params = searchType === "beid" ? { beid: value } : { dmzid: value };
       const r = await api.get("/admin/associate-lookup", { params });
       setAllColumns(r.data.columns);
       setRows(r.data.rows);
@@ -231,14 +231,11 @@ export default function AssociateLookup() {
             {searchType === "beid" ? (
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
                 value={beid}
-                onChange={(e) => setBeid(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="Enter Business Entity ID"
+                onChange={(e) => setBeid(e.target.value.replace(/[^0-9, ]/g, ""))}
+                placeholder="Enter BEID(s) — e.g. 123, 456, 890"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") search();
-                  if (e.key === " " || e.key === "." || e.key === "-" || e.key === "e") e.preventDefault();
                 }}
               />
             ) : (
