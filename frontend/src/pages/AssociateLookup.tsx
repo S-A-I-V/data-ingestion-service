@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import api from "../api";
 import SearchIcon from "@mui/icons-material/Search";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { Button, Spinner, ToggleGroup, ToggleGroupItem, DownloadButton } from "../components/ui";
-import { DEFAULT_VISIBLE_COLUMNS } from "../constants/associateLookup";
+import { getColumnLabel, isDefaultColumn } from "../utils/columnHelpers";
 import { validateEmail, validatePositiveInt } from "../utils/validation";
 
 export default function AssociateLookup() {
@@ -19,8 +20,15 @@ export default function AssociateLookup() {
   const [total, setTotal] = useState(0);
   const [searched, setSearched] = useState(false);
   const [searchedBeid, setSearchedBeid] = useState("");
-  const [visibleCols, setVisibleCols] = useState<Set<string>>(new Set(DEFAULT_VISIBLE_COLUMNS));
+  // Ordered array of visible columns — order = display + download order
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [colSearch, setColSearch] = useState("");
+
+  // Drag state refs
+  const dragIdx = useRef<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ idx: number; side: "left" | "right" } | null>(null);
+
+  const visibleCols = useMemo(() => new Set(columnOrder), [columnOrder]);
 
   const validateInput = (): string | null => {
     if (searchType === "beid") {
@@ -51,13 +59,11 @@ export default function AssociateLookup() {
       setRows(r.data.rows);
       setTotal(r.data.total);
       if (r.data.columns.length > 0) {
-        const available = new Set(r.data.columns as string[]);
-        const initial = DEFAULT_VISIBLE_COLUMNS.filter((c) => available.has(c));
-        setVisibleCols(new Set(initial.length > 0 ? initial : r.data.columns.slice(0, 8)));
+        const initial = (r.data.columns as string[]).filter((c) => isDefaultColumn(c));
+        setColumnOrder(initial.length > 0 ? initial : r.data.columns.slice(0, 8));
       }
     } catch (e: any) {
       if (e.response) {
-        // Server responded with an error status
         const status = e.response.status;
         const detail = e.response.data?.detail;
         if (status === 503) {
@@ -76,7 +82,6 @@ export default function AssociateLookup() {
           setError(detail || "An unexpected server error occurred. Please try again.");
         }
       } else if (e.request) {
-        // Request was made but no response received (network error)
         setError("Network error — unable to reach the server. Check your internet or VPN connection.");
       } else {
         setError("An unexpected error occurred. Please try again.");
@@ -87,27 +92,107 @@ export default function AssociateLookup() {
   };
 
   const toggleColumn = (col: string) => {
-    setVisibleCols((prev) => {
-      const next = new Set(prev);
-      if (next.has(col)) next.delete(col);
-      else next.add(col);
-      return next;
+    setColumnOrder((prev) => {
+      if (prev.includes(col)) {
+        return prev.filter((c) => c !== col);
+      }
+      return [...prev, col];
     });
   };
 
-  const selectAll = () => setVisibleCols(new Set(allColumns));
-  const selectNone = () => setVisibleCols(new Set());
+  const selectAll = () => setColumnOrder([...allColumns]);
+  const selectNone = () => setColumnOrder([]);
 
-  // Filter columns/rows to only visible
-  const displayColumns = useMemo(() => allColumns.filter((c) => visibleCols.has(c)), [allColumns, visibleCols]);
+  // Display columns in user-defined order
+  const displayColumns = columnOrder;
   const displayRows = useMemo(() => {
     const indices = displayColumns.map((c) => allColumns.indexOf(c));
     return rows.map((row) => indices.map((i) => row[i]));
   }, [rows, displayColumns, allColumns]);
 
+  // Drag-to-reorder handlers for the strip
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    dragIdx.current = idx;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(idx));
+    const el = e.currentTarget as HTMLElement;
+    requestAnimationFrame(() => el.classList.add("dragging"));
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragIdx.current === idx) {
+      setDropTarget(null);
+      return;
+    }
+    // Determine left/right side based on cursor position relative to chip center
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    const side = e.clientX < midX ? "left" : "right";
+    setDropTarget({ idx, side });
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIdx = dragIdx.current;
+    if (fromIdx === null || !dropTarget) {
+      // If no dropTarget but we're dropping, treat as end-drop
+      if (fromIdx !== null) {
+        setColumnOrder((prev) => {
+          const updated = [...prev];
+          const [dragged] = updated.splice(fromIdx, 1);
+          updated.push(dragged);
+          return updated;
+        });
+      }
+      dragIdx.current = null;
+      setDropTarget(null);
+      return;
+    }
+    const { idx: targetIdx, side } = dropTarget;
+    // Calculate the insert position
+    let insertAt = side === "left" ? targetIdx : targetIdx + 1;
+    // Adjust if dragging from before the insert point
+    if (fromIdx < insertAt) insertAt -= 1;
+    if (fromIdx === insertAt) {
+      dragIdx.current = null;
+      setDropTarget(null);
+      return;
+    }
+    setColumnOrder((prev) => {
+      const updated = [...prev];
+      const [dragged] = updated.splice(fromIdx, 1);
+      updated.splice(insertAt, 0, dragged);
+      return updated;
+    });
+    dragIdx.current = null;
+    setDropTarget(null);
+  };
+
+  const handleDropEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIdx = dragIdx.current;
+    if (fromIdx === null) return;
+    setColumnOrder((prev) => {
+      const updated = [...prev];
+      const [dragged] = updated.splice(fromIdx, 1);
+      updated.push(dragged);
+      return updated;
+    });
+    dragIdx.current = null;
+    setDropTarget(null);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    (e.currentTarget as HTMLElement).classList.remove("dragging");
+    dragIdx.current = null;
+    setDropTarget(null);
+  };
+
   const downloadCsv = () => {
     if (!displayColumns.length || !displayRows.length) return;
-    const header = displayColumns.join(",");
+    const header = displayColumns.map((c) => getColumnLabel(c)).join(",");
     const body = displayRows.map((row) =>
       row.map((cell: any) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","),
     );
@@ -172,22 +257,8 @@ export default function AssociateLookup() {
       </div>
 
       {loading && <Spinner size="lg" label="Querying REDACTED_DB..." />}
-      {validationError && (
-        <div
-          className="badge badge-failed"
-          style={{ display: "block", textAlign: "center", margin: "16px auto", width: "fit-content" }}
-        >
-          {validationError}
-        </div>
-      )}
-      {error && (
-        <div
-          className="badge badge-failed"
-          style={{ display: "block", textAlign: "center", margin: "16px auto", width: "fit-content" }}
-        >
-          {error}
-        </div>
-      )}
+      {validationError && <div className="lookup-error-badge">{validationError}</div>}
+      {error && <div className="lookup-error-badge">{error}</div>}
 
       {searched && !loading && !error && rows.length === 0 && (
         <div className="panel lookup-empty">
@@ -201,6 +272,45 @@ export default function AssociateLookup() {
 
       {rows.length > 0 && (
         <div className="lookup-results-layout">
+          {/* Column Order Strip — drag chips to reorder (table width only) */}
+          <div className="lookup-order-strip">
+            <span className="lookup-order-label">Column order:</span>
+            <div className="lookup-order-chips">
+              {columnOrder.map((col, idx) => (
+                <div
+                  key={col}
+                  className={`lookup-order-chip${dragIdx.current === idx ? " dragging" : ""}${dropTarget?.idx === idx && dropTarget.side === "left" ? " drop-left" : ""}${dropTarget?.idx === idx && dropTarget.side === "right" ? " drop-right" : ""}`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDrop={handleDrop}
+                  onDragEnd={(e) => handleDragEnd(e)}
+                >
+                  <DragIndicatorIcon className="lookup-order-grip" sx={{ fontSize: 12 }} />
+                  <span>{getColumnLabel(col)}</span>
+                  <button
+                    type="button"
+                    className="lookup-order-remove"
+                    onClick={() => toggleColumn(col)}
+                    aria-label={`Remove ${getColumnLabel(col)}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {/* Trailing drop zone — fills remaining space for easy end-drop */}
+              <div
+                className="lookup-order-end-zone"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                  setDropTarget(null);
+                }}
+                onDrop={handleDropEnd}
+              />
+            </div>
+          </div>
+
           {/* Results Table */}
           <div className="lookup-table-col">
             <div className="panel">
@@ -212,7 +322,7 @@ export default function AssociateLookup() {
                   <thead>
                     <tr>
                       {displayColumns.map((col) => (
-                        <th key={col}>{col}</th>
+                        <th key={col}>{getColumnLabel(col)}</th>
                       ))}
                     </tr>
                   </thead>
@@ -256,15 +366,17 @@ export default function AssociateLookup() {
               </div>
               <div className="lookup-col-list">
                 {[...allColumns]
-                  .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }))
-                  .filter((col) => col.toLowerCase().includes(colSearch.toLowerCase()))
+                  .sort((a, b) =>
+                    getColumnLabel(a).localeCompare(getColumnLabel(b), undefined, { sensitivity: "base" }),
+                  )
+                  .filter((col) => getColumnLabel(col).toLowerCase().includes(colSearch.trim().toLowerCase()))
                   .map((col) => (
                     <div
                       key={col}
                       className={`lookup-col-item${visibleCols.has(col) ? " active" : ""}`}
                       onClick={() => toggleColumn(col)}
                     >
-                      <span>{col}</span>
+                      <span>{getColumnLabel(col)}</span>
                     </div>
                   ))}
               </div>

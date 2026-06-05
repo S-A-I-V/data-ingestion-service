@@ -65,10 +65,15 @@ SELECT
     b.phoneNumber,
     b.lastUpdateDateTime AS businessEntityLastUpdateDateTime,
     b.status AS businessEntityStatus,
-    b.answersUID AS businessEntityAnswersUID
+    b.answersUID AS businessEntityAnswersUID,
+    p.productID,
+    p.numberOfUsersAuthorized,
+    p.lastUpdateDateTime AS productLastUpdateDateTime
 FROM REDACTED_DB.dbo.Associate a
 INNER JOIN REDACTED_DB.dbo.BusinessEntity b
     ON a.businessEntityID = b.businessEntityID
+LEFT JOIN REDACTED_DB.dbo.BusinessEntityProduct p
+    ON b.businessEntityID = p.businessEntityID
 WHERE a.businessEntityID = :beid
 """
 
@@ -108,10 +113,15 @@ SELECT
     b.phoneNumber,
     b.lastUpdateDateTime AS businessEntityLastUpdateDateTime,
     b.status AS businessEntityStatus,
-    b.answersUID AS businessEntityAnswersUID
+    b.answersUID AS businessEntityAnswersUID,
+    p.productID,
+    p.numberOfUsersAuthorized,
+    p.lastUpdateDateTime AS productLastUpdateDateTime
 FROM REDACTED_DB.dbo.Associate a
 INNER JOIN REDACTED_DB.dbo.BusinessEntity b
     ON a.businessEntityID = b.businessEntityID
+LEFT JOIN REDACTED_DB.dbo.BusinessEntityProduct p
+    ON b.businessEntityID = p.businessEntityID
 WHERE a.DMZID = :dmzid
 """
 

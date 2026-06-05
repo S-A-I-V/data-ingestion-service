@@ -47,6 +47,7 @@
 .exec-stat-label {
   font-size: 0.7rem;
   text-transform: uppercase;
+  /* Add override for whichever table we want specific labels. */
   letter-spacing: 0.05em;
   color: var(--muted);
   font-weight: 500;
@@ -953,12 +954,30 @@
 .lookup-results-layout {
   display: grid;
   grid-template-columns: 1fr 240px;
+  grid-template-rows: auto 1fr;
   gap: 16px;
   margin-top: 16px;
   height: calc(100vh - 200px);
 }
 
+.lookup-order-strip {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(15, 15, 28, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  align-self: start;
+}
+
 .lookup-col-picker {
+  grid-column: 2;
+  grid-row: 1 / -1;
   height: 100%;
   min-height: 0;
 }
@@ -1047,6 +1066,9 @@
   overflow-y: auto;
   padding: 6px 8px;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .lookup-col-item {
@@ -1085,6 +1107,8 @@
 }
 
 .lookup-table-col {
+  grid-column: 1;
+  grid-row: 2;
   min-width: 0;
   height: 100%;
   min-height: 0;
@@ -1332,4 +1356,303 @@
     visibility: visible;
     right: 32px;
   }
+}
+
+/* ── Lookup Error Badge ────────────────────────────────────────────── */
+
+.lookup-error-badge {
+  display: block;
+  text-align: center;
+  margin: 16px auto;
+  width: fit-content;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* ── Column Picker Sections ────────────────────────────────────────── */
+
+.lookup-col-section {
+  border-top: 1px solid var(--border);
+}
+
+.lookup-col-section:first-child {
+  border-top: none;
+}
+
+.lookup-col-section-label {
+  padding: 8px 12px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* ── Drag-to-reorder ──────────────────────────────────────────────── */
+
+.lookup-col-list-reorder {
+  max-height: 180px;
+}
+
+.lookup-col-item.draggable {
+  cursor: grab;
+  gap: 6px;
+}
+
+.lookup-col-item.draggable:active {
+  cursor: grabbing;
+  opacity: 0.7;
+  background: rgba(15, 177, 178, 0.15);
+  border-color: var(--accent);
+}
+
+.lookup-drag-handle {
+  color: var(--muted);
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.lookup-col-item.draggable:hover .lookup-drag-handle {
+  opacity: 1;
+}
+
+/* ── Column Order Strip (drag to reorder) ──────────────────────────── */
+
+.lookup-order-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.lookup-order-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  align-items: center;
+}
+
+.lookup-order-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: grab;
+  white-space: nowrap;
+  transition: all 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+  position: relative;
+}
+
+.lookup-order-chip:active {
+  cursor: grabbing;
+}
+
+.lookup-order-chip:hover {
+  border-color: var(--accent);
+  background: rgba(15, 177, 178, 0.06);
+}
+
+.lookup-order-chip.dragging {
+  opacity: 0.3;
+  border-style: dashed;
+}
+
+/* Drop indicator — a vertical bar centered in the gap BEFORE the chip */
+.lookup-order-chip.drop-before::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  width: 3px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(15, 177, 178, 0.6);
+  pointer-events: none;
+}
+
+.lookup-order-end-zone {
+  display: inline-flex;
+  align-items: center;
+  min-width: 20px;
+  min-height: 28px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.lookup-order-end-zone.drop-before::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(15, 177, 178, 0.6);
+  pointer-events: none;
+}
+
+.lookup-order-chip.drag-over {
+  border-color: var(--accent);
+  background: rgba(15, 177, 178, 0.12);
+  box-shadow: 0 0 0 2px rgba(15, 177, 178, 0.2);
+}
+
+.lookup-order-grip {
+  color: var(--muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.lookup-order-chip:hover .lookup-order-grip {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.lookup-order-remove {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  margin-left: 2px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.lookup-order-remove:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Drag indicator + states ───────────────────────────────────────── */
+
+.lookup-order-slot {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.lookup-order-chip.dragging {
+  opacity: 0.35;
+  border-style: dashed;
+}
+
+.lookup-drop-indicator {
+  width: 3px;
+  height: 24px;
+  background: var(--accent);
+  border-radius: 2px;
+  margin: 0 2px;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(15, 177, 178, 0.5);
+  animation: drop-indicator-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes drop-indicator-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.lookup-order-end-zone {
+  display: inline-flex;
+  align-items: center;
+  min-width: 24px;
+  min-height: 28px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.lookup-order-end-zone.drag-over {
+  background: rgba(15, 177, 178, 0.06);
+  border-radius: 6px;
+}
+
+.lookup-order-grip {
+  color: var(--muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.lookup-order-chip:hover .lookup-order-grip {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.lookup-order-remove {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  margin-left: 2px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.lookup-order-remove:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Drop indicator — vertical bar in the gap on left or right side of chip */
+.lookup-order-chip.drop-left::before,
+.lookup-order-chip.drop-right::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(15, 177, 178, 0.6);
+  pointer-events: none;
+}
+
+.lookup-order-chip.drop-left::before {
+  left: -6px;
+}
+
+.lookup-order-chip.drop-right::after {
+  right: -6px;
+}
+
+.lookup-order-end-zone {
+  display: inline-flex;
+  align-items: center;
+  min-width: 60px;
+  min-height: 28px;
+  flex: 1;
+  position: relative;
 }
