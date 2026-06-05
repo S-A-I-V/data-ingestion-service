@@ -13,6 +13,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
   border-bottom: 1px solid var(--border);
 }
 .data-table td {
