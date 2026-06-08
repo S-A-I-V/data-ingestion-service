@@ -16,7 +16,10 @@ const NAV_TABS = [
   { label: "Audit Log", to: "/audit" },
 ];
 
-const ADMIN_TABS = [{ label: "Associate Lookup", to: "/admin/associate-lookup", permission: "admin:associate_lookup" }];
+const ADMIN_TABS = [
+  { label: "Associate Lookup", to: "/admin/associate-lookup", permission: "admin:associate_lookup" },
+  { label: "Client Onboarding", to: "/admin/client-onboarding", permission: "admin:client_onboarding" },
+];
 
 function getDisplayName(name: string, email: string): string {
   if (name && name.trim().length > 1) return name.trim().split(/\s+/)[0];

@@ -1,0 +1,688 @@
+/* ===== CLIENT ONBOARDING ===== */
+
+/* ── Step Progress Bar ─────────────────────────────────────────────── */
+
+.step-progress {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.step-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  cursor: default;
+  padding: 6px 0;
+}
+
+.step-progress-item[role="button"] {
+  cursor: pointer;
+}
+
+.step-progress-item[role="button"]:hover .step-progress-circle {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.step-progress-circle {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-base);
+  transition: all 0.2s;
+}
+
+.step-progress-item.active .step-progress-circle {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+  box-shadow: 0 0 12px rgba(15, 177, 178, 0.3);
+}
+
+.step-progress-item.done .step-progress-circle {
+  border-color: var(--success);
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.step-progress-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.step-progress-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.step-progress-item.active .step-progress-title {
+  color: var(--text-primary);
+}
+
+.step-progress-item.done .step-progress-title {
+  color: var(--success);
+}
+
+.step-progress-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.step-progress-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 12px;
+  min-width: 20px;
+  align-self: center;
+}
+
+.step-progress-item.done .step-progress-connector {
+  background: var(--success);
+}
+
+/* ── Step Content ──────────────────────────────────────────────────── */
+
+.onboarding-step-content {
+  margin-bottom: 20px;
+}
+
+/* Match the badge height to the sm Button in the panel header */
+.onboarding-header-badge {
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+}
+
+.onboarding-field-error {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.onboarding-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.onboarding-hint strong {
+  color: var(--accent-light);
+}
+
+.input-readonly {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Prevent label wrapping in onboarding form rows */
+.onboarding-step-content .form-row label {
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+/* Two fields side by side */
+.onboarding-inline-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .onboarding-inline-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Navigation Buttons ────────────────────────────────────────────── */
+
+.onboarding-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── BEID Preview ──────────────────────────────────────────────────── */
+
+.onboarding-textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.onboarding-textarea:focus {
+  border-color: var(--accent);
+}
+
+.onboarding-beid-preview {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(15, 177, 178, 0.04);
+  border: 1px solid rgba(15, 177, 178, 0.15);
+  border-radius: 8px;
+}
+
+.onboarding-beid-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.onboarding-beid-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* ── Report Mapping Layout ─────────────────────────────────────────── */
+
+.onboarding-report-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  /* Override the container max-width so this section uses full width */
+  margin-left: -24px;
+  margin-right: -24px;
+  padding-left: 24px;
+  padding-right: 24px;
+  max-width: none;
+}
+
+@media (max-width: 900px) {
+  .onboarding-report-layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+}
+
+.onboarding-report-list-panel .panel-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 480px;
+}
+
+/* Application filter chips */
+.onboarding-app-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.onboarding-app-chip {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-glass);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.onboarding-app-chip:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.onboarding-app-chip.active {
+  background: rgba(15, 177, 178, 0.15);
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
+.onboarding-app-chip--clear {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+}
+
+.onboarding-app-chip--clear:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+
+.onboarding-report-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.onboarding-report-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 160px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  transition: border-color 0.2s;
+}
+
+.onboarding-report-search:focus-within {
+  border-color: var(--accent);
+}
+
+.onboarding-report-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+  width: 100%;
+  font-family: inherit;
+}
+
+.onboarding-report-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.onboarding-report-list {
+  overflow-y: auto;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 10px;
+}
+
+.onboarding-report-group {
+  margin-bottom: 14px;
+}
+
+.onboarding-report-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 6px 10px 4px;
+}
+
+.onboarding-report-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s;
+  border: 1px solid transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.onboarding-report-item:last-child {
+  margin-bottom: 0;
+}
+
+.onboarding-report-item:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--border);
+}
+
+.onboarding-report-item.active {
+  background: rgba(15, 177, 178, 0.08);
+  border-color: rgba(15, 177, 178, 0.25);
+}
+
+.onboarding-report-name {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.onboarding-report-id {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: "Fira Code", monospace;
+  flex-shrink: 0;
+}
+
+.onboarding-report-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* ── Report Graph — React Flow + Dagre ─────────────────────────────── */
+
+.onboarding-report-graph-panel {
+  min-height: 400px;
+  overflow: visible;
+}
+
+.onboarding-report-graph-panel > .panel {
+  height: 100%;
+  overflow: visible;
+}
+
+.onboarding-report-graph-panel .panel-body {
+  padding: 0;
+  height: calc(100% - 44px);
+  min-height: 380px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ensure React Flow controls are not clipped */
+.onboarding-report-graph-panel .panel,
+.onboarding-report-graph-panel {
+  overflow: visible;
+}
+
+/* Dark theme for React Flow */
+.report-flow-graph {
+  --xy-background-color: transparent;
+  --xy-node-background-color-default: rgba(255, 255, 255, 0.05);
+  --xy-node-color-default: var(--text-primary);
+  --xy-node-border-default: 1px solid rgba(255, 255, 255, 0.12);
+  --xy-node-boxshadow-default: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --xy-node-border-radius-default: 8px;
+  --xy-edge-stroke-default: var(--accent);
+  --xy-handle-background-color-default: var(--accent);
+  --xy-handle-border-color-default: var(--accent);
+  --xy-minimap-background-color-default: rgba(10, 10, 15, 0.8);
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+}
+
+.report-flow-graph .react-flow__node {
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 8px 14px;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+.report-flow-graph .react-flow__node-input {
+  border-color: var(--accent);
+  background: rgba(15, 177, 178, 0.1);
+  box-shadow: 0 0 12px rgba(15, 177, 178, 0.2);
+  font-weight: 700;
+  color: var(--accent-light);
+}
+
+.report-flow-graph .react-flow__node-default {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.report-flow-graph .react-flow__node-output {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.report-flow-graph .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.report-flow-graph .react-flow__controls {
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.report-flow-graph .react-flow__controls-button {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  fill: var(--text-primary);
+}
+
+.report-flow-graph .react-flow__controls-button:hover {
+  background: var(--bg-glass-hover);
+}
+
+.report-flow-graph .react-flow__panel {
+  margin: 8px;
+}
+
+/* ── Preview ───────────────────────────────────────────────────────── */
+
+.onboarding-preview-intro {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.onboarding-preview-intro strong {
+  color: var(--accent-light);
+}
+
+.onboarding-preview-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.onboarding-preview-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.onboarding-preview-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onboarding-preview-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.onboarding-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--bg-glass);
+}
+
+.onboarding-preview-total {
+  background: rgba(15, 177, 178, 0.06);
+  border: 1px solid rgba(15, 177, 178, 0.2);
+}
+
+.onboarding-preview-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.onboarding-preview-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: "Fira Code", monospace;
+}
+
+.onboarding-preview-total .onboarding-preview-value {
+  color: var(--accent);
+}
+
+.onboarding-preview-chips {
+  margin-top: 8px;
+}
+
+.onboarding-preview-report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.onboarding-preview-report-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--bg-glass);
+}
+
+.onboarding-preview-report-name {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.onboarding-preview-report-app {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Confirm Dialog ────────────────────────────────────────────────── */
+
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-dialog {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-dialog-icon {
+  margin-bottom: 16px;
+}
+
+.confirm-dialog-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.confirm-dialog-message {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* ── Success State ─────────────────────────────────────────────────── */
+
+.onboarding-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.onboarding-success-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.onboarding-success-details {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+/* ── Global Error ──────────────────────────────────────────────────── */
+
+.onboarding-global-error {
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}

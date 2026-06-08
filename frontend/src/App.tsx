@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Ingest from "./pages/Ingest";
 import AuditLog from "./pages/AuditLog";
 import AssociateLookup from "./pages/AssociateLookup";
+import ClientOnboarding from "./pages/ClientOnboarding";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
@@ -86,6 +87,9 @@ export default function App() {
         <Route path="/audit" element={<AuditLog />} />
         {user.permissions?.includes("admin:associate_lookup") && (
           <Route path="/admin/associate-lookup" element={<AssociateLookup />} />
+        )}
+        {user.permissions?.includes("admin:client_onboarding") && (
+          <Route path="/admin/client-onboarding" element={<ClientOnboarding />} />
         )}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />

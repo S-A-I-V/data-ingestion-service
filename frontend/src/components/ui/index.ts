@@ -2,9 +2,9 @@
 // e.g. import { Button, Badge, Panel } from "../ui";
 
 // shadcn primitives (Tailwind-based)
-export { Button, buttonVariants } from "./button";
-export type { ButtonProps } from "./button";
-export { Badge, badgeVariants } from "./badge";
+export { Button, buttonVariants } from "./Button";
+export type { ButtonProps } from "./Button";
+export { Badge, badgeVariants } from "./Badge";
 export { Input } from "./input";
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 export { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./card";
