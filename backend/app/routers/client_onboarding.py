@@ -17,10 +17,12 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.routers.auth import limiter
+from app.services.connection_status import mark_connection_active, mark_connection_failed
 from app.services.db_connector import get_connector
 from app.services.onboarding import (
     OnboardRequest,
     build_onboarding_statements,
+    check_duplicates,
     fetch_next_ids,
     fetch_report_definitions,
     fetch_report_map,
@@ -48,8 +50,10 @@ def get_report_definitions_endpoint(
         reports = fetch_report_definitions(connector)
     except Exception as e:
         logger.error(f"Failed to fetch report definitions: {e}")
+        mark_connection_failed(conn, db)
         raise HTTPException(status_code=500, detail="Failed to fetch report definitions") from e
 
+    mark_connection_active(conn, db)
     return {"reports": reports, "total": len(reports)}
 
 
@@ -68,8 +72,10 @@ def get_next_ids_endpoint(
         ids = fetch_next_ids(connector)
     except Exception as e:
         logger.error(f"Failed to fetch next IDs: {e}")
+        mark_connection_failed(conn, db)
         raise HTTPException(status_code=500, detail="Failed to fetch next available IDs") from e
 
+    mark_connection_active(conn, db)
     return ids
 
 
@@ -94,6 +100,15 @@ def execute_onboarding_endpoint(
         next_client_id = ids["next_client_id"]
         next_group_id = ids["next_group_id"]
 
+        # Duplicate check — prevent collisions if DB changed since preview
+        check_duplicates(
+            connector,
+            client_id=next_client_id,
+            client_name=payload.client_name,
+            group_id=next_group_id,
+            group_name=payload.group_name,
+        )
+
         # Fetch report metadata for selected IDs
         report_map = fetch_report_map(connector, payload.report_ids)
 
@@ -116,11 +131,13 @@ def execute_onboarding_endpoint(
         raise
     except Exception as e:
         logger.error(f"Client onboarding failed: {e}")
+        mark_connection_failed(conn, db)
         raise HTTPException(
             status_code=500,
             detail=f"Onboarding transaction failed: {str(e)}",
         ) from e
 
+    mark_connection_active(conn, db)
     return {
         "success": True,
         "client_id": next_client_id,

@@ -17,6 +17,7 @@ from app.database import get_db
 from app.models.connection import DBConnection
 from app.models.user import User
 from app.routers.auth import limiter
+from app.services.connection_status import mark_connection_active, mark_connection_failed
 from app.services.connectors.specialty import SybaseConnectionError
 from app.services.db_connector import get_connector
 from app.services.rbac import require_permission
@@ -257,6 +258,7 @@ def lookup_associates(
             results = connector.execute_query(query, params)
     except SybaseConnectionError as e:
         logger.error(f"Associate lookup connection error [{e.error_type}]: {e}")
+        mark_connection_failed(conn, db)
         # Map error types to appropriate HTTP status codes and user-friendly messages
         status_map = {
             "connection_refused": 503,
@@ -270,10 +272,14 @@ def lookup_associates(
         raise HTTPException(status_code=status_code, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Associate lookup query failed: {e}")
+        mark_connection_failed(conn, db)
         raise HTTPException(
             status_code=500,
             detail="An unexpected error occurred while querying the database. Please try again.",
         ) from e
+
+    # Mark connection as active/green after successful query
+    mark_connection_active(conn, db)
 
     if not results:
         search_field = "DMZID" if dmzid else "Business Entity ID(s)"

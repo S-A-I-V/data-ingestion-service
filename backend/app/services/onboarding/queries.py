@@ -8,6 +8,8 @@ parameterized statements for atomic transaction execution.
 
 from typing import Any
 
+from fastapi import HTTPException
+
 from app.services.connectors.base import SQLAlchemyConnector
 
 
@@ -57,6 +59,80 @@ def fetch_next_ids(connector: SQLAlchemyConnector) -> dict[str, int]:
         "next_detail_id": detail_count + 1,
         "next_crm_id": crm_count + 1,
     }
+
+
+def check_duplicates(
+    connector: SQLAlchemyConnector,
+    *,
+    client_id: int,
+    client_name: str,
+    group_id: int,
+    group_name: str,
+) -> None:
+    """
+    Verify no collisions exist before inserting.
+    Raises HTTPException 409 if client_id, client_name,
+    group_id, or group_name already exists.
+    """
+    # Check client_id collision
+    result = connector.execute_query(
+        "SELECT client_id FROM public.client_details " "WHERE client_id = :cid",
+        {"cid": client_id},
+    )
+    if result:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Client ID {client_id} already exists. "
+                "The database was modified since your preview. "
+                "Please try again — a fresh ID will be assigned."
+            ),
+        )
+
+    # Check client_name collision
+    result = connector.execute_query(
+        "SELECT client_id FROM public.client_details " "WHERE LOWER(client_name) = LOWER(:name)",
+        {"name": client_name},
+    )
+    if result:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Client '{client_name}' already exists "
+                f"(client_id={result[0]['client_id']}). "
+                "Duplicate onboarding prevented."
+            ),
+        )
+
+    # Check group_id collision
+    result = connector.execute_query(
+        'SELECT group_id FROM public."groups" ' "WHERE group_id = :gid",
+        {"gid": group_id},
+    )
+    if result:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Group ID {group_id} already exists. "
+                "The database was modified since your preview. "
+                "Please try again."
+            ),
+        )
+
+    # Check group_name collision
+    result = connector.execute_query(
+        'SELECT group_id FROM public."groups" ' "WHERE LOWER(group_name) = LOWER(:name)",
+        {"name": group_name},
+    )
+    if result:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Group '{group_name}' already exists "
+                f"(group_id={result[0]['group_id']}). "
+                "Duplicate onboarding prevented."
+            ),
+        )
 
 
 def fetch_report_map(

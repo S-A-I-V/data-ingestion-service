@@ -61,23 +61,51 @@ export default function ClientOnboarding() {
   const [result, setResult] = useState<any>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // Fetch next IDs on mount
+  // Fetch next IDs on mount — use sessionStorage cache to avoid re-fetching on refresh
   useEffect(() => {
+    const CACHE_KEY = "onboarding_next_ids";
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        setNextIds(JSON.parse(cached));
+        setIdsLoading(false);
+        return;
+      } catch {
+        /* fall through to fetch */
+      }
+    }
     setIdsLoading(true);
     api
       .get("/admin/client-onboarding/next-ids")
-      .then((r) => setNextIds(r.data))
+      .then((r) => {
+        setNextIds(r.data);
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(r.data));
+      })
       .catch((e) => setGlobalError(e.response?.data?.detail || "Failed to fetch next IDs"))
       .finally(() => setIdsLoading(false));
   }, []);
 
-  // Fetch report definitions when reaching step 4
+  // Fetch report definitions when reaching step 4 — cache in sessionStorage
   useEffect(() => {
     if (currentStep >= 3 && reports.length === 0 && !reportsLoading) {
+      const CACHE_KEY = "onboarding_reports";
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          setReports(JSON.parse(cached));
+          return;
+        } catch {
+          /* fall through */
+        }
+      }
       setReportsLoading(true);
       api
         .get("/admin/client-onboarding/report-definitions")
-        .then((r) => setReports(r.data.reports || []))
+        .then((r) => {
+          const reps = r.data.reports || [];
+          setReports(reps);
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(reps));
+        })
         .catch((e) => setStepErrors((prev) => ({ ...prev, 3: e.response?.data?.detail || "Failed to load reports" })))
         .finally(() => setReportsLoading(false));
     }
@@ -172,11 +200,17 @@ export default function ClientOnboarding() {
     setResult(null);
     setGlobalError(null);
     setStepErrors({});
+    // Clear session caches so next onboarding gets fresh IDs
+    sessionStorage.removeItem("onboarding_next_ids");
+    sessionStorage.removeItem("onboarding_reports");
     // Re-fetch IDs
     setIdsLoading(true);
     api
       .get("/admin/client-onboarding/next-ids")
-      .then((r) => setNextIds(r.data))
+      .then((r) => {
+        setNextIds(r.data);
+        sessionStorage.setItem("onboarding_next_ids", JSON.stringify(r.data));
+      })
       .finally(() => setIdsLoading(false));
   };
 
