@@ -36,6 +36,7 @@ export default function StepClientDetails({ clientName, setClientName, nextClien
               type="text"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
+              onBlur={(e) => setClientName(e.target.value.trim())}
               placeholder="Enter client name (e.g. Acme Corp)"
               maxLength={200}
             />

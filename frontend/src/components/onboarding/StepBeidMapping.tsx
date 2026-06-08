@@ -20,9 +20,11 @@ export default function StepBeidMapping({ beids, setBeids, orgId, setOrgId, clie
   const [beidInput, setBeidInput] = useState(beids.join(", "));
 
   const handleBeidChange = (raw: string) => {
-    setBeidInput(raw);
-    // Parse comma-separated values only
-    const parsed = raw
+    // Allow digits, commas, and spaces (spaces between BEIDs for readability)
+    const sanitized = raw.replace(/[^0-9, ]/g, "");
+    setBeidInput(sanitized);
+    // Parse comma-separated values, trimming spaces around each
+    const parsed = sanitized
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s && /^\d+$/.test(s))
@@ -52,7 +54,7 @@ export default function StepBeidMapping({ beids, setBeids, orgId, setOrgId, clie
               id="org-id"
               type="text"
               value={orgId}
-              onChange={(e) => setOrgId(e.target.value)}
+              onChange={(e) => setOrgId(e.target.value.replace(/\s/g, ""))}
               placeholder="Enter organization ID"
               maxLength={100}
             />

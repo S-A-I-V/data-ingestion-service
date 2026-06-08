@@ -36,6 +36,7 @@ export default function StepGroupDetails({ groupName, setGroupName, nextGroupId,
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
+              onBlur={(e) => setGroupName(e.target.value.trim())}
               placeholder="Enter group name (e.g. Acme Group)"
               maxLength={200}
             />

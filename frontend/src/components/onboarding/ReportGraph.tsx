@@ -4,16 +4,14 @@
  * LR (left-to-right) direction with smoothstep animated edges.
  */
 
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import {
   ReactFlow,
   Background,
   Controls,
   ConnectionLineType,
-  Panel,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   ReactFlowProvider,
   type Node,
   type Edge,
@@ -21,8 +19,6 @@ import {
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 import type { ReportDef } from "./StepReportMapping";
-import { Button } from "../ui";
-import FitScreenIcon from "@mui/icons-material/FitScreen";
 
 interface Props {
   clientName: string;
@@ -66,8 +62,6 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "LR") => 
 };
 
 function FlowInner({ clientName, reports }: Props) {
-  const { fitView } = useReactFlow();
-
   const { layoutedNodes, layoutedEdges, graphExtent } = useMemo(() => {
     const nodes: Node[] = [
       {
@@ -152,10 +146,6 @@ function FlowInner({ clientName, reports }: Props) {
   const [nodes, , onNodesChange] = useNodesState(layoutedNodes as Node[]);
   const [edges, , onEdgesChange] = useEdgesState(layoutedEdges as Edge[]);
 
-  const handleFitView = useCallback(() => {
-    fitView({ padding: 0.3, duration: 300 });
-  }, [fitView]);
-
   return (
     <ReactFlow
       nodes={nodes}
@@ -176,11 +166,6 @@ function FlowInner({ clientName, reports }: Props) {
     >
       <Background color="rgba(255,255,255,0.03)" gap={20} />
       <Controls showInteractive={false} />
-      <Panel position="top-right">
-        <Button size="sm" variant="ghost" onClick={handleFitView} title="Fit to viewport">
-          <FitScreenIcon sx={{ fontSize: 14 }} /> Fit
-        </Button>
-      </Panel>
     </ReactFlow>
   );
 }
