@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.models.audit import AuditLog
 from app.models.user import User
 from app.routers.auth import limiter
 from app.services.connection_status import mark_connection_active, mark_connection_failed
@@ -132,12 +133,56 @@ def execute_onboarding_endpoint(
     except Exception as e:
         logger.error(f"Client onboarding failed: {e}")
         mark_connection_failed(conn, db)
+        # Audit the failure
+        audit = AuditLog(
+            user_id=user.id,
+            user_email=user.email,
+            connection_id=conn.id,
+            connection_name=conn.name,
+            operation="ONBOARD",
+            table_name="client_details",
+            row_count=0,
+            query_preview=f"FAILED: client_name={payload.client_name}",
+            status="failed",
+            error_message=str(e)[:500],
+        )
+        last = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
+        audit.seal(last.record_hash if last else None)
+        db.add(audit)
+        db.commit()
         raise HTTPException(
             status_code=500,
             detail=f"Onboarding transaction failed: {str(e)}",
         ) from e
 
     mark_connection_active(conn, db)
+
+    # Record in audit log
+    total_rows = len(statements)
+    query_preview = (
+        f"ONBOARD client_id={next_client_id} "
+        f"client_name={payload.client_name} "
+        f"group_id={next_group_id} "
+        f"beids={len(payload.business_entity_ids)} "
+        f"reports={len(payload.report_ids)}"
+    )
+    audit = AuditLog(
+        user_id=user.id,
+        user_email=user.email,
+        connection_id=conn.id,
+        connection_name=conn.name,
+        operation="ONBOARD",
+        table_name="client_details,groups,client_groups,beid_mapping,report_mapping",
+        row_count=total_rows,
+        rows_inserted=total_rows,
+        query_preview=query_preview,
+        status="success",
+    )
+    last = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
+    audit.seal(last.record_hash if last else None)
+    db.add(audit)
+    db.commit()
+
     return {
         "success": True,
         "client_id": next_client_id,
