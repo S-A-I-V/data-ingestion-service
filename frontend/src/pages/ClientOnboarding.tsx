@@ -26,7 +26,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 const STEPS: Step[] = [
   { label: "Client", description: "Name & ID" },
-  { label: "Group", description: "Group setup" },
+  { label: "Group", description: "Group Setup" },
   { label: "BEIDs", description: "Entity mapping" },
   { label: "Reports", description: "Report mapping" },
   { label: "Review", description: "Preview & confirm" },
