@@ -4,7 +4,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { Button, Spinner, ToggleGroup, ToggleGroupItem, DownloadButton } from "../components/ui";
+import { Button, Spinner, Panel, PanelHeader, ToggleGroup, ToggleGroupItem, DownloadButton } from "../components/ui";
 import { getColumnLabel, isDefaultColumn } from "../utils/columnHelpers";
 import { validateEmail, validatePositiveInt } from "../utils/validation";
 
@@ -214,8 +214,8 @@ export default function AssociateLookup() {
         {rows.length > 0 && <DownloadButton onClick={downloadCsv} label="Download" doneLabel="Done" />}
       </div>
 
-      <div className="panel">
-        <div className="panel-header">Search Associate</div>
+      <Panel>
+        <PanelHeader>Search Associate</PanelHeader>
         <div className="lookup-search-body">
           <div className="form-row">
             <ToggleGroup
@@ -256,20 +256,20 @@ export default function AssociateLookup() {
             </Button>
           </div>
         </div>
-      </div>
+      </Panel>
 
       {loading && <Spinner size="lg" label="Querying REDACTED_DB..." />}
       {validationError && <div className="lookup-error-badge">{validationError}</div>}
       {error && <div className="lookup-error-badge">{error}</div>}
 
       {searched && !loading && !error && rows.length === 0 && (
-        <div className="panel lookup-empty">
+        <Panel className="lookup-empty">
           <SearchOffIcon sx={{ fontSize: 36, opacity: 0.5 }} />
           <span>
             No entries found for {searchType === "beid" ? "Business Entity ID" : "DMZID"}:{" "}
             <strong className="lookup-empty-beid">{searchedBeid}</strong>
           </span>
-        </div>
+        </Panel>
       )}
 
       {rows.length > 0 && (
@@ -290,14 +290,15 @@ export default function AssociateLookup() {
                 >
                   <DragIndicatorIcon className="lookup-order-grip" sx={{ fontSize: 12 }} />
                   <span>{getColumnLabel(col)}</span>
-                  <button
-                    type="button"
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     className="lookup-order-remove"
                     onClick={() => toggleColumn(col)}
                     aria-label={`Remove ${getColumnLabel(col)}`}
                   >
                     ×
-                  </button>
+                  </Button>
                 </div>
               ))}
               {/* Trailing drop zone — fills remaining space for easy end-drop */}
@@ -315,10 +316,10 @@ export default function AssociateLookup() {
 
           {/* Results Table */}
           <div className="lookup-table-col">
-            <div className="panel">
-              <div className="panel-header">
+            <Panel>
+              <PanelHeader>
                 Results — {total} associate{total !== 1 ? "s" : ""} found
-              </div>
+              </PanelHeader>
               <div className="csv-preview-scroll">
                 <table className="data-table">
                   <thead>
@@ -339,25 +340,25 @@ export default function AssociateLookup() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Panel>
           </div>
 
           {/* Column Picker Sidebar */}
           <aside className="lookup-col-picker">
-            <div className="panel">
-              <div className="panel-header">
+            <Panel>
+              <PanelHeader>
                 <ViewColumnIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> Columns
                 <span className="lookup-col-count">
                   {visibleCols.size}/{allColumns.length}
                 </span>
-              </div>
+              </PanelHeader>
               <div className="lookup-col-actions">
-                <button type="button" className="lookup-col-action-btn" onClick={selectAll}>
+                <Button size="sm" variant="ghost" onClick={selectAll}>
                   All
-                </button>
-                <button type="button" className="lookup-col-action-btn" onClick={selectNone}>
+                </Button>
+                <Button size="sm" variant="ghost" onClick={selectNone}>
                   None
-                </button>
+                </Button>
               </div>
               <div className="lookup-col-search">
                 <input
@@ -382,7 +383,7 @@ export default function AssociateLookup() {
                     </div>
                   ))}
               </div>
-            </div>
+            </Panel>
           </aside>
         </div>
       )}

@@ -9,6 +9,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { Button } from "../components/ui";
 import api from "../api";
 
 const fieldSx = {
@@ -100,8 +101,8 @@ export default function Login({ onLogin }: Props) {
               {mode === "register" ? (
                 <>
                   Already have an account?{" "}
-                  <button
-                    type="button"
+                  <Button
+                    variant="link"
                     className="auth-link"
                     onClick={() => {
                       setMode("login");
@@ -109,13 +110,13 @@ export default function Login({ onLogin }: Props) {
                     }}
                   >
                     Log in
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
                   Don't have an account?{" "}
-                  <button
-                    type="button"
+                  <Button
+                    variant="link"
                     className="auth-link"
                     onClick={() => {
                       setMode("register");
@@ -123,7 +124,7 @@ export default function Login({ onLogin }: Props) {
                     }}
                   >
                     Sign up
-                  </button>
+                  </Button>
                 </>
               )}
             </p>
@@ -229,9 +230,17 @@ export default function Login({ onLogin }: Props) {
 
               {error && <div className="auth-error">{error}</div>}
 
-              <button type="submit" className="auth-submit" disabled={loading}>
-                {loading ? "Please wait..." : mode === "register" ? "Create account" : "Sign in"}
-              </button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="auth-submit"
+                disabled={loading}
+                loading={loading}
+                loadingText="Please wait..."
+              >
+                {mode === "register" ? "Create account" : "Sign in"}
+              </Button>
             </form>
 
             <div className="auth-divider">

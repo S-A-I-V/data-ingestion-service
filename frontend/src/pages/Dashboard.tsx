@@ -7,7 +7,7 @@ import { DB_TYPES } from "../constants/database";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { LayoutGrid, List } from "lucide-react";
-import { Button, Toast, useToast, Spinner } from "../components/ui";
+import { Button, Toast, useToast, Spinner, Panel } from "../components/ui";
 import type { Connection } from "../types";
 import type { ConnStatus } from "../components/ConnectionStatusBadge";
 
@@ -138,22 +138,26 @@ export default function Dashboard() {
             <div className="toolbar-spacer" />
             {/* View toggle */}
             <div className="view-toggle">
-              <button
-                className={`view-toggle-btn${view === "grid" ? " active" : ""}`}
+              <Button
+                size="icon"
+                variant={view === "grid" ? "primary" : "ghost"}
+                className="view-toggle-btn"
                 onClick={() => switchView("grid")}
                 aria-label="Grid view"
                 title="Grid view"
               >
                 <LayoutGrid size={15} />
-              </button>
-              <button
-                className={`view-toggle-btn${view === "list" ? " active" : ""}`}
+              </Button>
+              <Button
+                size="icon"
+                variant={view === "list" ? "primary" : "ghost"}
+                className="view-toggle-btn"
                 onClick={() => switchView("list")}
                 aria-label="List view"
                 title="List view"
               >
                 <List size={15} />
-              </button>
+              </Button>
             </div>
             <Button
               variant="primary"
@@ -168,7 +172,7 @@ export default function Dashboard() {
         </>
 
         <>
-          <div className="panel">
+          <Panel>
             {pageLoading ? (
               <Spinner size="lg" label="Loading connections..." />
             ) : (
@@ -184,7 +188,7 @@ export default function Dashboard() {
                 view={view}
               />
             )}
-          </div>
+          </Panel>
         </>
 
         <Toast toast={toast} />

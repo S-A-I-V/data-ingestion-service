@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Button } from "./ui";
 
 interface Props {
   isAuthenticated: boolean;
@@ -22,15 +23,15 @@ export default function HeroSection({ isAuthenticated }: Props) {
       </div>
       <div className="home-ctas">
         <Link to={isAuthenticated ? "/ingest" : "/login"}>
-          <button type="button" className="home-btn-primary">
+          <Button variant="primary" size="lg" className="home-btn-primary">
             Start Ingesting Data
-          </button>
+          </Button>
         </Link>
         {isAuthenticated && (
           <Link to="/connections">
-            <button type="button" className="home-btn-secondary">
+            <Button size="lg" className="home-btn-secondary">
               Manage Connections
-            </button>
+            </Button>
           </Link>
         )}
       </div>

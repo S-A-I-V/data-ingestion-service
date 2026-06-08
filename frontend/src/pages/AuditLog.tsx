@@ -8,7 +8,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import { Button, Badge, EmptyState, Spinner } from "../components/ui";
+import { Button, Badge, EmptyState, Spinner, Panel, PanelHeader } from "../components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import type { AuditLog as Log } from "../types";
 
@@ -95,13 +95,13 @@ export default function AuditLog() {
           <AuditAnalyticsPanel metrics={metrics} />
 
           <div className="audit-table-col">
-            <div className="panel">
-              <div className="panel-header">
+            <Panel>
+              <PanelHeader>
                 <HistoryIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execution History
                 <Badge variant="info" className="mapper-badge">
                   {totalFiltered}/{logs.length} entries
                 </Badge>
-              </div>
+              </PanelHeader>
 
               {loading ? (
                 <Spinner size="lg" label="Loading audit log..." />
@@ -216,14 +216,15 @@ export default function AuditLog() {
                                 <Badge variant={l.status === "success" ? "success" : "danger"}>{l.status}</Badge>
                               </td>
                               <td className="audit-details-cell">
-                                <button
-                                  type="button"
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
                                   className="audit-details-btn"
                                   title="View full details"
                                   onClick={() => setDetailText(getDetail(l))}
                                 >
                                   <ZoomInIcon sx={{ fontSize: 16 }} />
-                                </button>
+                                </Button>
                               </td>
                             </tr>
                           ))
@@ -238,59 +239,69 @@ export default function AuditLog() {
                       <div className="csv-page-size">
                         <span>Rows per page:</span>
                         {[20, 50, 100].map((s) => (
-                          <button
+                          <Button
                             key={s}
-                            type="button"
-                            className={`csv-page-size-btn ${pageSize === s ? "active" : ""}`}
+                            size="sm"
+                            variant={pageSize === s ? "primary" : "ghost"}
+                            className="csv-page-size-btn"
                             onClick={() => {
                               setPageSize(s);
                               setPage(0);
                             }}
                           >
                             {s}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                       <div className="csv-page-info">
                         {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalFiltered)} of {totalFiltered}
                       </div>
                       <div className="csv-page-nav">
-                        <button type="button" className="csv-page-btn" disabled={page === 0} onClick={() => setPage(0)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="csv-page-btn"
+                          disabled={page === 0}
+                          onClick={() => setPage(0)}
+                        >
                           ««
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="csv-page-btn"
                           disabled={page === 0}
                           onClick={() => setPage(page - 1)}
                         >
                           ‹
-                        </button>
+                        </Button>
                         <span className="csv-page-current">
                           {page + 1} / {totalPages}
                         </span>
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="csv-page-btn"
                           disabled={page >= totalPages - 1}
                           onClick={() => setPage(page + 1)}
                         >
                           ›
-                        </button>
-                        <button
-                          type="button"
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="csv-page-btn"
                           disabled={page >= totalPages - 1}
                           onClick={() => setPage(totalPages - 1)}
                         >
                           »»
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
                 </>
               )}
-            </div>
+            </Panel>
           </div>
         </div>
       </div>

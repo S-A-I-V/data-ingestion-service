@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { Button } from "./ui";
 
 export default function PublicNav() {
   const loc = useLocation();
@@ -23,9 +24,9 @@ export default function PublicNav() {
             Home
           </Link>
         </div>
-        <Link to="/login" className="btn btn-sm nav-signin-btn">
-          SIGN IN
-        </Link>
+        <Button asChild size="sm" className="nav-signin-btn">
+          <Link to="/login">SIGN IN</Link>
+        </Button>
       </div>
     </nav>
   );

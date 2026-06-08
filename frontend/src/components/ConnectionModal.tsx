@@ -148,13 +148,13 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
         </span>
         <div className="modal-header-actions">
           {!isEditing && (
-            <button type="button" className="btn btn-sm" onClick={() => setShowPicker(true)}>
+            <Button size="sm" onClick={() => setShowPicker(true)}>
               ← Change DB
-            </button>
+            </Button>
           )}
-          <button type="button" className="close-btn" title="Close" onClick={onClose}>
+          <Button size="icon" variant="ghost" title="Close" onClick={onClose}>
             <CloseIcon sx={{ fontSize: 18 }} />
-          </button>
+          </Button>
         </div>
       </div>
       <div className="modal-body">
