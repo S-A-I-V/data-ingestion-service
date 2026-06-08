@@ -106,7 +106,44 @@
 /* ── Step Content ──────────────────────────────────────────────────── */
 
 .onboarding-step-content {
-  margin-bottom: 20px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+/* Make the onboarding page fill the available viewport */
+.container.audit-container:has(.onboarding-step-content) {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 52px);
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+/* Panels inside step content should fill available height */
+.onboarding-step-content > .onboarding-report-layout {
+  height: 100%;
+}
+
+.onboarding-report-list-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.onboarding-report-list-panel .panel-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.onboarding-report-list-panel .onboarding-report-list {
+  flex: 1;
+  min-height: 0;
 }
 
 /* Match the badge height to the sm Button in the panel header */
@@ -167,8 +204,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-top: 16px;
+  padding: 16px 0;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 /* ── BEID Preview ──────────────────────────────────────────────────── */
@@ -221,12 +259,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  /* Override the container max-width so this section uses full width */
-  margin-left: -24px;
-  margin-right: -24px;
-  padding-left: 24px;
-  padding-right: 24px;
-  max-width: none;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 900px) {
@@ -234,12 +270,6 @@
     grid-template-columns: 1fr;
     min-height: 0;
   }
-}
-
-.onboarding-report-list-panel .panel-body {
-  display: flex;
-  flex-direction: column;
-  max-height: 480px;
 }
 
 /* Application filter chips */
@@ -326,16 +356,24 @@
 }
 
 .onboarding-report-list {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  overflow-x: hidden;
   padding-right: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 16px;
+  row-gap: 0;
+  align-content: start;
 }
 
 .onboarding-report-group {
   margin-bottom: 14px;
+  break-inside: avoid;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px;
 }
 
 .onboarding-report-group-label {
@@ -400,8 +438,10 @@
 /* ── Report Graph — React Flow + Dagre ─────────────────────────────── */
 
 .onboarding-report-graph-panel {
-  min-height: 400px;
-  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .onboarding-report-graph-panel > .panel {
@@ -411,16 +451,10 @@
 
 .onboarding-report-graph-panel .panel-body {
   padding: 0;
-  height: calc(100% - 44px);
-  min-height: 380px;
+  flex: 1;
+  min-height: 0;
   position: relative;
   overflow: hidden;
-}
-
-/* Ensure React Flow controls are not clipped */
-.onboarding-report-graph-panel .panel,
-.onboarding-report-graph-panel {
-  overflow: visible;
 }
 
 /* Dark theme for React Flow */
@@ -437,7 +471,7 @@
   --xy-minimap-background-color-default: rgba(10, 10, 15, 0.8);
   width: 100%;
   height: 100%;
-  min-height: 380px;
+  min-height: 200px;
 }
 
 .report-flow-graph .react-flow__node {
