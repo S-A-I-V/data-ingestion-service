@@ -125,8 +125,8 @@ def execute_onboarding_endpoint(
             report_map=report_map,
         )
 
-        # Execute all in one transaction
-        connector.execute_transaction(statements)
+        # Execute all — skip duplicate conflicts (e.g. existing BEID mappings)
+        result = connector.execute_transaction_skip_conflicts(statements)
 
     except HTTPException:
         raise
@@ -158,13 +158,15 @@ def execute_onboarding_endpoint(
     mark_connection_active(conn, db)
 
     # Record in audit log
-    total_rows = len(statements)
+    total_rows = result["executed"]
+    skipped_rows = result["skipped"]
     query_preview = (
         f"ONBOARD client_id={next_client_id} "
         f"client_name={payload.client_name} "
         f"group_id={next_group_id} "
         f"beids={len(payload.business_entity_ids)} "
-        f"reports={len(payload.report_ids)}"
+        f"reports={len(payload.report_ids)} "
+        f"executed={total_rows} skipped={skipped_rows}"
     )
     audit = AuditLog(
         user_id=user.id,
@@ -173,8 +175,9 @@ def execute_onboarding_endpoint(
         connection_name=conn.name,
         operation="ONBOARD",
         table_name="client_details,groups,client_groups,beid_mapping,report_mapping",
-        row_count=total_rows,
+        row_count=len(statements),
         rows_inserted=total_rows,
+        rows_skipped=skipped_rows,
         query_preview=query_preview,
         status="success",
     )
@@ -192,4 +195,6 @@ def execute_onboarding_endpoint(
         "beids_mapped": len(payload.business_entity_ids),
         "reports_mapped": len(payload.report_ids),
         "total_statements": len(statements),
+        "executed": total_rows,
+        "skipped": skipped_rows,
     }

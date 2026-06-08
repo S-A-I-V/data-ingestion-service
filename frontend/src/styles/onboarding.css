@@ -780,7 +780,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   padding: 48px 24px;
   text-align: center;
 }
@@ -791,13 +791,68 @@
   color: var(--success);
 }
 
-.onboarding-success-details {
-  width: 100%;
-  max-width: 400px;
+.onboarding-success-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.onboarding-success-stat {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 24px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 80px;
+}
+
+.onboarding-success-stat--warn .onboarding-success-stat-value {
+  color: var(--warning);
+}
+
+.onboarding-success-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--success);
+  font-family: "Fira Code", monospace;
+}
+
+.onboarding-success-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  font-weight: 500;
+}
+
+.onboarding-success-table {
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.onboarding-success-table .data-table {
+  margin: 0;
+}
+
+.onboarding-success-table td {
+  text-align: center;
+  color: #fff;
+}
+
+.onboarding-success-table td:last-child {
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.onboarding-success-actions {
+  display: flex;
+  gap: 12px;
 }
 
 /* ── Global Error ──────────────────────────────────────────────────── */

@@ -124,6 +124,31 @@ class SQLAlchemyConnector(BaseConnector):
             for stmt in statements:
                 c.execute(text(stmt["sql"]), stmt.get("params", {}))
 
+    def execute_transaction_skip_conflicts(self, statements: list[dict[str, Any]]) -> dict[str, int]:
+        """Execute multiple statements, skipping ones that fail due to
+        unique constraint violations (duplicates). Uses SAVEPOINTs so
+        individual failures don't abort the whole transaction.
+
+        Returns: {"executed": N, "skipped": M}
+        """
+        from sqlalchemy import text
+
+        executed = 0
+        skipped = 0
+
+        with self._engine().begin() as c:
+            for stmt in statements:
+                try:
+                    c.execute(text("SAVEPOINT stmt_sp"))
+                    c.execute(text(stmt["sql"]), stmt.get("params", {}))
+                    c.execute(text("RELEASE SAVEPOINT stmt_sp"))
+                    executed += 1
+                except Exception:
+                    c.execute(text("ROLLBACK TO SAVEPOINT stmt_sp"))
+                    skipped += 1
+
+        return {"executed": executed, "skipped": skipped}
+
     def insert_rows_skip_existing(
         self, table: str, columns: list[str], rows: list[list[Any]], key_columns: list[str]
     ) -> dict[str, int]:

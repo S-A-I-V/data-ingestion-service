@@ -226,35 +226,72 @@ export default function ClientOnboarding() {
         <div className="onboarding-success">
           <CheckCircleOutlineIcon sx={{ fontSize: 56, color: "var(--success)" }} />
           <h2 className="onboarding-success-title">Client Onboarded Successfully</h2>
-          <div className="onboarding-success-details">
-            <div className="onboarding-preview-row">
-              <span className="onboarding-preview-label">Client ID</span>
-              <span className="onboarding-preview-value">{result.client_id}</span>
+
+          {/* Stats row */}
+          <div className="onboarding-success-stats">
+            <div className="onboarding-success-stat">
+              <span className="onboarding-success-stat-value">{result.executed ?? result.total_statements}</span>
+              <span className="onboarding-success-stat-label">Executed</span>
             </div>
-            <div className="onboarding-preview-row">
-              <span className="onboarding-preview-label">Client Name</span>
-              <span className="onboarding-preview-value">{result.client_name}</span>
+            <div className="onboarding-success-stat onboarding-success-stat--warn">
+              <span className="onboarding-success-stat-value">{result.skipped ?? 0}</span>
+              <span className="onboarding-success-stat-label">Skipped</span>
             </div>
-            <div className="onboarding-preview-row">
-              <span className="onboarding-preview-label">Group ID</span>
-              <span className="onboarding-preview-value">{result.group_id}</span>
-            </div>
-            <div className="onboarding-preview-row">
-              <span className="onboarding-preview-label">BEIDs Mapped</span>
-              <span className="onboarding-preview-value">{result.beids_mapped}</span>
-            </div>
-            <div className="onboarding-preview-row">
-              <span className="onboarding-preview-label">Reports Mapped</span>
-              <span className="onboarding-preview-value">{result.reports_mapped}</span>
-            </div>
-            <div className="onboarding-preview-row">
-              <span className="onboarding-preview-label">Total SQL Statements</span>
-              <span className="onboarding-preview-value">{result.total_statements}</span>
+            <div className="onboarding-success-stat">
+              <span className="onboarding-success-stat-value">{result.total_statements}</span>
+              <span className="onboarding-success-stat-label">Total</span>
             </div>
           </div>
-          <Button variant="primary" onClick={resetForm}>
-            <RestartAltIcon sx={{ fontSize: 16 }} /> Onboard Another Client
-          </Button>
+
+          {/* Summary table */}
+          <div className="onboarding-success-table">
+            <table className="data-table">
+              <tbody>
+                <tr>
+                  <td>Client ID</td>
+                  <td>
+                    <strong>{result.client_id}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Client Name</td>
+                  <td>
+                    <strong>{result.client_name}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Group ID</td>
+                  <td>
+                    <strong>{result.group_id}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Group Name</td>
+                  <td>
+                    <strong>{result.group_name}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td>BEIDs Mapped</td>
+                  <td>{result.beids_mapped}</td>
+                </tr>
+                <tr>
+                  <td>Reports Mapped</td>
+                  <td>{result.reports_mapped}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Actions */}
+          <div className="onboarding-success-actions">
+            <Button variant="primary" onClick={resetForm}>
+              <RestartAltIcon sx={{ fontSize: 16 }} /> Onboard Another Client
+            </Button>
+            <Button asChild>
+              <a href="/home">Go to Home</a>
+            </Button>
+          </div>
         </div>
       </div>
     );
