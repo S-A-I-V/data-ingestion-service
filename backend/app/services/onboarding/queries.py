@@ -156,14 +156,15 @@ def build_onboarding_statements(
     client_name: str,
     group_id: int,
     group_name: str,
-    beids: list[int],
-    org_id: str,
+    beid_org_mappings: list[dict],
     report_ids: list[int],
     report_map: dict[int, dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
     Build the complete list of parameterized SQL statements for
     atomic client onboarding. Returns list of {sql, params} dicts.
+
+    beid_org_mappings: list of {"beid": int, "org_id": str}
     """
     statements: list[dict[str, Any]] = []
 
@@ -225,7 +226,8 @@ def build_onboarding_statements(
     )
 
     # 4. Business entity → client mapping (one per BEID)
-    for beid in beids:
+    for item in beid_org_mappings:
+        beid = item["beid"]
         statements.append(
             {
                 "sql": """
@@ -241,8 +243,10 @@ def build_onboarding_statements(
             }
         )
 
-    # 5. Business entity → org mapping (one per BEID)
-    for beid in beids:
+    # 5. Business entity → org mapping (per-BEID org_id)
+    for item in beid_org_mappings:
+        beid = item["beid"]
+        org_id = item["org_id"]
         statements.append(
             {
                 "sql": """

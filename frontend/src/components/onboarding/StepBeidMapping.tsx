@@ -1,86 +1,146 @@
 /**
  * Step 3 — BEID & Org Mapping
- * Collects business entity IDs (comma-separated) and org_id.
- * Each BEID gets mapped to both the client_id and the org_id.
+ * Each BEID can have its own org_id.
+ * Supports: add rows individually, or bulk-add BEIDs with a default org.
  */
 
 import { useState } from "react";
-import { Panel, PanelHeader, PanelBody, FormRow, Badge } from "../ui";
+import { Panel, PanelHeader, PanelBody, Button, Badge } from "../ui";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+
+export interface BeidOrgMapping {
+  beid: number;
+  org_id: string;
+}
 
 interface Props {
-  beids: number[];
-  setBeids: (v: number[]) => void;
-  orgId: string;
-  setOrgId: (v: string) => void;
+  mappings: BeidOrgMapping[];
+  setMappings: (v: BeidOrgMapping[]) => void;
   clientName: string;
   error: string | null;
 }
 
-export default function StepBeidMapping({ beids, setBeids, orgId, setOrgId, clientName, error }: Props) {
-  const [beidInput, setBeidInput] = useState(beids.join(", "));
+export default function StepBeidMapping({ mappings, setMappings, clientName, error }: Props) {
+  const [bulkBeids, setBulkBeids] = useState("");
+  const [defaultOrgId, setDefaultOrgId] = useState("");
 
-  const handleBeidChange = (raw: string) => {
-    // Allow digits, commas, and spaces (spaces between BEIDs for readability)
-    const sanitized = raw.replace(/[^0-9, ]/g, "");
-    setBeidInput(sanitized);
-    // Parse comma-separated values, trimming spaces around each
-    const parsed = sanitized
+  const addBulk = () => {
+    const parsed = bulkBeids
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s && /^\d+$/.test(s))
       .map(Number)
       .filter((n) => n > 0);
-    setBeids(parsed);
+
+    if (parsed.length === 0) return;
+
+    const orgToUse = defaultOrgId.replace(/\s/g, "");
+    const newMappings = parsed
+      .filter((beid) => !mappings.some((m) => m.beid === beid))
+      .map((beid) => ({ beid, org_id: orgToUse }));
+
+    setMappings([...mappings, ...newMappings]);
+    setBulkBeids("");
   };
+
+  const updateOrgId = (index: number, org_id: string) => {
+    const updated = [...mappings];
+    updated[index] = { ...updated[index], org_id: org_id.replace(/\s/g, "") };
+    setMappings(updated);
+  };
+
+  const removeMapping = (index: number) => {
+    setMappings(mappings.filter((_, i) => i !== index));
+  };
+
+  const clearAll = () => setMappings([]);
 
   return (
     <Panel>
       <PanelHeader>
         <span className="step-num">3</span> Business Entity Mapping
+        <Badge variant="info" className="mapper-badge">
+          {mappings.length} BEID{mappings.length !== 1 ? "s" : ""}
+        </Badge>
+        {mappings.length > 0 && (
+          <Button size="sm" variant="danger" onClick={clearAll}>
+            Clear All
+          </Button>
+        )}
       </PanelHeader>
       <PanelBody>
-        <div className="onboarding-inline-row">
-          <FormRow label="Business Entity IDs:" htmlFor="beid-input">
+        {/* Bulk add section */}
+        <div className="beid-bulk-row">
+          <div className="beid-bulk-input">
+            <label htmlFor="bulk-beids">BEIDs (comma-separated):</label>
             <input
-              id="beid-input"
+              id="bulk-beids"
               type="text"
-              value={beidInput}
-              onChange={(e) => handleBeidChange(e.target.value)}
-              placeholder="Enter BEIDs separated by commas (e.g. 1001, 1002, 1003)"
+              value={bulkBeids}
+              onChange={(e) => setBulkBeids(e.target.value.replace(/[^0-9, ]/g, ""))}
+              placeholder="1001, 1002, 1003"
             />
-          </FormRow>
-          <FormRow label="Org ID:" htmlFor="org-id">
+          </div>
+          <div className="beid-bulk-input">
+            <label htmlFor="default-org">Default Org ID:</label>
             <input
-              id="org-id"
+              id="default-org"
               type="text"
-              value={orgId}
-              onChange={(e) => setOrgId(e.target.value.replace(/\s/g, ""))}
-              placeholder="Enter organization ID"
-              maxLength={100}
+              value={defaultOrgId}
+              onChange={(e) => setDefaultOrgId(e.target.value.replace(/\s/g, ""))}
+              placeholder="org_id for all above"
             />
-          </FormRow>
+          </div>
+          <Button size="sm" variant="primary" onClick={addBulk} disabled={!bulkBeids.trim()}>
+            <AddIcon sx={{ fontSize: 14 }} /> Add
+          </Button>
         </div>
-        {beids.length > 0 && (
-          <div className="onboarding-beid-preview">
-            <span className="onboarding-beid-count">
-              {beids.length} BEID{beids.length !== 1 ? "s" : ""} parsed:
-            </span>
-            <div className="onboarding-beid-chips">
-              {beids.slice(0, 20).map((b) => (
-                <Badge key={b} variant="info">
-                  {b}
-                </Badge>
-              ))}
-              {beids.length > 20 && <Badge variant="warning">+{beids.length - 20} more</Badge>}
-            </div>
+
+        {/* Mapping table */}
+        {mappings.length > 0 && (
+          <div className="beid-mapping-table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>BEID</th>
+                  <th>Org ID</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {mappings.map((m, idx) => (
+                  <tr key={idx}>
+                    <td>{idx + 1}</td>
+                    <td>
+                      <code>{m.beid}</code>
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="beid-org-inline-input"
+                        value={m.org_id}
+                        onChange={(e) => updateOrgId(idx, e.target.value)}
+                        placeholder="Enter org ID"
+                      />
+                    </td>
+                    <td>
+                      <Button size="icon" variant="ghost" onClick={() => removeMapping(idx)}>
+                        <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
         {error && <div className="onboarding-field-error">{error}</div>}
 
         <p className="onboarding-hint">
-          Each BEID will be mapped to client <strong>{clientName || "(unnamed)"}</strong> and org{" "}
-          <strong>{orgId || "(id)"}</strong>
+          Each BEID will be mapped to client <strong>{clientName || "(unnamed)"}</strong> with its own org ID.
         </p>
       </PanelBody>
     </Panel>

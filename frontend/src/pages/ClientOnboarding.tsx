@@ -15,7 +15,7 @@ import { Button, Spinner } from "../components/ui";
 import StepProgress, { type Step } from "../components/onboarding/StepProgress";
 import StepClientDetails from "../components/onboarding/StepClientDetails";
 import StepGroupDetails from "../components/onboarding/StepGroupDetails";
-import StepBeidMapping from "../components/onboarding/StepBeidMapping";
+import StepBeidMapping, { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
 import StepReportMapping, { type ReportDef } from "../components/onboarding/StepReportMapping";
 import StepPreview from "../components/onboarding/StepPreview";
 import ConfirmDialog from "../components/onboarding/ConfirmDialog";
@@ -39,8 +39,7 @@ export default function ClientOnboarding() {
   // Form data
   const [clientName, setClientName] = useState("");
   const [groupName, setGroupName] = useState("");
-  const [beids, setBeids] = useState<number[]>([]);
-  const [orgId, setOrgId] = useState("");
+  const [beidMappings, setBeidMappings] = useState<BeidOrgMapping[]>([]);
   const [selectedReportIds, setSelectedReportIds] = useState<number[]>([]);
 
   // Server-fetched data
@@ -124,9 +123,9 @@ export default function ClientOnboarding() {
           if (groupName.trim().length < 2) return "Group name must be at least 2 characters";
           return null;
         case 2:
-          if (beids.length === 0) return "At least one Business Entity ID is required";
-          if (beids.some((b) => b <= 0)) return "All BEIDs must be positive integers";
-          if (!orgId.trim()) return "Org ID is required";
+          if (beidMappings.length === 0) return "At least one BEID mapping is required";
+          if (beidMappings.some((m) => m.beid <= 0)) return "All BEIDs must be positive integers";
+          if (beidMappings.some((m) => !m.org_id.trim())) return "Org ID is required for all BEIDs";
           return null;
         case 3:
           if (selectedReportIds.length === 0) return "At least one report must be selected";
@@ -135,7 +134,7 @@ export default function ClientOnboarding() {
           return null;
       }
     },
-    [clientName, groupName, beids, orgId, selectedReportIds],
+    [clientName, groupName, beidMappings, selectedReportIds],
   );
 
   const goNext = () => {
@@ -176,8 +175,7 @@ export default function ClientOnboarding() {
       const r = await api.post("/admin/client-onboarding/execute", {
         client_name: clientName.trim(),
         group_name: groupName.trim(),
-        business_entity_ids: beids,
-        org_id: orgId.trim(),
+        beid_org_mappings: beidMappings,
         report_ids: selectedReportIds,
       });
       setResult(r.data);
@@ -194,8 +192,7 @@ export default function ClientOnboarding() {
     setCurrentStep(0);
     setClientName("");
     setGroupName("");
-    setBeids([]);
-    setOrgId("");
+    setBeidMappings([]);
     setSelectedReportIds([]);
     setResult(null);
     setGlobalError(null);
@@ -343,10 +340,8 @@ export default function ClientOnboarding() {
         )}
         {currentStep === 2 && (
           <StepBeidMapping
-            beids={beids}
-            setBeids={setBeids}
-            orgId={orgId}
-            setOrgId={setOrgId}
+            mappings={beidMappings}
+            setMappings={setBeidMappings}
             clientName={clientName}
             error={stepErrors[2] ?? null}
           />
@@ -367,8 +362,7 @@ export default function ClientOnboarding() {
             groupName={groupName}
             nextClientId={nextIds?.next_client_id ?? null}
             nextGroupId={nextIds?.next_group_id ?? null}
-            beids={beids}
-            orgId={orgId}
+            beidMappings={beidMappings}
             selectedReports={selectedReports}
           />
         )}
@@ -397,7 +391,7 @@ export default function ClientOnboarding() {
       <ConfirmDialog
         open={showConfirm}
         title="Confirm Client Onboarding"
-        message={`This will execute ${3 + beids.length * 2 + selectedReportIds.length} INSERT statements on NFC Prod in a single transaction. This action cannot be undone.`}
+        message={`This will execute ${3 + beidMappings.length * 2 + selectedReportIds.length} INSERT statements on NFC Prod in a single transaction. This action cannot be undone.`}
         confirmLabel="Execute"
         loading={executing}
         onConfirm={handleExecute}

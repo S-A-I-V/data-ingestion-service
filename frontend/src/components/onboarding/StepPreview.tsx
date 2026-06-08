@@ -9,14 +9,14 @@
 
 import { Panel, PanelHeader, PanelBody, Badge } from "../ui";
 import type { ReportDef } from "./StepReportMapping";
+import type { BeidOrgMapping } from "./StepBeidMapping";
 
 interface Props {
   clientName: string;
   groupName: string;
   nextClientId: number | null;
   nextGroupId: number | null;
-  beids: number[];
-  orgId: string;
+  beidMappings: BeidOrgMapping[];
   selectedReports: ReportDef[];
 }
 
@@ -25,11 +25,10 @@ export default function StepPreview({
   groupName,
   nextClientId,
   nextGroupId,
-  beids,
-  orgId,
+  beidMappings,
   selectedReports,
 }: Props) {
-  const totalStatements = 3 + beids.length * 2 + selectedReports.length;
+  const totalStatements = 3 + beidMappings.length * 2 + selectedReports.length;
 
   // Transaction summary rows with full SQL
   const txnSummary = [
@@ -54,14 +53,14 @@ export default function StepPreview({
     {
       table: "business_entity_client_mapping",
       operation: "INSERT",
-      rows: beids.length,
-      sql: `INSERT INTO business_entity_client_mapping(business_entity_id, client_id, ...) VALUES(<beid>, ${nextClientId}, now(), 'NFC_Team', now(), 'NFC_Team') -- ×${beids.length}`,
+      rows: beidMappings.length,
+      sql: `INSERT INTO business_entity_client_mapping(business_entity_id, client_id, ...) VALUES(<beid>, ${nextClientId}, ...) -- ×${beidMappings.length}`,
     },
     {
       table: "business_entity_org_mapping",
       operation: "INSERT",
-      rows: beids.length,
-      sql: `INSERT INTO business_entity_org_mapping(business_entity_id, org_id, ...) VALUES(<beid>, '${orgId}', now(), 'NFC_Team', now(), 'NFC_Team') -- ×${beids.length}`,
+      rows: beidMappings.length,
+      sql: `INSERT INTO business_entity_org_mapping(business_entity_id, org_id, ...) VALUES(<beid>, <per-beid org_id>, ...) -- ×${beidMappings.length}`,
     },
     {
       table: "client_report_mapping",
@@ -97,18 +96,24 @@ export default function StepPreview({
               <span className="preview-info-value">{groupName}</span>
             </div>
             <div className="preview-info-cell">
-              <span className="preview-info-label">BEIDs ({beids.length})</span>
+              <span className="preview-info-label">BEIDs ({beidMappings.length})</span>
               <div className="preview-beid-chips">
-                {beids.map((b) => (
-                  <Badge key={b} variant="info">
-                    {b}
+                {beidMappings.map((m) => (
+                  <Badge key={m.beid} variant="info">
+                    {m.beid}
                   </Badge>
                 ))}
               </div>
             </div>
-            <div className="preview-info-cell">
-              <span className="preview-info-label">Org ID</span>
-              <span className="preview-info-value">{orgId}</span>
+            <div className="preview-info-cell preview-info-cell--short">
+              <span className="preview-info-label">Org IDs</span>
+              <div className="preview-beid-chips">
+                {[...new Set(beidMappings.map((m) => m.org_id))].map((oid) => (
+                  <Badge key={oid} variant="info">
+                    {oid}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
 

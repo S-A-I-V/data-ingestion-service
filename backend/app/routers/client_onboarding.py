@@ -119,8 +119,7 @@ def execute_onboarding_endpoint(
             client_name=payload.client_name,
             group_id=next_group_id,
             group_name=payload.group_name,
-            beids=payload.business_entity_ids,
-            org_id=payload.org_id,
+            beid_org_mappings=payload.beid_org_mappings,
             report_ids=payload.report_ids,
             report_map=report_map,
         )
@@ -164,7 +163,7 @@ def execute_onboarding_endpoint(
         f"ONBOARD client_id={next_client_id} "
         f"client_name={payload.client_name} "
         f"group_id={next_group_id} "
-        f"beids={len(payload.business_entity_ids)} "
+        f"beids={len(payload.beid_org_mappings)} "
         f"reports={len(payload.report_ids)} "
         f"executed={total_rows} skipped={skipped_rows}"
     )
@@ -192,7 +191,7 @@ def execute_onboarding_endpoint(
         "group_id": next_group_id,
         "client_name": payload.client_name,
         "group_name": payload.group_name,
-        "beids_mapped": len(payload.business_entity_ids),
+        "beids_mapped": len(payload.beid_org_mappings),
         "reports_mapped": len(payload.report_ids),
         "total_statements": len(statements),
         "executed": total_rows,

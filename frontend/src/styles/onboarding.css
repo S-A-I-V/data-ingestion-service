@@ -209,7 +209,73 @@
   flex-shrink: 0;
 }
 
-/* ── BEID Preview ──────────────────────────────────────────────────── */
+/* ── BEID Mapping ──────────────────────────────────────────────────── */
+
+.beid-bulk-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.beid-bulk-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 150px;
+}
+
+.beid-bulk-input label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.beid-bulk-input input {
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.beid-bulk-input input:focus {
+  border-color: var(--accent);
+}
+
+.beid-mapping-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 300px;
+  margin-bottom: 12px;
+}
+
+.beid-mapping-table-wrap .data-table {
+  margin: 0;
+}
+
+.beid-org-inline-input {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: "Fira Code", monospace;
+  outline: none;
+}
+
+.beid-org-inline-input:focus {
+  border-color: var(--accent);
+}
 
 .onboarding-textarea {
   width: 100%;
