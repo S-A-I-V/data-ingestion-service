@@ -275,6 +275,10 @@ export default function ClientOnboarding() {
     <div className="container audit-container">
       <div className="toolbar">
         <span className="toolbar-title">Client Onboarding</span>
+        <div className="toolbar-spacer" />
+        <Button size="sm" variant="danger" onClick={resetForm} disabled={executing}>
+          <RestartAltIcon sx={{ fontSize: 14 }} /> Reset
+        </Button>
       </div>
 
       {globalError && <div className="onboarding-global-error">{globalError}</div>}
