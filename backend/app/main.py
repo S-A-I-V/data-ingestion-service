@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.config import settings
 from app.database import Base, engine
 from app.middleware.security import SecurityHeadersMiddleware
-from app.routers import ai, associate_lookup, audit, auth, connections, ingestion
+from app.routers import ai, associate_lookup, audit, auth, client_onboarding, connections, ingestion
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -36,6 +36,7 @@ app.include_router(ingestion.router)
 app.include_router(audit.router)
 app.include_router(ai.router)
 app.include_router(associate_lookup.router)
+app.include_router(client_onboarding.router)
 
 
 @app.get("/api/health")

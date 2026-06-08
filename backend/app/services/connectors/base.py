@@ -112,6 +112,18 @@ class SQLAlchemyConnector(BaseConnector):
             columns = list(result.keys())
             return [dict(zip(columns, row)) for row in result.fetchall()]
 
+    def execute_transaction(self, statements: list[dict[str, Any]]) -> None:
+        """Execute multiple statements in a single atomic transaction.
+
+        Each statement is a dict with 'sql' (str) and 'params' (dict).
+        If any statement fails, the entire transaction is rolled back.
+        """
+        from sqlalchemy import text
+
+        with self._engine().begin() as c:
+            for stmt in statements:
+                c.execute(text(stmt["sql"]), stmt.get("params", {}))
+
     def insert_rows_skip_existing(
         self, table: str, columns: list[str], rows: list[list[Any]], key_columns: list[str]
     ) -> dict[str, int]:

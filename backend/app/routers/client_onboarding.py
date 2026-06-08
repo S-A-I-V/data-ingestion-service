@@ -1,0 +1,133 @@
+"""
+Client Onboarding — Admin-only API endpoints.
+
+Thin router layer that delegates to the onboarding service modules:
+  - services/onboarding/schemas.py    → request validation
+  - services/onboarding/connection.py → NFC Prod DB resolution
+  - services/onboarding/queries.py    → SQL builders & data fetchers
+
+Requires 'admin:client_onboarding' permission.
+"""
+
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models.user import User
+from app.routers.auth import limiter
+from app.services.db_connector import get_connector
+from app.services.onboarding import (
+    OnboardRequest,
+    build_onboarding_statements,
+    fetch_next_ids,
+    fetch_report_definitions,
+    fetch_report_map,
+    find_nfc_connection,
+)
+from app.services.rbac import require_permission
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/admin/client-onboarding", tags=["admin"])
+
+
+@router.get("/report-definitions")
+@limiter.limit("30/minute")
+def get_report_definitions_endpoint(
+    request: Request,
+    user: User = Depends(require_permission("admin:client_onboarding")),
+    db: Session = Depends(get_db),
+):
+    """Fetch available report definitions from report_definitions table."""
+    conn = find_nfc_connection(user.id, db)
+    connector = get_connector(conn)
+
+    try:
+        reports = fetch_report_definitions(connector)
+    except Exception as e:
+        logger.error(f"Failed to fetch report definitions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch report definitions") from e
+
+    return {"reports": reports, "total": len(reports)}
+
+
+@router.get("/next-ids")
+@limiter.limit("30/minute")
+def get_next_ids_endpoint(
+    request: Request,
+    user: User = Depends(require_permission("admin:client_onboarding")),
+    db: Session = Depends(get_db),
+):
+    """Fetch the next available client_id, group_id for preview."""
+    conn = find_nfc_connection(user.id, db)
+    connector = get_connector(conn)
+
+    try:
+        ids = fetch_next_ids(connector)
+    except Exception as e:
+        logger.error(f"Failed to fetch next IDs: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch next available IDs") from e
+
+    return ids
+
+
+@router.post("/execute")
+@limiter.limit("5/minute")
+def execute_onboarding_endpoint(
+    request: Request,
+    payload: OnboardRequest,
+    user: User = Depends(require_permission("admin:client_onboarding")),
+    db: Session = Depends(get_db),
+):
+    """
+    Execute the complete client onboarding in a single transaction.
+    All inserts happen atomically — if any fail, everything rolls back.
+    """
+    conn = find_nfc_connection(user.id, db)
+    connector = get_connector(conn)
+
+    try:
+        # Resolve next IDs at execution time
+        ids = fetch_next_ids(connector)
+        next_client_id = ids["next_client_id"]
+        next_group_id = ids["next_group_id"]
+
+        # Fetch report metadata for selected IDs
+        report_map = fetch_report_map(connector, payload.report_ids)
+
+        # Build atomic statement list
+        statements = build_onboarding_statements(
+            client_id=next_client_id,
+            client_name=payload.client_name,
+            group_id=next_group_id,
+            group_name=payload.group_name,
+            beids=payload.business_entity_ids,
+            org_id=payload.org_id,
+            report_ids=payload.report_ids,
+            report_map=report_map,
+        )
+
+        # Execute all in one transaction
+        connector.execute_transaction(statements)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Client onboarding failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Onboarding transaction failed: {str(e)}",
+        ) from e
+
+    return {
+        "success": True,
+        "client_id": next_client_id,
+        "group_id": next_group_id,
+        "client_name": payload.client_name,
+        "group_name": payload.group_name,
+        "beids_mapped": len(payload.business_entity_ids),
+        "reports_mapped": len(payload.report_ids),
+        "total_statements": len(statements),
+    }

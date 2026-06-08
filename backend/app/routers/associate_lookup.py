@@ -12,6 +12,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
+from app.constants import LOOKUP_DB, LOOKUP_HOST, LOOKUP_PORT
 from app.database import get_db
 from app.models.connection import DBConnection
 from app.models.user import User
@@ -23,11 +24,6 @@ from app.services.rbac import require_permission
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/admin/associate-lookup", tags=["admin"])
-
-# The fixed connection target for this feature
-LOOKUP_HOST = "REDACTED_HOST"
-LOOKUP_PORT = 2125
-LOOKUP_DB = "REDACTED_DB"
 
 ASSOCIATE_QUERY_BY_BEID = """
 SELECT
