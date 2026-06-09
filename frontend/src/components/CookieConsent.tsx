@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import CookieIcon from "@mui/icons-material/Cookie";
 import { Link } from "react-router-dom";
+import { Button } from "./ui";
+import CookieIcon from "./icons/CookieIcon";
 
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
@@ -27,16 +28,32 @@ export default function CookieConsent() {
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
+          {/* Cookie illustration */}
+          <div className="cookie-icon-wrap">
+            <CookieIcon />
+          </div>
+
           <div className="cookie-content">
-            <CookieIcon sx={{ fontSize: 20, color: "var(--accent)", flexShrink: 0 }} />
-            <p>
-              We use essential cookies for authentication. No tracking or advertising cookies.
-              See our <Link to="/privacy">Privacy Policy</Link>.
+            <h5 className="cookie-title">Your privacy is important to us</h5>
+            <p className="cookie-text">
+              We process your personal information to measure and improve our sites and services, to assist our
+              campaigns and to provide personalised content.
+              <br />
+              For more information see our{" "}
+              <Link to="/privacy" className="cookie-link">
+                Privacy Policy
+              </Link>
             </p>
           </div>
-          <button type="button" className="cookie-accept" onClick={accept}>
-            Got it
-          </button>
+
+          <div className="cookie-actions">
+            <Link to="/privacy" className="cookie-more">
+              More Options
+            </Link>
+            <Button variant="primary" size="sm" onClick={accept}>
+              Accept
+            </Button>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
