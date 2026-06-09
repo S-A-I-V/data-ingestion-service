@@ -38,7 +38,9 @@ export default function CookieConsent() {
             <p className="cookie-text">
               We process your personal information to measure and improve our sites and services, to assist our
               campaigns and to provide personalised content.
-              <br />
+            </p>
+            <div className="cookie-separator" />
+            <p className="cookie-text cookie-info-line">
               For more information see our{" "}
               <Link to="/privacy" className="cookie-link">
                 Privacy Policy
