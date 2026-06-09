@@ -6,7 +6,7 @@ The build_onboarding_statements function produces the full list of
 parameterized statements for atomic transaction execution.
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import HTTPException
 
@@ -159,6 +159,7 @@ def build_onboarding_statements(
     beid_org_mappings: list[dict],
     report_ids: list[int],
     report_map: dict[int, dict[str, Any]],
+    fastie_aliases: Optional[list[str]] = None,
 ) -> list[dict[str, Any]]:
     """
     Build the complete list of parameterized SQL statements for
@@ -283,6 +284,26 @@ def build_onboarding_statements(
                     "report_name": info.get("report_name", ""),
                     "app_name": info.get("application_name", ""),
                     "report_id": rid,
+                },
+            }
+        )
+
+    # 7. Fastie client alias mapping (optional)
+    for alias in fastie_aliases or []:
+        statements.append(
+            {
+                "sql": """
+                INSERT INTO public.fastie_client_alias_mapping(
+                    client_id, fastie_client_name, is_active,
+                    created_by, created_at, updated_by, updated_at
+                ) VALUES(
+                    :client_id, :alias_name, true,
+                    'NFC_Team', now(), 'NFC_Team', now()
+                )
+            """,
+                "params": {
+                    "client_id": client_id,
+                    "alias_name": alias,
                 },
             }
         )

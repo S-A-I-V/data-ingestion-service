@@ -14,20 +14,22 @@ interface Props {
   steps: Step[];
   currentStep: number;
   onStepClick?: (index: number) => void;
+  skippedSteps?: Set<number>;
 }
 
-export default function StepProgress({ steps, currentStep, onStepClick }: Props) {
+export default function StepProgress({ steps, currentStep, onStepClick, skippedSteps }: Props) {
   return (
     <div className="step-progress">
       {steps.map((step, idx) => {
         const isDone = idx < currentStep;
         const isActive = idx === currentStep;
+        const isSkipped = skippedSteps?.has(idx) ?? false;
         const isClickable = onStepClick && idx <= currentStep;
 
         return (
           <div
             key={idx}
-            className={`step-progress-item${isActive ? " active" : ""}${isDone ? " done" : ""}`}
+            className={`step-progress-item${isActive ? " active" : ""}${isDone ? " done" : ""}${isSkipped ? " skipped" : ""}`}
             onClick={() => isClickable && onStepClick(idx)}
             {...(isClickable ? { role: "button", tabIndex: 0 } : {})}
             onKeyDown={(e) => {
@@ -35,7 +37,7 @@ export default function StepProgress({ steps, currentStep, onStepClick }: Props)
             }}
           >
             <div className="step-progress-circle">
-              {isDone ? <CheckCircleIcon sx={{ fontSize: 20 }} /> : <span>{idx + 1}</span>}
+              {isSkipped ? <span>—</span> : isDone ? <CheckCircleIcon sx={{ fontSize: 20 }} /> : <span>{idx + 1}</span>}
             </div>
             <div className="step-progress-label">
               <span className="step-progress-title">{step.label}</span>

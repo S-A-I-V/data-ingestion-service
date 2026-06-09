@@ -122,6 +122,7 @@ def execute_onboarding_endpoint(
             beid_org_mappings=payload.beid_org_mappings,
             report_ids=payload.report_ids,
             report_map=report_map,
+            fastie_aliases=payload.fastie_aliases,
         )
 
         # Execute all — skip duplicate conflicts (e.g. existing BEID mappings)

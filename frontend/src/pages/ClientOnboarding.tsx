@@ -19,6 +19,7 @@ import StepBeidMapping, { type BeidOrgMapping } from "../components/onboarding/S
 import StepReportMapping, { type ReportDef } from "../components/onboarding/StepReportMapping";
 import StepPreview from "../components/onboarding/StepPreview";
 import ConfirmDialog from "../components/onboarding/ConfirmDialog";
+import StepFastieAlias from "../components/onboarding/StepFastieAlias";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -29,6 +30,7 @@ const STEPS: Step[] = [
   { label: "Group", description: "Group Setup" },
   { label: "BEIDs", description: "Entity mapping" },
   { label: "Reports", description: "Report mapping" },
+  { label: "Fastie", description: "Aliases (optional)" },
   { label: "Review", description: "Preview & confirm" },
 ];
 
@@ -41,6 +43,8 @@ export default function ClientOnboarding() {
   const [groupName, setGroupName] = useState("");
   const [beidMappings, setBeidMappings] = useState<BeidOrgMapping[]>([]);
   const [selectedReportIds, setSelectedReportIds] = useState<number[]>([]);
+  const [fastieAliases, setFastieAliases] = useState<string[]>([]);
+  const [skippedSteps, setSkippedSteps] = useState<Set<number>>(new Set());
 
   // Server-fetched data
   const [nextIds, setNextIds] = useState<{
@@ -144,6 +148,14 @@ export default function ClientOnboarding() {
       return;
     }
     setStepErrors((prev) => ({ ...prev, [currentStep]: null }));
+    // If this step was previously skipped but now has data, un-skip it
+    if (skippedSteps.has(currentStep)) {
+      setSkippedSteps((prev) => {
+        const next = new Set(prev);
+        next.delete(currentStep);
+        return next;
+      });
+    }
     setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
 
@@ -177,6 +189,7 @@ export default function ClientOnboarding() {
         group_name: groupName.trim(),
         beid_org_mappings: beidMappings,
         report_ids: selectedReportIds,
+        fastie_aliases: fastieAliases,
       });
       setResult(r.data);
       setShowConfirm(false);
@@ -194,6 +207,8 @@ export default function ClientOnboarding() {
     setGroupName("");
     setBeidMappings([]);
     setSelectedReportIds([]);
+    setFastieAliases([]);
+    setSkippedSteps(new Set());
     setResult(null);
     setGlobalError(null);
     setStepErrors({});
@@ -318,7 +333,7 @@ export default function ClientOnboarding() {
       {globalError && <div className="onboarding-global-error">{globalError}</div>}
 
       {/* Step progress indicator */}
-      <StepProgress steps={STEPS} currentStep={currentStep} onStepClick={goToStep} />
+      <StepProgress steps={STEPS} currentStep={currentStep} onStepClick={goToStep} skippedSteps={skippedSteps} />
 
       {/* Step content */}
       <div className="onboarding-step-content">
@@ -357,6 +372,14 @@ export default function ClientOnboarding() {
           />
         )}
         {currentStep === 4 && (
+          <StepFastieAlias
+            aliases={fastieAliases}
+            setAliases={setFastieAliases}
+            clientName={clientName}
+            error={stepErrors[4] ?? null}
+          />
+        )}
+        {currentStep === 5 && (
           <StepPreview
             clientName={clientName}
             groupName={groupName}
@@ -364,6 +387,7 @@ export default function ClientOnboarding() {
             nextGroupId={nextIds?.next_group_id ?? null}
             beidMappings={beidMappings}
             selectedReports={selectedReports}
+            fastieAliases={fastieAliases}
           />
         )}
       </div>
@@ -376,8 +400,20 @@ export default function ClientOnboarding() {
           </Button>
         )}
         <div className="toolbar-spacer" />
+        {currentStep === 4 && (
+          <Button
+            variant="ghost"
+            disabled={fastieAliases.length > 0}
+            onClick={() => {
+              setSkippedSteps((prev) => new Set([...prev, 4]));
+              setCurrentStep(5);
+            }}
+          >
+            Skip →
+          </Button>
+        )}
         {currentStep < STEPS.length - 1 ? (
-          <Button variant="primary" onClick={goNext}>
+          <Button variant="primary" onClick={goNext} disabled={currentStep === 4 && fastieAliases.length === 0}>
             Next <ArrowForwardIcon sx={{ fontSize: 16 }} />
           </Button>
         ) : (

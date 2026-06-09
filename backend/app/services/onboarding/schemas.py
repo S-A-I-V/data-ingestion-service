@@ -78,6 +78,7 @@ class OnboardRequest(BaseModel):
     group_name: str
     beid_org_mappings: list[dict]
     report_ids: list[int]
+    fastie_aliases: list[str] = []
 
     @field_validator("client_name", "group_name")
     @classmethod

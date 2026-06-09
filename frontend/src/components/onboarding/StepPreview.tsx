@@ -18,6 +18,7 @@ interface Props {
   nextGroupId: number | null;
   beidMappings: BeidOrgMapping[];
   selectedReports: ReportDef[];
+  fastieAliases: string[];
 }
 
 export default function StepPreview({
@@ -27,8 +28,9 @@ export default function StepPreview({
   nextGroupId,
   beidMappings,
   selectedReports,
+  fastieAliases,
 }: Props) {
-  const totalStatements = 3 + beidMappings.length * 2 + selectedReports.length;
+  const totalStatements = 3 + beidMappings.length * 2 + selectedReports.length + fastieAliases.length;
 
   // Transaction summary rows with full SQL
   const txnSummary = [
@@ -68,6 +70,16 @@ export default function StepPreview({
       rows: selectedReports.length,
       sql: `INSERT INTO client_report_mapping(client_id, report_name, application_name, report_id, id, ...) VALUES(${nextClientId}, <name>, <app>, <id>, gen_random_uuid(), ...) -- ×${selectedReports.length}`,
     },
+    ...(fastieAliases.length > 0
+      ? [
+          {
+            table: "fastie_client_alias_mapping",
+            operation: "INSERT",
+            rows: fastieAliases.length,
+            sql: `INSERT INTO fastie_client_alias_mapping(client_id, fastie_client_name, is_active, ...) VALUES(${nextClientId}, <alias>, true, ...) -- ×${fastieAliases.length}`,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -144,7 +156,21 @@ export default function StepPreview({
             </div>
           </div>
 
-          {/* Section 4: Transaction Summary with inline SQL */}
+          {/* Section 4: Fastie Aliases (if any) */}
+          {fastieAliases.length > 0 && (
+            <div className="preview-section-compact">
+              <span className="preview-section-label">Fastie Client Aliases ({fastieAliases.length})</span>
+              <div className="preview-beid-chips">
+                {fastieAliases.map((alias) => (
+                  <Badge key={alias} variant="warning">
+                    {alias}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Section 5: Transaction Summary with inline SQL */}
           <div className="preview-section-compact">
             <span className="preview-section-label">Transaction Summary</span>
             <div className="preview-table-wrap">

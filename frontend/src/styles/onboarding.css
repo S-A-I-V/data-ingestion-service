@@ -12,6 +12,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow-x: auto;
+  width: 100%;
 }
 
 .step-progress-item {
@@ -61,6 +62,23 @@
   border-color: var(--success);
   color: var(--success);
   background: var(--success-bg);
+}
+
+.step-progress-item.skipped .step-progress-circle {
+  border-color: var(--warning);
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.1);
+  border-style: dashed;
+}
+
+.step-progress-item.skipped .step-progress-title {
+  color: var(--warning);
+  text-decoration: line-through;
+}
+
+.step-progress-item.skipped .step-progress-connector {
+  background: var(--warning);
+  border-style: dashed;
 }
 
 .step-progress-label {
@@ -119,6 +137,7 @@
   height: calc(100vh - 52px);
   padding-bottom: 0;
   overflow: hidden;
+  max-width: 100%;
 }
 
 /* Panels inside step content should fill available height */
