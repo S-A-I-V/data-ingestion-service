@@ -47,9 +47,6 @@ export default function CookieConsent() {
           </div>
 
           <div className="cookie-actions">
-            <Link to="/privacy" className="cookie-more">
-              More Options
-            </Link>
             <Button variant="primary" size="sm" onClick={accept}>
               Accept
             </Button>
