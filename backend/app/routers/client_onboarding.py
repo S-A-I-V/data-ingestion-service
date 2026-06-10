@@ -29,6 +29,7 @@ from app.services.onboarding import (
     fetch_report_map,
     find_nfc_connection,
 )
+from app.services.query_metrics import track_transaction
 from app.services.rbac import require_permission
 
 logger = logging.getLogger(__name__)
@@ -125,8 +126,8 @@ def execute_onboarding_endpoint(
             fastie_aliases=payload.fastie_aliases,
         )
 
-        # Execute all — skip duplicate conflicts (e.g. existing BEID mappings)
-        result = connector.execute_transaction_skip_conflicts(statements)
+        # Execute all — skip duplicate conflicts, capture metrics
+        result, metrics = track_transaction(connector, statements)
 
     except HTTPException:
         raise
@@ -180,6 +181,9 @@ def execute_onboarding_endpoint(
         rows_skipped=skipped_rows,
         query_preview=query_preview,
         status="success",
+        total_time_ms=metrics.total_time_ms,
+        peak_memory_bytes=metrics.peak_memory_bytes,
+        cpu_time_s=metrics.cpu_time_s,
     )
     last = db.query(AuditLog).order_by(AuditLog.id.desc()).first()
     audit.seal(last.record_hash if last else None)
