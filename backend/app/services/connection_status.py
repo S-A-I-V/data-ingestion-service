@@ -26,17 +26,33 @@ def mark_connection_active(conn: DBConnection, db: Session) -> None:
         conn.last_tested_at = datetime.now(timezone.utc)
         conn.last_test_ok = True
         db.commit()
+        logger.debug(
+            "connection_marked_active",
+            extra={"connection_id": conn.id, "db_type": conn.db_type},
+        )
     except Exception as e:
-        logger.warning(f"Failed to update connection status for {conn.id}: {e}")
+        logger.warning(
+            "connection_status_update_failed",
+            extra={"connection_id": conn.id, "action": "mark_active", "error": str(e)[:200]},
+        )
         db.rollback()
 
 
 def mark_connection_failed(conn: DBConnection, db: Session) -> None:
-    """Mark a connection as failed after an error."""
+    """
+    Mark a connection as failed (red badge in Dashboard).
+    """
     try:
         conn.last_tested_at = datetime.now(timezone.utc)
         conn.last_test_ok = False
         db.commit()
+        logger.info(
+            "connection_marked_failed",
+            extra={"connection_id": conn.id, "db_type": conn.db_type},
+        )
     except Exception as e:
-        logger.warning(f"Failed to update connection status for {conn.id}: {e}")
+        logger.warning(
+            "connection_status_update_failed",
+            extra={"connection_id": conn.id, "action": "mark_failed", "error": str(e)[:200]},
+        )
         db.rollback()

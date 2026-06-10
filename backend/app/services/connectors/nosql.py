@@ -1,7 +1,6 @@
 """NoSQL / NewSQL / Compatible connectors: CockroachDB, TiDB, Yugabyte, OceanBase, StarRocks, Timescale, etc."""
 
-from .sql import PostgresConnector, MySQLConnector, MSSQLConnector
-from .base import SQLAlchemyConnector
+from .sql import MySQLConnector, PostgresConnector
 
 
 class CockroachDBConnector(PostgresConnector):

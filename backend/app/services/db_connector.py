@@ -12,37 +12,70 @@ Connectors are organized into modules under app.services.connectors:
 """
 
 from app.models.connection import DBConnection
-from app.services.connectors.base import BaseConnector
 
-# SQL
-from app.services.connectors.sql import (
-    PostgresConnector, MySQLConnector, MariaDBConnector, MSSQLConnector,
-    OracleConnector, SQLiteConnector, DB2Connector, FirebirdConnector, AzureSQLConnector,
-)
-# Cloud
-from app.services.connectors.cloud import (
-    SnowflakeConnector, RedshiftConnector, BigQueryConnector,
-    AthenaConnector, DatabricksConnector, SpannerConnector,
-)
 # Analytical
 from app.services.connectors.analytical import (
-    ClickHouseConnector, VerticaConnector, TeradataConnector, ExasolConnector,
-    SAPHANAConnector, MonetDBConnector, DuckDBConnector, CrateDBConnector, DatabendConnector,
+    ClickHouseConnector,
+    CrateDBConnector,
+    DatabendConnector,
+    DuckDBConnector,
+    ExasolConnector,
+    MonetDBConnector,
+    SAPHANAConnector,
+    TeradataConnector,
+    VerticaConnector,
 )
-# NoSQL / NewSQL
-from app.services.connectors.nosql import (
-    CockroachDBConnector, TiDBConnector, YugabyteConnector, OceanBaseConnector,
-    StarRocksConnector, TimescaleDBConnector, GreenplumConnector,
-    MaterializeConnector, CloudberryConnector,
-)
+from app.services.connectors.base import BaseConnector
+
 # BigData / Search
 from app.services.connectors.bigdata import (
-    HiveConnector, PrestoConnector, TrinoConnector, SparkConnector,
-    DrillConnector, ElasticsearchConnector, OpenSearchConnector,
+    DrillConnector,
+    ElasticsearchConnector,
+    HiveConnector,
+    OpenSearchConnector,
+    PrestoConnector,
+    SparkConnector,
+    TrinoConnector,
 )
+
+# Cloud
+from app.services.connectors.cloud import (
+    AthenaConnector,
+    BigQueryConnector,
+    DatabricksConnector,
+    RedshiftConnector,
+    SnowflakeConnector,
+    SpannerConnector,
+)
+
+# NoSQL / NewSQL
+from app.services.connectors.nosql import (
+    CloudberryConnector,
+    CockroachDBConnector,
+    GreenplumConnector,
+    MaterializeConnector,
+    OceanBaseConnector,
+    StarRocksConnector,
+    TiDBConnector,
+    TimescaleDBConnector,
+    YugabyteConnector,
+)
+
 # Specialty
 from app.services.connectors.specialty import SybaseConnector
 
+# SQL
+from app.services.connectors.sql import (
+    AzureSQLConnector,
+    DB2Connector,
+    FirebirdConnector,
+    MariaDBConnector,
+    MSSQLConnector,
+    MySQLConnector,
+    OracleConnector,
+    PostgresConnector,
+    SQLiteConnector,
+)
 
 CONNECTORS = {
     # Popular / SQL
