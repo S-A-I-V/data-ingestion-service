@@ -110,3 +110,51 @@ class OnboardRequest(BaseModel):
         if not v:
             raise ValueError("At least one report must be selected")
         return v
+
+
+class EditClientRequest(BaseModel):
+    """Payload for editing an existing client's configuration."""
+
+    client_id: int
+    group_name: str
+    beid_org_mappings: list[dict]
+    report_ids: list[int]
+    fastie_aliases: list[str] = []
+
+    @field_validator("client_id")
+    @classmethod
+    def validate_client_id(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("Client ID must be a positive integer")
+        return v
+
+    @field_validator("group_name")
+    @classmethod
+    def validate_group(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Group name cannot be empty")
+        if len(v) > 200:
+            raise ValueError("Group name must be under 200 characters")
+        return v
+
+    @field_validator("beid_org_mappings")
+    @classmethod
+    def validate_beid_org(cls, v: list[dict]) -> list[dict]:
+        if not v:
+            raise ValueError("At least one BEID mapping is required")
+        for item in v:
+            beid = item.get("beid")
+            org_id = item.get("org_id", "").strip()
+            if not beid or beid <= 0:
+                raise ValueError(f"Invalid BEID: {beid}")
+            if not org_id:
+                raise ValueError(f"Org ID is required for BEID {beid}")
+        return v
+
+    @field_validator("report_ids")
+    @classmethod
+    def validate_report_ids(cls, v: list[int]) -> list[int]:
+        if not v:
+            raise ValueError("At least one report must be selected")
+        return v

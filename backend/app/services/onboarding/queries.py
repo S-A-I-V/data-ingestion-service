@@ -309,3 +309,279 @@ def build_onboarding_statements(
         )
 
     return statements
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Edit Existing Client — Query Functions
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+def fetch_all_clients(connector: SQLAlchemyConnector) -> list[dict[str, Any]]:
+    """Fetch all clients for the search/select dropdown."""
+    results = connector.execute_query(
+        """
+        SELECT client_id, client_name, created_at
+        FROM public.client_details
+        ORDER BY client_name ASC
+        """,
+        {},
+    )
+    return [dict(r) for r in results] if results else []
+
+
+def fetch_client_details(connector: SQLAlchemyConnector, client_id: int) -> dict[str, Any]:
+    """Fetch full client configuration for editing."""
+    # Client info
+    client = connector.execute_query(
+        "SELECT client_id, client_name FROM public.client_details WHERE client_id = :cid",
+        {"cid": client_id},
+    )
+    if not client:
+        raise HTTPException(status_code=404, detail=f"Client {client_id} not found")
+
+    # Group info (via client_groups junction)
+    group = connector.execute_query(
+        """
+        SELECT g.group_id, g.group_name
+        FROM public."groups" g
+        INNER JOIN public.client_groups cg ON cg.group_id = g.group_id
+        WHERE cg.client_id = :cid
+        LIMIT 1
+        """,
+        {"cid": client_id},
+    )
+
+    # BEID mappings
+    beids = connector.execute_query(
+        """
+        SELECT becm.business_entity_id AS beid,
+               COALESCE(beom.org_id, '') AS org_id
+        FROM public.business_entity_client_mapping becm
+        LEFT JOIN public.business_entity_org_mapping beom
+            ON becm.business_entity_id = beom.business_entity_id
+        WHERE becm.client_id = :cid
+        ORDER BY becm.business_entity_id
+        """,
+        {"cid": client_id},
+    )
+
+    # Report mappings
+    reports = connector.execute_query(
+        """
+        SELECT report_id, report_name, application_name
+        FROM public.client_report_mapping
+        WHERE client_id = :cid
+        ORDER BY report_name
+        """,
+        {"cid": client_id},
+    )
+
+    # Fastie aliases
+    aliases = connector.execute_query(
+        """
+        SELECT fastie_client_name
+        FROM public.fastie_client_alias_mapping
+        WHERE client_id = :cid AND is_active = true
+        ORDER BY fastie_client_name
+        """,
+        {"cid": client_id},
+    )
+
+    return {
+        "client_id": client[0]["client_id"],
+        "client_name": client[0]["client_name"],
+        "group_id": group[0]["group_id"] if group else None,
+        "group_name": group[0]["group_name"] if group else "",
+        "beid_mappings": [{"beid": b["beid"], "org_id": b["org_id"]} for b in (beids or [])],
+        "report_ids": [r["report_id"] for r in (reports or [])],
+        "reports": [dict(r) for r in (reports or [])],
+        "fastie_aliases": [a["fastie_client_name"] for a in (aliases or [])],
+    }
+
+
+def build_edit_statements(
+    *,
+    client_id: int,
+    client_name: str,
+    group_id: int,
+    group_name: str,
+    new_group_name: Optional[str],
+    current_beids: list[dict],
+    new_beids: list[dict],
+    current_report_ids: list[int],
+    new_report_ids: list[int],
+    report_map: dict[int, dict[str, Any]],
+    current_aliases: list[str],
+    new_aliases: list[str],
+) -> dict[str, Any]:
+    """
+    Build diff-based SQL statements for editing an existing client.
+
+    Returns {
+        "statements": [...],
+        "diff": {
+            "group_name_changed": bool,
+            "beids_added": [...],
+            "beids_removed": [...],
+            "reports_added": [...],
+            "reports_removed": [...],
+            "aliases_added": [...],
+            "aliases_removed": [...],
+        }
+    }
+    """
+    statements: list[dict[str, Any]] = []
+
+    # ── Group name update ─────────────────────────────────────────────────────
+    group_name_changed = False
+    if new_group_name and new_group_name != group_name:
+        group_name_changed = True
+        statements.append(
+            {
+                "sql": """
+                UPDATE public."groups"
+                SET group_name = :new_name, updated_at = now(), updated_by = 'NFC_Team'
+                WHERE group_id = :gid
+            """,
+                "params": {"new_name": new_group_name, "gid": group_id},
+            }
+        )
+
+    # ── BEID diff ─────────────────────────────────────────────────────────────
+    current_beid_set = {(b["beid"], b["org_id"]) for b in current_beids}
+    new_beid_set = {(b["beid"], b["org_id"]) for b in new_beids}
+
+    beids_added = new_beid_set - current_beid_set
+    beids_removed = current_beid_set - new_beid_set
+
+    for beid, _org_id in beids_removed:
+        statements.append(
+            {
+                "sql": """
+                DELETE FROM public.business_entity_client_mapping
+                WHERE business_entity_id = :beid AND client_id = :cid
+            """,
+                "params": {"beid": beid, "cid": client_id},
+            }
+        )
+        statements.append(
+            {
+                "sql": """
+                DELETE FROM public.business_entity_org_mapping
+                WHERE business_entity_id = :beid
+            """,
+                "params": {"beid": beid},
+            }
+        )
+
+    for beid, org_id in beids_added:
+        statements.append(
+            {
+                "sql": """
+                INSERT INTO public.business_entity_client_mapping(
+                    business_entity_id, client_id,
+                    created_at, created_by, updated_at, updated_by
+                ) VALUES(:beid, :cid, now(), 'NFC_Team', now(), 'NFC_Team')
+            """,
+                "params": {"beid": beid, "cid": client_id},
+            }
+        )
+        statements.append(
+            {
+                "sql": """
+                INSERT INTO public.business_entity_org_mapping(
+                    business_entity_id, org_id,
+                    created_at, created_by, updated_at, updated_by
+                ) VALUES(:beid, :org_id, now(), 'NFC_Team', now(), 'NFC_Team')
+            """,
+                "params": {"beid": beid, "org_id": org_id},
+            }
+        )
+
+    # ── Report diff ───────────────────────────────────────────────────────────
+    current_report_set = set(current_report_ids)
+    new_report_set = set(new_report_ids)
+
+    reports_added = new_report_set - current_report_set
+    reports_removed = current_report_set - new_report_set
+
+    for rid in reports_removed:
+        statements.append(
+            {
+                "sql": """
+                DELETE FROM public.client_report_mapping
+                WHERE client_id = :cid AND report_id = :rid
+            """,
+                "params": {"cid": client_id, "rid": rid},
+            }
+        )
+
+    for rid in reports_added:
+        info = report_map.get(rid, {})
+        statements.append(
+            {
+                "sql": """
+                INSERT INTO public.client_report_mapping(
+                    client_id, report_name, application_name,
+                    report_id, id,
+                    created_by, created_at, updated_at, updated_by
+                ) VALUES(
+                    :cid, :report_name, :app_name,
+                    :rid, gen_random_uuid(),
+                    'NFC_Team', now(), now(), 'NFC_Team'
+                )
+            """,
+                "params": {
+                    "cid": client_id,
+                    "report_name": info.get("report_name", ""),
+                    "app_name": info.get("application_name", ""),
+                    "rid": rid,
+                },
+            }
+        )
+
+    # ── Alias diff ────────────────────────────────────────────────────────────
+    current_alias_set = set(current_aliases)
+    new_alias_set = set(new_aliases)
+
+    aliases_added = new_alias_set - current_alias_set
+    aliases_removed = current_alias_set - new_alias_set
+
+    for alias in aliases_removed:
+        statements.append(
+            {
+                "sql": """
+                UPDATE public.fastie_client_alias_mapping
+                SET is_active = false, updated_at = now(), updated_by = 'NFC_Team'
+                WHERE client_id = :cid AND fastie_client_name = :alias
+            """,
+                "params": {"cid": client_id, "alias": alias},
+            }
+        )
+
+    for alias in aliases_added:
+        statements.append(
+            {
+                "sql": """
+                INSERT INTO public.fastie_client_alias_mapping(
+                    client_id, fastie_client_name, is_active,
+                    created_by, created_at, updated_by, updated_at
+                ) VALUES(:cid, :alias, true, 'NFC_Team', now(), 'NFC_Team', now())
+            """,
+                "params": {"cid": client_id, "alias": alias},
+            }
+        )
+
+    diff = {
+        "group_name_changed": group_name_changed,
+        "old_group_name": group_name if group_name_changed else None,
+        "new_group_name": new_group_name if group_name_changed else None,
+        "beids_added": [{"beid": b, "org_id": o} for b, o in beids_added],
+        "beids_removed": [{"beid": b, "org_id": o} for b, o in beids_removed],
+        "reports_added": list(reports_added),
+        "reports_removed": list(reports_removed),
+        "aliases_added": list(aliases_added),
+        "aliases_removed": list(aliases_removed),
+    }
+
+    return {"statements": statements, "diff": diff}
