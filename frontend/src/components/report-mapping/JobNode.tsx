@@ -14,6 +14,7 @@ declare global {
     __REPORT_MAPPING_JOBS__?: Array<{ job_id: number; job_name: string; category: string | null }>;
     __REPORT_MAPPING_UPDATE_NODE__?: (nodeId: string, jobId: number, jobName: string, category: string) => void;
     __REPORT_MAPPING_DELETE_NODE__?: (nodeId: string) => void;
+    __REPORT_MAPPING_DISCONNECT_RIGHT__?: (nodeId: string) => void;
   }
 }
 
@@ -25,6 +26,7 @@ function JobNode({ id, data }: NodeProps) {
   const jobs = window.__REPORT_MAPPING_JOBS__ || [];
   const updateNode = window.__REPORT_MAPPING_UPDATE_NODE__;
   const deleteNode = window.__REPORT_MAPPING_DELETE_NODE__;
+  const disconnectRight = window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
 
   // Close on click outside
   useEffect(() => {
@@ -55,6 +57,16 @@ function JobNode({ id, data }: NodeProps) {
 
       <div className="job-node-header">
         <span className="job-node-label">{(data as any).job_name || "Select a job..."}</span>
+        <button
+          className="job-node-action"
+          onClick={(e) => {
+            e.stopPropagation();
+            disconnectRight?.(id);
+          }}
+          title="Disconnect outgoing edges (→)"
+        >
+          ✂
+        </button>
         <button
           className="job-node-delete"
           onClick={(e) => {

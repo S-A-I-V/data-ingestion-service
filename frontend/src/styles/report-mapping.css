@@ -323,6 +323,22 @@
   color: var(--danger);
 }
 
+.job-node-action {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.job-node-action:hover {
+  color: var(--warning);
+}
+
 .job-node-id {
   font-size: 10px;
   font-family: "Fira Code", monospace;

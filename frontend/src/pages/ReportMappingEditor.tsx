@@ -34,11 +34,14 @@ import "@xyflow/react/dist/style.css";
 import api from "../api";
 import { Button, Spinner } from "../components/ui";
 import JobNode from "../components/report-mapping/JobNode";
+import { useUndoRedo } from "../hooks/useUndoRedo";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
 import AddIcon from "@mui/icons-material/Add";
 import DownloadIcon from "@mui/icons-material/Download";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import UndoIcon from "@mui/icons-material/Undo";
+import RedoIcon from "@mui/icons-material/Redo";
 
 interface Job {
   job_id: number;
@@ -98,6 +101,41 @@ export default function ReportMappingEditor() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+
+  // ── Undo/Redo via hook ─────────────────────────────────────────────────────
+  const graph = useUndoRedo<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
+
+  // Sync hook state → local state (for React Flow)
+  useEffect(() => {
+    setNodes(graph.state.nodes);
+    setEdges(graph.state.edges);
+  }, [graph.state]);
+
+  // Commit: call this after any user action to record it
+  const commitChange = useCallback(
+    (newNodes: Node[], newEdges: Edge[]) => {
+      graph.set({ nodes: newNodes, edges: newEdges });
+    },
+    [graph],
+  );
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) graph.redo();
+        else graph.undo();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "y") {
+        e.preventDefault();
+        graph.redo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [graph]);
+  // ──────────────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -166,15 +204,38 @@ export default function ReportMappingEditor() {
     const layoutedNodes = applyDagreLayout(flowNodes, flowEdges, "LR");
     setNodes(layoutedNodes);
     setEdges(flowEdges);
+    graph.reset({ nodes: layoutedNodes, edges: flowEdges });
   };
 
   // React Flow callbacks
-  const onNodesChange: OnNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
-  const onEdgesChange: OnEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
+  const onNodesChange: OnNodesChange = useCallback(
+    (changes) => {
+      setNodes((nds) => {
+        const updated = applyNodeChanges(changes, nds);
+        if (changes.some((c) => c.type === "remove")) {
+          commitChange(updated, edges);
+        }
+        return updated;
+      });
+    },
+    [edges, commitChange],
+  );
+  const onEdgesChange: OnEdgesChange = useCallback(
+    (changes) => {
+      setEdges((eds) => {
+        const updated = applyEdgeChanges(changes, eds);
+        if (changes.some((c) => c.type === "remove")) {
+          commitChange(nodes, updated);
+        }
+        return updated;
+      });
+    },
+    [nodes, commitChange],
+  );
   const onConnect: OnConnect = useCallback(
-    (connection) =>
-      setEdges((eds) =>
-        addEdge(
+    (connection) => {
+      setEdges((eds) => {
+        const updated = addEdge(
           {
             ...connection,
             type: "smoothstep",
@@ -182,9 +243,12 @@ export default function ReportMappingEditor() {
             style: { stroke: "var(--accent)" },
           },
           eds,
-        ),
-      ),
-    [],
+        );
+        commitChange(nodes, updated);
+        return updated;
+      });
+    },
+    [nodes, commitChange],
   );
 
   // Add node
@@ -198,7 +262,9 @@ export default function ReportMappingEditor() {
       targetPosition: Position.Left,
       data: { job_id: null, job_name: "", category: "" },
     };
-    setNodes((prev) => [...prev, newNode]);
+    const newNodes = [...nodes, newNode];
+    setNodes(newNodes);
+    commitChange(newNodes, edges);
   };
 
   // Update node job selection
@@ -216,17 +282,31 @@ export default function ReportMappingEditor() {
     setEdges((prev) => prev.filter((e) => e.source !== nodeId && e.target !== nodeId));
   }, []);
 
+  // Disconnect outgoing edges only (keep incoming)
+  const disconnectRight = useCallback(
+    (nodeId: string) => {
+      setEdges((prev) => {
+        const updated = prev.filter((e) => e.source !== nodeId);
+        commitChange(nodes, updated);
+        return updated;
+      });
+    },
+    [nodes, commitChange],
+  );
+
   // Expose jobs and callbacks to JobNode via window (React Flow constraint)
   useEffect(() => {
     window.__REPORT_MAPPING_JOBS__ = jobs;
     window.__REPORT_MAPPING_UPDATE_NODE__ = updateNodeJob;
     window.__REPORT_MAPPING_DELETE_NODE__ = deleteNode;
+    window.__REPORT_MAPPING_DISCONNECT_RIGHT__ = disconnectRight;
     return () => {
       delete window.__REPORT_MAPPING_JOBS__;
       delete window.__REPORT_MAPPING_UPDATE_NODE__;
       delete window.__REPORT_MAPPING_DELETE_NODE__;
+      delete window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
     };
-  }, [jobs, updateNodeJob, deleteNode]);
+  }, [jobs, updateNodeJob, deleteNode, disconnectRight]);
 
   // Compute dynamic translate extent from node positions
   const graphExtent = useMemo((): [[number, number], [number, number]] => {
@@ -377,6 +457,12 @@ export default function ReportMappingEditor() {
         <div className="toolbar-spacer" />
         <Button size="sm" onClick={addNode}>
           <AddIcon sx={{ fontSize: 14 }} /> Add Job
+        </Button>
+        <Button size="sm" onClick={graph.undo} disabled={!graph.canUndo} title="Undo (Ctrl+Z)">
+          <UndoIcon sx={{ fontSize: 14 }} />
+        </Button>
+        <Button size="sm" onClick={graph.redo} disabled={!graph.canRedo} title="Redo (Ctrl+Shift+Z)">
+          <RedoIcon sx={{ fontSize: 14 }} />
         </Button>
         <Button size="sm" onClick={handleRelayout} title="Auto-layout (Dagre Sugiyama)">
           <AccountTreeIcon sx={{ fontSize: 14 }} /> Layout
