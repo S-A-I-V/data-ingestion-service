@@ -88,8 +88,7 @@ def list_jobs(
     try:
         results = connector.execute_query(
             """
-            SELECT job_id, job_name, category, owner_email, job_description,
-                   is_deleted
+            SELECT job_id, job_name
             FROM public.job_definitions
             WHERE is_deleted = false OR is_deleted IS NULL
             ORDER BY job_name

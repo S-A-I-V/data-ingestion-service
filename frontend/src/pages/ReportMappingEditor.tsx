@@ -458,6 +458,8 @@ export default function ReportMappingEditor() {
         .map((nn) => nodes.find((n) => n.id === nn)?.data.job_id)
         .filter(Boolean)
         .join(",");
+      // Skip orphan nodes (no connections at all)
+      if (!prevJobIds && !nextJobIds) continue;
       rows.push([String(jobId), prevJobIds, nextJobIds]);
     }
 

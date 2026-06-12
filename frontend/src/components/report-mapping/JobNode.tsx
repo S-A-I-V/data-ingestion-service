@@ -64,7 +64,6 @@ function JobNode({ id, data }: NodeProps) {
       </div>
 
       {(data as any).job_id && <div className="job-node-id">ID: {(data as any).job_id}</div>}
-      {(data as any).category && <div className="job-node-category">{(data as any).category}</div>}
 
       {/* Action panel */}
       <div className="job-node-actions">
