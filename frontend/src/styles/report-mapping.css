@@ -290,6 +290,39 @@
   font-weight: 600;
 }
 
+.rm-save-toast-popup {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  background: var(--success);
+  color: #000;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  z-index: 30;
+  pointer-events: none;
+  animation: rmToastPop 3s ease-out forwards;
+}
+
+@keyframes rmToastPop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* ── React Flow Dark Theme (Editor) ────────────────────────────────── */
 
 .rm-editor-canvas .react-flow {

@@ -116,6 +116,7 @@ export default function ReportMappingEditor() {
   const commitChange = useCallback(
     (newNodes: Node[], newEdges: Edge[]) => {
       graph.set({ nodes: newNodes, edges: newEdges });
+      setDirty(true);
     },
     [graph],
   );
@@ -139,6 +140,8 @@ export default function ReportMappingEditor() {
   // ──────────────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [saveToast, setSaveToast] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [mappingId, setMappingId] = useState<number | null>(loadId ? Number(loadId) : null);
   const [mappingName, setMappingName] = useState("");
@@ -275,6 +278,7 @@ export default function ReportMappingEditor() {
         n.id === nodeId ? { ...n, data: { ...n.data, job_id: jobId, job_name: jobName, category } } : n,
       ),
     );
+    setDirty(true);
   }, []);
 
   // Delete node
@@ -373,6 +377,9 @@ export default function ReportMappingEditor() {
         const res = await api.post("/admin/report-mapping/saved", payload);
         setMappingId(res.data.id);
       }
+      setDirty(false);
+      setSaveToast(`Saved "${mappingName.trim()}"`);
+      setTimeout(() => setSaveToast(""), 3000);
     } catch (e: any) {
       setError(e.response?.data?.detail || "Save failed");
     } finally {
@@ -443,9 +450,30 @@ export default function ReportMappingEditor() {
         <Button size="sm" onClick={() => navigate("/admin/report-mapping")}>
           <ArrowBackIcon sx={{ fontSize: 14 }} /> Back
         </Button>
-        <OutlinedInput label="Mapping Name" value={mappingName} onChange={setMappingName} />
-        <OutlinedInput label="Report Name" value={reportName} onChange={setReportName} />
-        <OutlinedInput label="Application" value={appName} onChange={setAppName} />
+        <OutlinedInput
+          label="Mapping Name"
+          value={mappingName}
+          onChange={(v) => {
+            setMappingName(v);
+            setDirty(true);
+          }}
+        />
+        <OutlinedInput
+          label="Report Name"
+          value={reportName}
+          onChange={(v) => {
+            setReportName(v);
+            setDirty(true);
+          }}
+        />
+        <OutlinedInput
+          label="Application"
+          value={appName}
+          onChange={(v) => {
+            setAppName(v);
+            setDirty(true);
+          }}
+        />
         <div className="toolbar-spacer" />
         <Button size="sm" onClick={addNode}>
           <AddIcon sx={{ fontSize: 14 }} /> Add Job
@@ -459,7 +487,7 @@ export default function ReportMappingEditor() {
         <Button size="sm" onClick={handleRelayout} title="Auto-layout (Dagre Sugiyama)">
           <AccountTreeIcon sx={{ fontSize: 14 }} /> Layout
         </Button>
-        <Button size="sm" variant="primary" onClick={handleSave} disabled={saving}>
+        <Button size="sm" variant="primary" onClick={handleSave} disabled={saving || !dirty}>
           <SaveIcon sx={{ fontSize: 14 }} /> {saving ? "Saving..." : "Save"}
         </Button>
         <Button size="sm" onClick={handleExport}>
@@ -468,6 +496,8 @@ export default function ReportMappingEditor() {
       </div>
 
       {error && <div className="rm-editor-error">{error}</div>}
+
+      {saveToast && <div className="rm-save-toast-popup">{saveToast}</div>}
 
       {/* Graph Canvas */}
       <div className="rm-editor-canvas">
