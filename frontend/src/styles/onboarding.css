@@ -1331,3 +1331,14 @@
   margin: 0;
   line-height: 1.5;
 }
+
+/* ── Utility modifiers ─────────────────────────────────────────────── */
+
+.onboarding-hint--top {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.beid-bulk-input--wide {
+  flex: 2;
+}

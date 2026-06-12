@@ -46,14 +46,14 @@ export default function StepFastieAlias({ aliases, setAliases, clientName, error
         )}
       </PanelHeader>
       <PanelBody>
-        <p className="onboarding-hint" style={{ marginTop: 0, marginBottom: 12 }}>
+        <p className="onboarding-hint onboarding-hint--top">
           Add Fastie client alias names for <strong>{clientName || "(client)"}</strong>. Skip this step if not
           applicable.
         </p>
 
         {/* Add alias input */}
         <div className="beid-bulk-row">
-          <div className="beid-bulk-input" style={{ flex: 2 }}>
+          <div className="beid-bulk-input beid-bulk-input--wide">
             <label htmlFor="fastie-alias-input">Fastie Client Name:</label>
             <input
               id="fastie-alias-input"

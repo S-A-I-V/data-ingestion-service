@@ -252,42 +252,44 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 14px;
-  padding: 28px 24px;
+  gap: 10px;
+  padding: 20px 18px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--bg-glass);
   cursor: pointer;
   transition: all 0.15s;
   text-align: left;
   font-family: inherit;
+  text-decoration: none;
 }
 
 .admin-tool-card:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
 }
 
 .admin-tool-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .admin-tool-card h3 {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
   margin: 0;
 }
 
 .admin-tool-card p {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.4;
 }

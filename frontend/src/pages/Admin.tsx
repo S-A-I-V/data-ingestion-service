@@ -3,7 +3,7 @@
  * Each card links to its respective feature page.
  */
 
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
@@ -43,7 +43,6 @@ const ADMIN_TOOLS = [
 ];
 
 export default function Admin({ permissions }: Props) {
-  const navigate = useNavigate();
   const visibleTools = ADMIN_TOOLS.filter((t) => permissions.includes(t.permission));
 
   return (
@@ -56,13 +55,13 @@ export default function Admin({ permissions }: Props) {
         {visibleTools.map((tool) => {
           const Icon = tool.icon;
           return (
-            <button key={tool.to} className="admin-tool-card" onClick={() => navigate(tool.to)}>
+            <Link key={tool.to} to={tool.to} className="admin-tool-card">
               <div className="admin-tool-icon" style={{ background: tool.bg, color: tool.color }}>
-                <Icon sx={{ fontSize: 28 }} />
+                <Icon sx={{ fontSize: 22 }} />
               </div>
               <h3>{tool.title}</h3>
               <p>{tool.description}</p>
-            </button>
+            </Link>
           );
         })}
       </div>
