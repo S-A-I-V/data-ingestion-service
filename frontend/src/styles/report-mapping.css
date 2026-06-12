@@ -132,6 +132,25 @@
   margin: 0;
 }
 
+.rm-card-app {
+  font-size: 10px;
+  color: var(--accent);
+  margin: 0;
+  font-weight: 500;
+}
+
+.rm-card-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(15, 177, 178, 0.12);
+  border: 1px solid rgba(15, 177, 178, 0.3);
+  border-radius: 20px;
+  width: fit-content;
+}
+
 .rm-card-stats {
   display: flex;
   gap: 12px;

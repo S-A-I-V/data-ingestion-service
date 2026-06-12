@@ -118,6 +118,7 @@ export default function ReportMappingHub() {
                   </button>
                 </div>
                 {m.report_name && <p className="rm-card-report">{m.report_name}</p>}
+                {m.application_name && <span className="rm-card-chip">{m.application_name}</span>}
                 <div className="rm-card-stats">
                   <span>{m.node_count} jobs</span>
                   <span>{m.edge_count} edges</span>
