@@ -11,6 +11,9 @@ import AssociateLookup from "./pages/AssociateLookup";
 import ClientOnboarding from "./pages/ClientOnboarding";
 import ClientOnboardingHub from "./pages/ClientOnboardingHub";
 import ClientEdit from "./pages/ClientEdit";
+import ReportMappingHub from "./pages/ReportMappingHub";
+import ReportMappingEditor from "./pages/ReportMappingEditor";
+import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
@@ -87,6 +90,9 @@ export default function App() {
         <Route path="/connections" element={<Dashboard />} />
         <Route path="/ingest" element={<Ingest />} />
         <Route path="/audit" element={<AuditLog />} />
+        {user.permissions?.some((p: string) => p.startsWith("admin:")) && (
+          <Route path="/admin" element={<Admin permissions={user.permissions || []} />} />
+        )}
         {user.permissions?.includes("admin:associate_lookup") && (
           <Route path="/admin/associate-lookup" element={<AssociateLookup />} />
         )}
@@ -98,6 +104,12 @@ export default function App() {
         )}
         {user.permissions?.includes("admin:client_onboarding") && (
           <Route path="/admin/client-onboarding/edit" element={<ClientEdit />} />
+        )}
+        {user.permissions?.includes("admin:report_mapping") && (
+          <Route path="/admin/report-mapping" element={<ReportMappingHub />} />
+        )}
+        {user.permissions?.includes("admin:report_mapping") && (
+          <Route path="/admin/report-mapping/editor" element={<ReportMappingEditor />} />
         )}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />

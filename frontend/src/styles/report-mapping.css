@@ -1,0 +1,430 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Report Job Mapping — Hub + Editor + Nodes
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Hub Tabs ──────────────────────────────────────────────────────── */
+
+.rm-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.rm-tab {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.rm-tab:hover {
+  color: var(--text-primary);
+}
+
+.rm-tab.active {
+  background: rgba(15, 177, 178, 0.12);
+  color: var(--accent-light);
+}
+
+/* ── Hub Grid ──────────────────────────────────────────────────────── */
+
+.rm-search-bar {
+  margin-bottom: 16px;
+}
+
+.rm-search-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.rm-search-input:focus {
+  border-color: var(--accent);
+}
+
+.rm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.rm-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.rm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-glass);
+  transition: border-color 0.15s;
+}
+
+.rm-card:hover {
+  border-color: var(--accent);
+}
+
+.rm-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rm-card-header h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  word-break: break-word;
+}
+
+.rm-card-delete {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.rm-card-delete:hover {
+  color: var(--danger);
+}
+
+.rm-card-report {
+  font-size: 11px;
+  color: #ffffff;
+  margin: 0;
+}
+
+.rm-card-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #ffffff;
+  font-family: "Fira Code", monospace;
+}
+
+/* ── Editor Layout ─────────────────────────────────────────────────── */
+
+.rm-editor-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+  position: fixed;
+  top: 52px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}
+
+.rm-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 20;
+  flex-wrap: wrap;
+}
+
+.rm-name-input {
+  padding: 6px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  min-width: 220px;
+  max-width: 400px;
+  width: auto;
+  flex-shrink: 1;
+  transition: border-color 0.15s;
+}
+
+.rm-name-input:focus {
+  border-color: var(--accent);
+}
+
+.rm-name-input--small {
+  min-width: 200px;
+  max-width: 350px;
+  font-size: 12px;
+}
+
+.rm-editor-error {
+  padding: 8px 16px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 12px;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.rm-editor-canvas {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.rm-editor-canvas .react-flow {
+  width: 100%;
+  height: 100%;
+}
+
+.rm-editor-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-base);
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: "Fira Code", monospace;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.rm-saved-badge {
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* ── React Flow Dark Theme (Editor) ────────────────────────────────── */
+
+.rm-editor-canvas .react-flow {
+  --xy-background-color: transparent;
+  --xy-node-background-color-default: rgba(255, 255, 255, 0.05);
+  --xy-node-color-default: var(--text-primary);
+  --xy-node-border-default: 1px solid rgba(255, 255, 255, 0.12);
+  --xy-node-boxshadow-default: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --xy-node-border-radius-default: 10px;
+  --xy-edge-stroke-default: var(--accent);
+  --xy-handle-background-color-default: var(--accent);
+  --xy-handle-border-color-default: var(--accent);
+  --xy-minimap-background-color-default: rgba(10, 10, 15, 0.8);
+}
+
+.rm-editor-canvas .react-flow__controls {
+  background: rgba(10, 10, 15, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.rm-editor-canvas .react-flow__controls-button {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  fill: var(--text-primary);
+}
+
+.rm-editor-canvas .react-flow__controls-button:hover {
+  background: var(--bg-glass-hover);
+}
+
+.rm-editor-canvas .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.rm-editor-canvas .react-flow__panel {
+  margin: 8px;
+}
+
+/* ── Job Node ──────────────────────────────────────────────────────── */
+
+.job-node {
+  min-width: 200px;
+  padding: 12px 14px;
+  background: rgba(10, 10, 20, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font);
+  position: relative;
+}
+
+.job-node-handle {
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 2px solid var(--bg-base);
+}
+
+.job-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.job-node-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.job-node-delete {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.job-node-delete:hover {
+  color: var(--danger);
+}
+
+.job-node-id {
+  font-size: 10px;
+  font-family: "Fira Code", monospace;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.job-node-category {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.job-node-select-btn {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-glass);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.job-node-select-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+/* ── Job Node Dropdown ─────────────────────────────────────────────── */
+
+.job-node-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  margin-top: 4px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.job-node-search {
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.job-node-options {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.job-node-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.job-node-option:hover {
+  background: rgba(15, 177, 178, 0.1);
+}
+
+.job-node-option-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-node-option-id {
+  font-size: 10px;
+  color: var(--accent);
+  font-family: "Fira Code", monospace;
+  margin-left: 8px;
+}
+
+.job-node-option-empty {
+  padding: 12px 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: italic;
+}

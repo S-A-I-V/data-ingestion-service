@@ -16,10 +16,7 @@ const NAV_TABS = [
   { label: "Audit Log", to: "/audit" },
 ];
 
-const ADMIN_TABS = [
-  { label: "Associate Lookup", to: "/admin/associate-lookup", permission: "admin:associate_lookup" },
-  { label: "Client Onboarding", to: "/admin/client-onboarding", permission: "admin:client_onboarding" },
-];
+const ADMIN_PERMISSIONS = ["admin:associate_lookup", "admin:client_onboarding", "admin:report_mapping"];
 
 function getDisplayName(name: string, email: string): string {
   if (name && name.trim().length > 1) return name.trim().split(/\s+/)[0];
@@ -36,9 +33,15 @@ export default function Nav({ user }: Props) {
   const ambienceX = useRef(0);
 
   const userPerms = user.permissions || [];
-  const visibleTabs = [...NAV_TABS, ...ADMIN_TABS.filter((t) => userPerms.includes(t.permission))];
+  const hasAnyAdmin = ADMIN_PERMISSIONS.some((p) => userPerms.includes(p));
 
-  const activeIndex = visibleTabs.findIndex((t) => t.to === loc.pathname);
+  // Build visible tabs — add "Admin" as a simple link if user has any admin permission
+  const visibleTabs = hasAnyAdmin ? [...NAV_TABS, { label: "Admin", to: "/admin" }] : [...NAV_TABS];
+
+  const isOnAdminPage = loc.pathname.startsWith("/admin");
+  const activeIndex = isOnAdminPage
+    ? visibleTabs.findIndex((t) => t.to === "/admin")
+    : visibleTabs.findIndex((t) => t.to === loc.pathname);
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -138,7 +141,7 @@ export default function Nav({ user }: Props) {
               key={tab.to}
               to={tab.to}
               data-index={idx}
-              className={`nav-tab ${loc.pathname === tab.to ? "active" : ""}`}
+              className={`nav-tab ${(tab.to === "/admin" ? isOnAdminPage : loc.pathname === tab.to) ? "active" : ""}`}
               onClick={tab.to === "/home" ? goHome : undefined}
             >
               {tab.label}

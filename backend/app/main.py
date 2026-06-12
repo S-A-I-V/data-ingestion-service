@@ -22,7 +22,7 @@ from app.database import Base, engine
 from app.logging_config import configure_logging
 from app.middleware.request_context import RequestContextMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
-from app.routers import ai, associate_lookup, audit, auth, client_onboarding, connections, ingestion
+from app.routers import ai, associate_lookup, audit, auth, client_onboarding, connections, ingestion, report_mapping
 
 # ── 1. Configure Logging ─────────────────────────────────────────────────────
 configure_logging(level=settings.LOG_LEVEL, log_format=settings.LOG_FORMAT)
@@ -67,6 +67,7 @@ app.include_router(audit.router)
 app.include_router(ai.router)
 app.include_router(associate_lookup.router)
 app.include_router(client_onboarding.router)
+app.include_router(report_mapping.router)
 
 
 # ── Health Check ──────────────────────────────────────────────────────────────
