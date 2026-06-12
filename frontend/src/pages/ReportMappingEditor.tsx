@@ -34,6 +34,7 @@ import "@xyflow/react/dist/style.css";
 import api from "../api";
 import { Button, Spinner } from "../components/ui";
 import JobNode from "../components/report-mapping/JobNode";
+import OutlinedInput from "../components/ui/OutlinedInput";
 import { useUndoRedo } from "../hooks/useUndoRedo";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
@@ -442,18 +443,9 @@ export default function ReportMappingEditor() {
         <Button size="sm" onClick={() => navigate("/admin/report-mapping")}>
           <ArrowBackIcon sx={{ fontSize: 14 }} /> Back
         </Button>
-        <input
-          className="rm-name-input"
-          placeholder="Mapping name..."
-          value={mappingName}
-          onChange={(e) => setMappingName(e.target.value)}
-        />
-        <input
-          className="rm-name-input rm-name-input--small"
-          placeholder="Report name (optional)"
-          value={reportName}
-          onChange={(e) => setReportName(e.target.value)}
-        />
+        <OutlinedInput label="Mapping Name" value={mappingName} onChange={setMappingName} />
+        <OutlinedInput label="Report Name" value={reportName} onChange={setReportName} />
+        <OutlinedInput label="Application" value={appName} onChange={setAppName} />
         <div className="toolbar-spacer" />
         <Button size="sm" onClick={addNode}>
           <AddIcon sx={{ fontSize: 14 }} /> Add Job
@@ -493,6 +485,7 @@ export default function ReportMappingEditor() {
           translateExtent={graphExtent}
           deleteKeyCode="Delete"
           connectionLineType={ConnectionLineType.SmoothStep}
+          proOptions={{ hideAttribution: true }}
           className="report-flow-graph"
         >
           <Controls showInteractive={false} />

@@ -304,7 +304,7 @@ def save_mapping(
 
     logger.info(
         "report_mapping_saved",
-        extra={"user_id": user.id, "mapping_id": mapping.id, "name": payload.name},
+        extra={"user_id": user.id, "mapping_id": mapping.id, "mapping_name": payload.name},
     )
 
     return {"id": mapping.id, "message": "Mapping saved successfully"}
