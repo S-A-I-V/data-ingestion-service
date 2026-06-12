@@ -378,7 +378,7 @@ export default function ReportMappingEditor() {
         setMappingId(res.data.id);
       }
       setDirty(false);
-      setSaveToast(`Saved "${mappingName.trim()}"`);
+      setSaveToast(`Saved changes to "${mappingName.trim()}"`);
       setTimeout(() => setSaveToast(""), 3000);
     } catch (e: any) {
       setError(e.response?.data?.detail || "Save failed");
