@@ -73,7 +73,7 @@ export default function ReportMappingHub() {
         <div className="toolbar">
           <span className="toolbar-title">Report Job Mapping</span>
         </div>
-        <Spinner size="lg" label="Loading..." />
+        <Spinner size="lg" label="Loading reports and saved mappings..." />
       </div>
     );
   }
