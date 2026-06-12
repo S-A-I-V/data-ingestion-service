@@ -6,6 +6,8 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
+import CallSplitIcon from "@mui/icons-material/CallSplit";
 
 // Jobs are passed via a global context (set by parent)
 // We use window.__REPORT_MAPPING_JOBS__ as a simple shared store
@@ -15,6 +17,7 @@ declare global {
     __REPORT_MAPPING_UPDATE_NODE__?: (nodeId: string, jobId: number, jobName: string, category: string) => void;
     __REPORT_MAPPING_DELETE_NODE__?: (nodeId: string) => void;
     __REPORT_MAPPING_DISCONNECT_RIGHT__?: (nodeId: string) => void;
+    __REPORT_MAPPING_BYPASS_DELETE__?: (nodeId: string) => void;
   }
 }
 
@@ -27,6 +30,7 @@ function JobNode({ id, data }: NodeProps) {
   const updateNode = window.__REPORT_MAPPING_UPDATE_NODE__;
   const deleteNode = window.__REPORT_MAPPING_DELETE_NODE__;
   const disconnectRight = window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
+  const bypassDelete = window.__REPORT_MAPPING_BYPASS_DELETE__;
 
   // Close on click outside
   useEffect(() => {
@@ -57,30 +61,44 @@ function JobNode({ id, data }: NodeProps) {
 
       <div className="job-node-header">
         <span className="job-node-label">{(data as any).job_name || "Select a job..."}</span>
+      </div>
+
+      {(data as any).job_id && <div className="job-node-id">ID: {(data as any).job_id}</div>}
+      {(data as any).category && <div className="job-node-category">{(data as any).category}</div>}
+
+      {/* Action panel */}
+      <div className="job-node-actions">
         <button
-          className="job-node-action"
+          className="job-node-action-btn job-node-action-btn--cut"
           onClick={(e) => {
             e.stopPropagation();
             disconnectRight?.(id);
           }}
-          title="Disconnect outgoing edges (→)"
+          title="Disconnect outgoing edges"
         >
-          ✂
+          <ContentCutIcon sx={{ fontSize: 18 }} />
         </button>
         <button
-          className="job-node-delete"
+          className="job-node-action-btn job-node-action-btn--bypass"
+          onClick={(e) => {
+            e.stopPropagation();
+            bypassDelete?.(id);
+          }}
+          title="Bypass — connect prev to next, remove this"
+        >
+          <CallSplitIcon sx={{ fontSize: 18, transform: "rotate(90deg)" }} />
+        </button>
+        <button
+          className="job-node-action-btn job-node-action-btn--delete"
           onClick={(e) => {
             e.stopPropagation();
             deleteNode?.(id);
           }}
           title="Delete node"
         >
-          <DeleteIcon sx={{ fontSize: 12 }} />
+          <DeleteIcon sx={{ fontSize: 18 }} />
         </button>
       </div>
-
-      {(data as any).job_id && <div className="job-node-id">ID: {(data as any).job_id}</div>}
-      {(data as any).category && <div className="job-node-category">{(data as any).category}</div>}
 
       {/* Dropdown trigger */}
       <button className="job-node-select-btn" onClick={() => setOpen(!open)}>

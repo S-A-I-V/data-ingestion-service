@@ -43,6 +43,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
+import CircularProgress from "@mui/material/CircularProgress";
 
 interface Job {
   job_id: number;
@@ -52,7 +53,7 @@ interface Job {
 
 // ── Dagre Sugiyama Layout ────────────────────────────────────────────────────
 const NODE_WIDTH = 220;
-const NODE_HEIGHT = 80;
+const NODE_HEIGHT = 160;
 
 function applyDagreLayout(nodes: Node[], edges: Edge[], direction = "LR"): Node[] {
   if (nodes.length === 0) return nodes;
@@ -62,8 +63,8 @@ function applyDagreLayout(nodes: Node[], edges: Edge[], direction = "LR"): Node[
 
   dagreGraph.setGraph({
     rankdir: direction,
-    nodesep: 60, // vertical spacing between nodes in same rank
-    ranksep: 200, // horizontal spacing between ranks
+    nodesep: 80, // vertical spacing between nodes in same rank
+    ranksep: 250, // horizontal spacing between ranks
     marginx: 40,
     marginy: 40,
   });
@@ -299,19 +300,56 @@ export default function ReportMappingEditor() {
     [nodes, commitChange],
   );
 
+  // Bypass delete: connect all incoming sources to all outgoing targets, then remove node
+  const bypassDelete = useCallback(
+    (nodeId: string) => {
+      const incomingEdges = edges.filter((e) => e.target === nodeId);
+      const outgoingEdges = edges.filter((e) => e.source === nodeId);
+      const sourceNodeIds = incomingEdges.map((e) => e.source);
+      const targetNodeIds = outgoingEdges.map((e) => e.target);
+
+      // Create new edges: every source → every target
+      const bypassEdges: typeof edges = [];
+      for (const src of sourceNodeIds) {
+        for (const tgt of targetNodeIds) {
+          const edgeId = `e${src}-${tgt}`;
+          if (!edges.find((e) => e.id === edgeId)) {
+            bypassEdges.push({
+              id: edgeId,
+              source: src,
+              target: tgt,
+              type: "smoothstep",
+              animated: true,
+              style: { stroke: "var(--accent)" },
+            });
+          }
+        }
+      }
+
+      const updatedNodes = nodes.filter((n) => n.id !== nodeId);
+      const updatedEdges = [...edges.filter((e) => e.source !== nodeId && e.target !== nodeId), ...bypassEdges];
+      setNodes(updatedNodes);
+      setEdges(updatedEdges);
+      commitChange(updatedNodes, updatedEdges);
+    },
+    [nodes, edges, commitChange],
+  );
+
   // Expose jobs and callbacks to JobNode via window (React Flow constraint)
   useEffect(() => {
     window.__REPORT_MAPPING_JOBS__ = jobs;
     window.__REPORT_MAPPING_UPDATE_NODE__ = updateNodeJob;
     window.__REPORT_MAPPING_DELETE_NODE__ = deleteNode;
     window.__REPORT_MAPPING_DISCONNECT_RIGHT__ = disconnectRight;
+    window.__REPORT_MAPPING_BYPASS_DELETE__ = bypassDelete;
     return () => {
       delete window.__REPORT_MAPPING_JOBS__;
       delete window.__REPORT_MAPPING_UPDATE_NODE__;
       delete window.__REPORT_MAPPING_DELETE_NODE__;
       delete window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
+      delete window.__REPORT_MAPPING_BYPASS_DELETE__;
     };
-  }, [jobs, updateNodeJob, deleteNode, disconnectRight]);
+  }, [jobs, updateNodeJob, deleteNode, disconnectRight, bypassDelete]);
 
   // Compute dynamic translate extent from node positions
   const graphExtent = useMemo((): [[number, number], [number, number]] => {
@@ -406,7 +444,8 @@ export default function ReportMappingEditor() {
     }
 
     // Build CSV rows
-    const rows = [["job_id", "previous_job_ids", "next_job_ids"]];
+    // const rows = [["job_id", "previous_job_ids", "next_job_ids"]];
+    const rows: string[][] = [];
     for (const node of nodes) {
       const jobId = node.data.job_id || "";
       const prevNodes = prevMap[node.id] || [];
@@ -422,7 +461,7 @@ export default function ReportMappingEditor() {
       rows.push([String(jobId), prevJobIds, nextJobIds]);
     }
 
-    const csv = rows.map((r) => r.join(",")).join("\n");
+    const csv = rows.map((r) => r.map((cell) => (cell.includes(",") ? `"${cell}"` : cell)).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -488,7 +527,7 @@ export default function ReportMappingEditor() {
           <AccountTreeIcon sx={{ fontSize: 14 }} /> Layout
         </Button>
         <Button size="sm" variant="primary" onClick={handleSave} disabled={saving || !dirty}>
-          <SaveIcon sx={{ fontSize: 14 }} /> {saving ? "Saving..." : "Save"}
+          {saving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : <SaveIcon sx={{ fontSize: 14 }} />} Save
         </Button>
         <Button size="sm" onClick={handleExport}>
           <DownloadIcon sx={{ fontSize: 14 }} /> Export CSV

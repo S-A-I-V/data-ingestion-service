@@ -387,9 +387,8 @@
 .job-node-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .job-node-label {
@@ -402,35 +401,49 @@
   flex: 1;
 }
 
-.job-node-delete {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 2px;
-  border-radius: 4px;
+/* Action panel — strip below content */
+.job-node-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.job-node-action-btn {
+  flex: 1;
   display: flex;
   align-items: center;
-}
-
-.job-node-delete:hover {
-  color: var(--danger);
-}
-
-.job-node-action {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
+  justify-content: center;
+  padding: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
   cursor: pointer;
-  padding: 2px;
-  border-radius: 4px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
+  transition: all 0.12s;
 }
 
-.job-node-action:hover {
+.job-node-action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.job-node-action-btn--cut:hover {
+  border-color: var(--warning);
   color: var(--warning);
+}
+
+.job-node-action-btn--bypass:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.job-node-action-btn--delete:hover {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .job-node-id {
