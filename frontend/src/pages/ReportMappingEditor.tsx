@@ -20,6 +20,7 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   ConnectionLineType,
+  Position,
   type Node,
   type Edge,
   type OnNodesChange,
@@ -81,8 +82,8 @@ function applyDagreLayout(nodes: Node[], edges: Edge[], direction = "LR"): Node[
         x: pos.x - NODE_WIDTH / 2,
         y: pos.y - NODE_HEIGHT / 2,
       },
-      targetPosition: isHorizontal ? "left" : "top",
-      sourcePosition: isHorizontal ? "right" : "bottom",
+      targetPosition: isHorizontal ? Position.Left : Position.Top,
+      sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
     } as Node;
   });
 }
@@ -193,8 +194,8 @@ export default function ReportMappingEditor() {
       id,
       type: "jobNode",
       position: { x: Math.random() * 400 + 50, y: Math.random() * 300 + 50 },
-      sourcePosition: "right",
-      targetPosition: "left",
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
       data: { job_id: null, job_name: "", category: "" },
     };
     setNodes((prev) => [...prev, newNode]);

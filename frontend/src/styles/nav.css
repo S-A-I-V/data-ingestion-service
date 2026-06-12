@@ -184,7 +184,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: visible;
+  overflow: hidden;
   padding: 0 4px;
   /* CSS vars updated by JS */
   --spotlight-x: 50%;
@@ -200,8 +200,6 @@
   opacity: 0;
   transition: opacity 0.3s;
   background: radial-gradient(100px circle at var(--spotlight-x) 100%, rgba(15, 177, 178, 0.18) 0%, transparent 60%);
-  border-radius: 999px;
-  overflow: hidden;
 }
 
 .nav-spotlight-glow--visible {
