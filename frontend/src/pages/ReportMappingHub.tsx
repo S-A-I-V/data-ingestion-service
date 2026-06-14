@@ -38,6 +38,11 @@ export default function ReportMappingHub() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [appFilter, setAppFilter] = useState("");
+
+  // Derived: unique application names for filter chips
+  const savedAppNames = [...new Set(saved.map((m) => m.application_name).filter(Boolean))].sort();
+  const existingAppNames = [...new Set(existing.map((r) => r.application_name).filter(Boolean))].sort();
 
   useEffect(() => {
     setLoading(true);
@@ -92,84 +97,163 @@ export default function ReportMappingHub() {
 
       {/* Tab selector */}
       <div className="rm-tabs">
-        <button className={`rm-tab ${tab === "saved" ? "active" : ""}`} onClick={() => setTab("saved")}>
+        <button
+          className={`rm-tab ${tab === "saved" ? "active" : ""}`}
+          onClick={() => {
+            setTab("saved");
+            setSearch("");
+            setAppFilter("");
+          }}
+        >
           <FolderOpenIcon sx={{ fontSize: 16 }} /> My Saved ({saved.length})
         </button>
-        <button className={`rm-tab ${tab === "existing" ? "active" : ""}`} onClick={() => setTab("existing")}>
+        <button
+          className={`rm-tab ${tab === "existing" ? "active" : ""}`}
+          onClick={() => {
+            setTab("existing");
+            setSearch("");
+            setAppFilter("");
+          }}
+        >
           <ContentCopyIcon sx={{ fontSize: 16 }} /> Copy from Existing ({existing.length})
         </button>
       </div>
 
       {/* Saved mappings */}
       {tab === "saved" && (
-        <div className="rm-grid">
-          {saved.length === 0 ? (
-            <div className="rm-empty">
-              <AccountTreeIcon sx={{ fontSize: 40, color: "var(--text-muted)" }} />
-              <p>No saved mappings yet. Create one to get started.</p>
-            </div>
-          ) : (
-            saved.map((m) => (
-              <div key={m.id} className="rm-card">
-                <div className="rm-card-header">
-                  <h4>{m.name}</h4>
-                  <button className="rm-card-delete" onClick={() => handleDelete(m.id)} title="Delete">
-                    <DeleteIcon sx={{ fontSize: 14 }} />
-                  </button>
-                </div>
-                {m.report_name && <p className="rm-card-report">{m.report_name}</p>}
-                {m.application_name && <span className="rm-card-chip">{m.application_name}</span>}
-                <div className="rm-card-stats">
-                  <span>{m.node_count} jobs</span>
-                  <span>{m.edge_count} edges</span>
-                </div>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onClick={() => navigate(`/admin/report-mapping/editor?load=${m.id}`)}
+        <>
+          <div className="rm-filter-bar">
+            <input
+              type="text"
+              placeholder="Search mappings..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="rm-filter-search"
+            />
+            <div className="rm-filter-chips">
+              <button className={`rm-filter-chip ${!appFilter ? "active" : ""}`} onClick={() => setAppFilter("")}>
+                All
+              </button>
+              {savedAppNames.map((app) => (
+                <button
+                  key={app}
+                  className={`rm-filter-chip ${appFilter === app ? "active" : ""}`}
+                  onClick={() => setAppFilter(appFilter === app ? "" : app)}
                 >
-                  Open
-                </Button>
+                  {app}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="rm-grid">
+            {saved.filter((m) => {
+              const matchesSearch =
+                !search ||
+                m.name.toLowerCase().includes(search.toLowerCase()) ||
+                (m.report_name || "").toLowerCase().includes(search.toLowerCase());
+              const matchesApp = !appFilter || m.application_name === appFilter;
+              return matchesSearch && matchesApp;
+            }).length === 0 ? (
+              <div className="rm-empty">
+                <AccountTreeIcon sx={{ fontSize: 40, color: "var(--text-muted)" }} />
+                <p>
+                  {search || appFilter
+                    ? "No mappings matching filters"
+                    : "No saved mappings yet. Create one to get started."}
+                </p>
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              saved
+                .filter((m) => {
+                  const matchesSearch =
+                    !search ||
+                    m.name.toLowerCase().includes(search.toLowerCase()) ||
+                    (m.report_name || "").toLowerCase().includes(search.toLowerCase());
+                  const matchesApp = !appFilter || m.application_name === appFilter;
+                  return matchesSearch && matchesApp;
+                })
+                .map((m) => (
+                  <div key={m.id} className="rm-card">
+                    <div className="rm-card-header">
+                      <h4>{m.name}</h4>
+                      <button className="rm-card-delete" onClick={() => handleDelete(m.id)} title="Delete">
+                        <DeleteIcon sx={{ fontSize: 14 }} />
+                      </button>
+                    </div>
+                    {m.report_name && <p className="rm-card-report">{m.report_name}</p>}
+                    {m.application_name && <span className="rm-card-chip">{m.application_name}</span>}
+                    <div className="rm-card-stats">
+                      <span>{m.node_count} jobs</span>
+                      <span>{m.edge_count} edges</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => navigate(`/admin/report-mapping/editor?load=${m.id}`)}
+                    >
+                      Open
+                    </Button>
+                  </div>
+                ))
+            )}
+          </div>
+        </>
       )}
 
       {/* Existing report mappings to copy */}
       {tab === "existing" && (
         <>
-          <div className="rm-search-bar">
+          <div className="rm-filter-bar">
             <input
               type="text"
-              placeholder="Search by report name or application..."
+              placeholder="Search reports..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="rm-search-input"
+              className="rm-filter-search"
             />
+            <div className="rm-filter-chips">
+              <button className={`rm-filter-chip ${!appFilter ? "active" : ""}`} onClick={() => setAppFilter("")}>
+                All
+              </button>
+              {existingAppNames.map((app) => (
+                <button
+                  key={app}
+                  className={`rm-filter-chip ${appFilter === app ? "active" : ""}`}
+                  onClick={() => setAppFilter(appFilter === app ? "" : app)}
+                >
+                  {app}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="rm-grid">
-            {existing.filter(
-              (r) =>
+            {existing.filter((r) => {
+              const matchesSearch =
+                !search ||
                 r.report_name.toLowerCase().includes(search.toLowerCase()) ||
-                r.application_name.toLowerCase().includes(search.toLowerCase()),
-            ).length === 0 ? (
+                r.application_name.toLowerCase().includes(search.toLowerCase());
+              const matchesApp = !appFilter || r.application_name === appFilter;
+              return matchesSearch && matchesApp;
+            }).length === 0 ? (
               <div className="rm-empty">
-                <p>{search ? `No reports matching "${search}"` : "No existing report mappings found in NFC Prod."}</p>
+                <p>{search || appFilter ? "No reports matching filters" : "No existing report mappings found."}</p>
               </div>
             ) : (
               existing
-                .filter(
-                  (r) =>
+                .filter((r) => {
+                  const matchesSearch =
+                    !search ||
                     r.report_name.toLowerCase().includes(search.toLowerCase()) ||
-                    r.application_name.toLowerCase().includes(search.toLowerCase()),
-                )
+                    r.application_name.toLowerCase().includes(search.toLowerCase());
+                  const matchesApp = !appFilter || r.application_name === appFilter;
+                  return matchesSearch && matchesApp;
+                })
                 .map((r) => (
                   <div key={r.report_id} className="rm-card">
                     <div className="rm-card-header">
                       <h4>{r.report_name}</h4>
                     </div>
-                    <p className="rm-card-report">{r.application_name}</p>
+                    <span className="rm-card-chip">{r.application_name}</span>
                     <div className="rm-card-stats">
                       <span>{r.job_count} jobs</span>
                     </div>
