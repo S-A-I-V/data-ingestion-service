@@ -97,24 +97,10 @@ export default function ReportMappingHub() {
 
       {/* Tab selector */}
       <div className="rm-tabs">
-        <button
-          className={`rm-tab ${tab === "saved" ? "active" : ""}`}
-          onClick={() => {
-            setTab("saved");
-            setSearch("");
-            setAppFilter("");
-          }}
-        >
+        <button className={`rm-tab ${tab === "saved" ? "active" : ""}`} onClick={() => setTab("saved")}>
           <FolderOpenIcon sx={{ fontSize: 16 }} /> My Saved ({saved.length})
         </button>
-        <button
-          className={`rm-tab ${tab === "existing" ? "active" : ""}`}
-          onClick={() => {
-            setTab("existing");
-            setSearch("");
-            setAppFilter("");
-          }}
-        >
+        <button className={`rm-tab ${tab === "existing" ? "active" : ""}`} onClick={() => setTab("existing")}>
           <ContentCopyIcon sx={{ fontSize: 16 }} /> Copy from Existing ({existing.length})
         </button>
       </div>
