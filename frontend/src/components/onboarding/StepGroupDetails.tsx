@@ -24,7 +24,7 @@ export default function StepGroupDetails({ groupName, setGroupName, nextGroupId,
             <input
               id="group-id"
               type="text"
-              value={nextGroupId !== null ? String(nextGroupId) : "Loading..."}
+              value={nextGroupId !== null ? String(nextGroupId) : "—"}
               disabled
               className="input-readonly"
               title="Auto-assigned group ID"
