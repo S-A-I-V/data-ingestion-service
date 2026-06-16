@@ -91,6 +91,7 @@ export default function ReportMappingHub() {
         <Button variant="primary" onClick={() => navigate("/admin/report-mapping/editor")}>
           <AddIcon sx={{ fontSize: 16 }} /> New Mapping
         </Button>
+        <Button onClick={() => navigate("/admin/report-mapping/live-edit")}>Edit Existing</Button>
       </div>
 
       {error && <div className="onboarding-global-error">{error}</div>}

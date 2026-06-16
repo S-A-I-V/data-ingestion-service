@@ -13,6 +13,7 @@ import ClientOnboardingHub from "./pages/ClientOnboardingHub";
 import ClientEdit from "./pages/ClientEdit";
 import ReportMappingHub from "./pages/ReportMappingHub";
 import ReportMappingEditor from "./pages/ReportMappingEditor";
+import ReportMappingLiveEdit from "./pages/ReportMappingLiveEdit";
 import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -110,6 +111,9 @@ export default function App() {
         )}
         {user.permissions?.includes("admin:report_mapping") && (
           <Route path="/admin/report-mapping/editor" element={<ReportMappingEditor />} />
+        )}
+        {user.permissions?.includes("admin:report_mapping") && (
+          <Route path="/admin/report-mapping/live-edit" element={<ReportMappingLiveEdit />} />
         )}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />

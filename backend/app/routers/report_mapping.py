@@ -430,3 +430,295 @@ def export_mapping_csv(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Edit Existing Report Mapping (Live DB) — Diff + Atomic Apply
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+class ApplyMappingRequest(BaseModel):
+    """Payload for applying mapping changes to live report_job_mapping table."""
+
+    report_name: str
+    application_name: str
+    report_id: int
+    nodes: list[dict]  # [{job_id, job_name}]
+    edges: list[dict]  # [{source_node_id, target_node_id}]
+
+    @field_validator("report_name", "application_name")
+    @classmethod
+    def validate_names(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Name cannot be empty")
+        return v
+
+    @field_validator("nodes")
+    @classmethod
+    def validate_nodes(cls, v: list[dict]) -> list[dict]:
+        if not v:
+            raise ValueError("At least one node is required")
+        for n in v:
+            if not n.get("job_id"):
+                raise ValueError("All nodes must have a job_id assigned")
+        return v
+
+
+@router.post("/preview-changes")
+@limiter.limit("10/minute")
+def preview_mapping_changes(
+    request: Request,
+    payload: ApplyMappingRequest,
+    user: User = Depends(require_permission("admin:report_mapping")),
+    db: Session = Depends(get_db),
+):
+    """
+    Preview the SQL statements that would be executed to update the mapping.
+    Computes diff between current DB state and new state from the editor.
+    Returns the list of statements without executing them.
+    """
+    conn = find_nfc_connection(user.id, db)
+    connector = get_connector(conn)
+
+    try:
+        statements = _compute_mapping_diff(connector, payload)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to compute diff: {str(e)[:200]}") from e
+
+    return {
+        "statements": [{"sql": s["sql"][:500], "params": s.get("params", {})} for s in statements],
+        "total": len(statements),
+    }
+
+
+@router.post("/apply-changes")
+@limiter.limit("3/minute")
+def apply_mapping_changes(
+    request: Request,
+    payload: ApplyMappingRequest,
+    user: User = Depends(require_permission("admin:report_mapping")),
+    db: Session = Depends(get_db),
+):
+    """
+    Apply mapping changes to live report_job_mapping table.
+    Computes diff, executes atomically, logs to audit.
+    """
+    conn = find_nfc_connection(user.id, db)
+    connector = get_connector(conn)
+
+    try:
+        statements = _compute_mapping_diff(connector, payload)
+
+        if not statements:
+            return {"success": True, "message": "No changes detected", "executed": 0, "skipped": 0}
+
+        # Execute atomically
+        from app.services.query_metrics import track_transaction
+
+        result, metrics = track_transaction(connector, statements)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Apply mapping failed: {e}")
+        mark_connection_failed(conn, db)
+
+        from app.models.audit import AuditLog
+        from app.services.audit_chain import seal_and_persist
+
+        audit = AuditLog(
+            user_id=user.id,
+            user_email=user.email,
+            connection_id=conn.id,
+            connection_name=conn.name,
+            operation="EDIT_MAPPING",
+            table_name="report_job_mapping",
+            row_count=0,
+            query_preview=f"FAILED: {payload.report_name} / {payload.application_name}",
+            status="failed",
+            error_message=str(e)[:500],
+        )
+        seal_and_persist(audit, db)
+        raise HTTPException(status_code=500, detail=f"Apply failed: {str(e)[:200]}") from e
+
+    mark_connection_active(conn, db)
+
+    # Audit log
+    from app.models.audit import AuditLog
+    from app.services.audit_chain import seal_and_persist
+
+    audit = AuditLog(
+        user_id=user.id,
+        user_email=user.email,
+        connection_id=conn.id,
+        connection_name=conn.name,
+        operation="EDIT_MAPPING",
+        table_name="report_job_mapping",
+        row_count=len(statements),
+        rows_inserted=result["executed"],
+        rows_skipped=result["skipped"],
+        query_preview=(
+            f"EDIT_MAPPING report={payload.report_name} app={payload.application_name} "
+            f"statements={len(statements)} executed={result['executed']}"
+        )[:500],
+        status="success",
+        total_time_ms=metrics.total_time_ms,
+        peak_memory_bytes=metrics.peak_memory_bytes,
+        cpu_time_s=metrics.cpu_time_s,
+    )
+    seal_and_persist(audit, db)
+
+    return {
+        "success": True,
+        "report_name": payload.report_name,
+        "application_name": payload.application_name,
+        "total_statements": len(statements),
+        "executed": result["executed"],
+        "skipped": result["skipped"],
+    }
+
+
+def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]:
+    """
+    Compute the diff between current DB state and new state.
+
+    Strategy:
+    1. Fetch current rows for this report+app
+    2. Build new rows from nodes + edges
+    3. Compare: what to DELETE, INSERT, UPDATE
+
+    For job_id changes: updates previous_job_ids/next_job_ids across all rows.
+    """
+    # Fetch current state
+    current_rows = connector.execute_query(
+        """
+        SELECT job_id, job_name, previous_job_ids, next_job_ids,
+               run_requirement_mode, required_offsets_json, min_success_count,
+               sequence_id, is_final_step, job_category
+        FROM public.report_job_mapping
+        WHERE report_name = :rname AND application_name = :aname
+        ORDER BY job_id
+        """,
+        {"rname": payload.report_name, "aname": payload.application_name},
+    )
+
+    # Build current job_id set
+    current_job_ids = {row["job_id"] for row in current_rows}
+    current_by_job_id = {row["job_id"]: row for row in current_rows}
+
+    # Rebuild canonical prev/next from DB's next_job_ids (single source of truth)
+    # This avoids false diffs from inconsistent previous_job_ids in the DB
+    db_next_map: dict[int, list[int]] = {}
+    db_prev_map: dict[int, list[int]] = {}
+    for row in current_rows:
+        job_id = row["job_id"]
+        next_str = row.get("next_job_ids") or ""
+        if next_str:
+            for nid_str in next_str.split(","):
+                nid_str = nid_str.strip()
+                if nid_str:
+                    try:
+                        nid = int(nid_str)
+                        db_next_map.setdefault(job_id, []).append(nid)
+                        db_prev_map.setdefault(nid, []).append(job_id)
+                    except ValueError:
+                        pass
+
+    # Build new state from nodes + edges
+    # Map node_id -> job_id
+    node_to_job = {}
+    for n in payload.nodes:
+        node_to_job[n["id"]] = n["job_id"]
+
+    new_job_ids = {n["job_id"] for n in payload.nodes}
+
+    # Build adjacency from edges
+    prev_map: dict[int, list[int]] = {}  # job_id -> [prev_job_ids]
+    next_map: dict[int, list[int]] = {}  # job_id -> [next_job_ids]
+
+    for edge in payload.edges:
+        src_job = node_to_job.get(edge["source"])
+        tgt_job = node_to_job.get(edge["target"])
+        if src_job and tgt_job:
+            next_map.setdefault(src_job, []).append(tgt_job)
+            prev_map.setdefault(tgt_job, []).append(src_job)
+
+    statements: list[dict] = []
+
+    # 1. DELETE removed nodes
+    removed = current_job_ids - new_job_ids
+    for job_id in removed:
+        statements.append(
+            {
+                "sql": ("DELETE FROM public.report_job_mapping " "WHERE report_id = :rid AND job_id = :jid"),
+                "params": {"rid": payload.report_id, "jid": job_id},
+            }
+        )
+
+    # 2. INSERT new nodes
+    added = new_job_ids - current_job_ids
+    for job_id in added:
+        node = next((n for n in payload.nodes if n["job_id"] == job_id), None)
+        if not node:
+            continue
+        prev_ids = ",".join(str(p) for p in sorted(prev_map.get(job_id, [])))
+        next_ids = ",".join(str(n) for n in sorted(next_map.get(job_id, [])))
+        statements.append(
+            {
+                "sql": """
+                INSERT INTO public.report_job_mapping(
+                    report_name, application_name, report_id, job_id, job_name,
+                    previous_job_ids, next_job_ids, sequence_id, is_final_step,
+                    job_category, run_requirement_mode
+                ) VALUES(
+                    :rname, :aname, :rid, :jid, :jname,
+                    :prev, :next, 0, false,
+                    '', 'PER_DATA_DATE'
+                )
+            """,
+                "params": {
+                    "rname": payload.report_name,
+                    "aname": payload.application_name,
+                    "rid": payload.report_id,
+                    "jid": job_id,
+                    "jname": node.get("job_name", ""),
+                    "prev": prev_ids,
+                    "next": next_ids,
+                },
+            }
+        )
+
+    # 3. UPDATE existing nodes where prev/next changed
+    for job_id in current_job_ids & new_job_ids:
+        current_row = current_by_job_id[job_id]
+        new_prev = ",".join(str(p) for p in sorted(prev_map.get(job_id, [])))
+        new_next = ",".join(str(n) for n in sorted(next_map.get(job_id, [])))
+
+        # Use canonical DB state (rebuilt from edges) for comparison
+        old_prev_canonical = ",".join(str(p) for p in sorted(db_prev_map.get(job_id, [])))
+        old_next_canonical = ",".join(str(n) for n in sorted(db_next_map.get(job_id, [])))
+
+        if old_prev_canonical != new_prev or old_next_canonical != new_next:
+            node = next((n for n in payload.nodes if n["job_id"] == job_id), None)
+            new_name = node.get("job_name", "") if node else current_row.get("job_name", "")
+
+            statements.append(
+                {
+                    "sql": """
+                    UPDATE public.report_job_mapping
+                    SET previous_job_ids = :prev, next_job_ids = :next,
+                        job_name = :jname
+                    WHERE report_id = :rid AND job_id = :jid
+                """,
+                    "params": {
+                        "prev": new_prev,
+                        "next": new_next,
+                        "jname": new_name,
+                        "rid": payload.report_id,
+                        "jid": job_id,
+                    },
+                }
+            )
+
+    return statements
