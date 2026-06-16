@@ -913,6 +913,7 @@
 .audit-table-col .csv-preview-scroll {
   flex: 1;
   min-height: 0;
+  max-height: calc(100vh - 220px);
 }
 
 /* Full-width container override for the audit page */
