@@ -11,7 +11,7 @@
  * Route: /admin/report-mapping/live-edit?report=NAME&app=APP&rid=ID
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ReactFlow,
@@ -47,6 +47,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import CircularProgress from "@mui/material/CircularProgress";
 import StepProgress, { type Step } from "../components/onboarding/StepProgress";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 interface Job {
   job_id: number;
@@ -115,6 +116,7 @@ export default function ReportMappingLiveEdit() {
   const [result, setResult] = useState<any>(null);
   const [dirty, setDirty] = useState(false);
   const [toast, setToast] = useState("");
+  const initialStateRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
 
   const graph = useUndoRedo<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
   const nodeTypes: NodeTypes = useMemo(() => ({ jobNode: JobNode }), []);
@@ -190,6 +192,7 @@ export default function ReportMappingLiveEdit() {
         setNodes(layouted);
         setEdges(flowEdges);
         graph.reset({ nodes: layouted, edges: flowEdges });
+        initialStateRef.current = { nodes: layouted, edges: flowEdges };
       } catch (e: any) {
         setError(e.response?.data?.detail || "Failed to load mapping");
       } finally {
@@ -312,6 +315,17 @@ export default function ReportMappingLiveEdit() {
   const handleRelayout = useCallback(() => {
     setNodes((cur) => applyDagreLayout(cur, edges));
   }, [edges]);
+
+  const handleReset = () => {
+    if (!initialStateRef.current) return;
+    const { nodes: initNodes, edges: initEdges } = initialStateRef.current;
+    setNodes(JSON.parse(JSON.stringify(initNodes)));
+    setEdges(JSON.parse(JSON.stringify(initEdges)));
+    graph.reset({ nodes: initNodes, edges: initEdges });
+    setDirty(false);
+    setToast("Reset to original mapping");
+    setTimeout(() => setToast(""), 3000);
+  };
 
   // Preview changes
   const handlePreview = async () => {
@@ -525,6 +539,9 @@ export default function ReportMappingLiveEdit() {
         </Button>
         <Button size="sm" onClick={handleRelayout}>
           <AccountTreeIcon sx={{ fontSize: 14 }} /> Layout
+        </Button>
+        <Button size="sm" variant="danger" onClick={handleReset}>
+          <RestartAltIcon sx={{ fontSize: 14 }} /> Reset
         </Button>
         <Button size="sm" variant="primary" onClick={handlePreview} disabled={previewing} style={{ minWidth: 150 }}>
           {previewing ? (
