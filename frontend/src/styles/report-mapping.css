@@ -711,6 +711,12 @@
   margin-bottom: 0;
 }
 
+/* Step progress wrapper in the live edit editor toolbar area */
+.rm-editor-step-bar {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
 /* Preview statement params display */
 .rm-preview-stmt-params {
   margin-top: 4px;

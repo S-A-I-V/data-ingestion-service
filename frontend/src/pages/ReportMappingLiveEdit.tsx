@@ -275,7 +275,7 @@ export default function ReportMappingLiveEdit() {
       </div>
 
       {/* Step Progress */}
-      <div className="rm-editor-page .step-progress">
+      <div className="rm-editor-step-bar">
         <StepProgress
           steps={LIVE_EDIT_STEPS}
           currentStep={previewStatements ? 2 : 1}
