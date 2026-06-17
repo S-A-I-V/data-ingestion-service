@@ -16,32 +16,28 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { Button, Spinner } from "../components/ui";
-import StepProgress, { type Step } from "../components/onboarding/StepProgress";
-import StepClientDetails from "../components/onboarding/StepClientDetails";
-import StepGroupDetails from "../components/onboarding/StepGroupDetails";
-import StepBeidMapping, { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
-import StepReportMapping, { type ReportDef } from "../components/onboarding/StepReportMapping";
-import StepPreview from "../components/onboarding/StepPreview";
+import StepProgress from "../components/onboarding/StepProgress";
+import { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
+import { type ReportDef } from "../components/onboarding/StepReportMapping";
 import ConfirmDialog from "../components/onboarding/ConfirmDialog";
-import StepFastieAlias from "../components/onboarding/StepFastieAlias";
+import OnboardingSuccess from "../components/onboarding/OnboardingSuccess";
+import WizardNavigation from "../components/onboarding/WizardNavigation";
+import NewClientStepContent from "../components/onboarding/NewClientStepContent";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-
-const STEPS: Step[] = [
-  { label: "Client", description: "Name & ID" },
-  { label: "Group", description: "Group Setup" },
-  { label: "BEIDs", description: "Entity mapping" },
-  { label: "Reports", description: "Report mapping" },
-  { label: "Fastie", description: "Aliases (optional)" },
-  { label: "Review", description: "Preview & confirm" },
-];
+import {
+  NEW_CLIENT_STEPS,
+  CACHE_KEY_NEXT_IDS,
+  CACHE_KEY_REPORTS,
+  MIN_NAME_LENGTH,
+  NAV_ICON_SIZE_PX,
+  TOOLBAR_ICON_SIZE_PX,
+  NEW_CLIENT_FASTIE_STEP_INDEX,
+} from "../constants/onboarding";
 
 export default function ClientOnboarding() {
   const navigate = useNavigate();
 
-  // Step state
   const [currentStep, setCurrentStep] = useState(0);
 
   // Form data
@@ -72,8 +68,7 @@ export default function ClientOnboarding() {
 
   // Fetch next IDs on mount
   useEffect(() => {
-    const CACHE_KEY = "onboarding_next_ids";
-    const cached = sessionStorage.getItem(CACHE_KEY);
+    const cached = sessionStorage.getItem(CACHE_KEY_NEXT_IDS);
     if (cached) {
       try {
         setNextIds(JSON.parse(cached));
@@ -88,7 +83,7 @@ export default function ClientOnboarding() {
       .get("/admin/client-onboarding/next-ids")
       .then((r) => {
         setNextIds(r.data);
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify(r.data));
+        sessionStorage.setItem(CACHE_KEY_NEXT_IDS, JSON.stringify(r.data));
       })
       .catch((e) => setGlobalError(e.response?.data?.detail || "Failed to fetch next IDs"))
       .finally(() => setIdsLoading(false));
@@ -97,8 +92,7 @@ export default function ClientOnboarding() {
   // Fetch report definitions when reaching step 3
   useEffect(() => {
     if (currentStep >= 3 && reports.length === 0 && !reportsLoading) {
-      const CACHE_KEY = "onboarding_reports";
-      const cached = sessionStorage.getItem(CACHE_KEY);
+      const cached = sessionStorage.getItem(CACHE_KEY_REPORTS);
       if (cached) {
         try {
           setReports(JSON.parse(cached));
@@ -113,7 +107,7 @@ export default function ClientOnboarding() {
         .then((r) => {
           const reps = r.data.reports || [];
           setReports(reps);
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify(reps));
+          sessionStorage.setItem(CACHE_KEY_REPORTS, JSON.stringify(reps));
         })
         .catch((e) => setStepErrors((prev) => ({ ...prev, 3: e.response?.data?.detail || "Failed to load reports" })))
         .finally(() => setReportsLoading(false));
@@ -126,11 +120,13 @@ export default function ClientOnboarding() {
       switch (step) {
         case 0:
           if (!clientName.trim()) return "Client name is required";
-          if (clientName.trim().length < 2) return "Client name must be at least 2 characters";
+          if (clientName.trim().length < MIN_NAME_LENGTH)
+            return `Client name must be at least ${MIN_NAME_LENGTH} characters`;
           return null;
         case 1:
           if (!groupName.trim()) return "Group name is required";
-          if (groupName.trim().length < 2) return "Group name must be at least 2 characters";
+          if (groupName.trim().length < MIN_NAME_LENGTH)
+            return `Group name must be at least ${MIN_NAME_LENGTH} characters`;
           return null;
         case 2:
           if (beidMappings.length === 0) return "At least one BEID mapping is required";
@@ -161,7 +157,7 @@ export default function ClientOnboarding() {
         return next;
       });
     }
-    setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
+    setCurrentStep((s) => Math.min(s + 1, NEW_CLIENT_STEPS.length - 1));
   };
 
   const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
@@ -215,14 +211,14 @@ export default function ClientOnboarding() {
     setResult(null);
     setGlobalError(null);
     setStepErrors({});
-    sessionStorage.removeItem("onboarding_next_ids");
-    sessionStorage.removeItem("onboarding_reports");
+    sessionStorage.removeItem(CACHE_KEY_NEXT_IDS);
+    sessionStorage.removeItem(CACHE_KEY_REPORTS);
     setIdsLoading(true);
     api
       .get("/admin/client-onboarding/next-ids")
       .then((r) => {
         setNextIds(r.data);
-        sessionStorage.setItem("onboarding_next_ids", JSON.stringify(r.data));
+        sessionStorage.setItem(CACHE_KEY_NEXT_IDS, JSON.stringify(r.data));
       })
       .finally(() => setIdsLoading(false));
   };
@@ -236,70 +232,30 @@ export default function ClientOnboarding() {
         <div className="toolbar">
           <span className="toolbar-title">Client Onboarding</span>
         </div>
-        <div className="onboarding-success">
-          <CheckCircleOutlineIcon sx={{ fontSize: 56, color: "var(--success)" }} />
-          <h2 className="onboarding-success-title">Client Onboarded Successfully</h2>
-          <div className="onboarding-success-stats">
-            <div className="onboarding-success-stat">
-              <span className="onboarding-success-stat-value">{result.executed ?? result.total_statements}</span>
-              <span className="onboarding-success-stat-label">Executed</span>
-            </div>
-            <div className="onboarding-success-stat onboarding-success-stat--warn">
-              <span className="onboarding-success-stat-value">{result.skipped ?? 0}</span>
-              <span className="onboarding-success-stat-label">Skipped</span>
-            </div>
-            <div className="onboarding-success-stat">
-              <span className="onboarding-success-stat-value">{result.total_statements}</span>
-              <span className="onboarding-success-stat-label">Total</span>
-            </div>
-          </div>
-          <div className="onboarding-success-table">
-            <table className="data-table">
-              <tbody>
-                <tr>
-                  <td>Client ID</td>
-                  <td>
-                    <strong>{result.client_id}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Client Name</td>
-                  <td>
-                    <strong>{result.client_name}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Group ID</td>
-                  <td>
-                    <strong>{result.group_id}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Group Name</td>
-                  <td>
-                    <strong>{result.group_name}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td>BEIDs Mapped</td>
-                  <td>{result.beids_mapped}</td>
-                </tr>
-                <tr>
-                  <td>Reports Mapped</td>
-                  <td>{result.reports_mapped}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="onboarding-success-actions">
-            <Button variant="primary" onClick={resetForm}>
-              <RestartAltIcon sx={{ fontSize: 16 }} /> Onboard Another
-            </Button>
-            <Button onClick={() => navigate("/admin/client-onboarding")}>
-              <ArrowBackIcon sx={{ fontSize: 16 }} /> Back to Hub
-            </Button>
-          </div>
-        </div>
+        <OnboardingSuccess
+          title="Client Onboarded Successfully"
+          executed={result.executed ?? result.total_statements}
+          skipped={result.skipped ?? 0}
+          total={result.total_statements}
+          tableRows={[
+            { label: "Client ID", value: result.client_id, bold: true },
+            { label: "Client Name", value: result.client_name, bold: true },
+            { label: "Group ID", value: result.group_id, bold: true },
+            { label: "Group Name", value: result.group_name, bold: true },
+            { label: "BEIDs Mapped", value: result.beids_mapped },
+            { label: "Reports Mapped", value: result.reports_mapped },
+          ]}
+          actions={
+            <>
+              <Button variant="primary" onClick={resetForm}>
+                <RestartAltIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Onboard Another
+              </Button>
+              <Button onClick={() => navigate("/admin/client-onboarding")}>
+                <ArrowBackIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Back to Hub
+              </Button>
+            </>
+          }
+        />
       </div>
     );
   }
@@ -321,102 +277,56 @@ export default function ClientOnboarding() {
         <span className="toolbar-title">New Client Onboarding</span>
         <div className="toolbar-spacer" />
         <Button size="sm" onClick={() => navigate("/admin/client-onboarding")}>
-          <ArrowBackIcon sx={{ fontSize: 14 }} /> Back
+          <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
         </Button>
         <Button size="sm" variant="danger" onClick={resetForm} disabled={executing}>
-          <RestartAltIcon sx={{ fontSize: 14 }} /> Reset
+          <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Reset
         </Button>
       </div>
 
       {globalError && <div className="onboarding-global-error">{globalError}</div>}
 
-      <StepProgress steps={STEPS} currentStep={currentStep} onStepClick={goToStep} skippedSteps={skippedSteps} />
+      <StepProgress
+        steps={NEW_CLIENT_STEPS}
+        currentStep={currentStep}
+        onStepClick={goToStep}
+        skippedSteps={skippedSteps}
+      />
 
-      <div className="onboarding-step-content">
-        {currentStep === 0 && (
-          <StepClientDetails
-            clientName={clientName}
-            setClientName={setClientName}
-            nextClientId={nextIds?.next_client_id ?? null}
-            error={stepErrors[0] ?? null}
-          />
-        )}
-        {currentStep === 1 && (
-          <StepGroupDetails
-            groupName={groupName}
-            setGroupName={setGroupName}
-            nextGroupId={nextIds?.next_group_id ?? null}
-            error={stepErrors[1] ?? null}
-          />
-        )}
-        {currentStep === 2 && (
-          <StepBeidMapping
-            mappings={beidMappings}
-            setMappings={setBeidMappings}
-            clientName={clientName}
-            error={stepErrors[2] ?? null}
-          />
-        )}
-        {currentStep === 3 && (
-          <StepReportMapping
-            reports={reports}
-            reportsLoading={reportsLoading}
-            selectedReportIds={selectedReportIds}
-            setSelectedReportIds={setSelectedReportIds}
-            clientName={clientName}
-            error={stepErrors[3] ?? null}
-          />
-        )}
-        {currentStep === 4 && (
-          <StepFastieAlias
-            aliases={fastieAliases}
-            setAliases={setFastieAliases}
-            clientName={clientName}
-            error={stepErrors[4] ?? null}
-          />
-        )}
-        {currentStep === 5 && (
-          <StepPreview
-            clientName={clientName}
-            groupName={groupName}
-            nextClientId={nextIds?.next_client_id ?? null}
-            nextGroupId={nextIds?.next_group_id ?? null}
-            beidMappings={beidMappings}
-            selectedReports={selectedReports}
-            fastieAliases={fastieAliases}
-          />
-        )}
-      </div>
+      <NewClientStepContent
+        currentStep={currentStep}
+        clientName={clientName}
+        setClientName={setClientName}
+        groupName={groupName}
+        setGroupName={setGroupName}
+        beidMappings={beidMappings}
+        setBeidMappings={setBeidMappings}
+        selectedReportIds={selectedReportIds}
+        setSelectedReportIds={setSelectedReportIds}
+        fastieAliases={fastieAliases}
+        setFastieAliases={setFastieAliases}
+        nextClientId={nextIds?.next_client_id ?? null}
+        nextGroupId={nextIds?.next_group_id ?? null}
+        reports={reports}
+        reportsLoading={reportsLoading}
+        selectedReports={selectedReports}
+        stepErrors={stepErrors}
+      />
 
-      <div className="onboarding-nav-buttons">
-        {currentStep > 0 && (
-          <Button onClick={goBack}>
-            <ArrowBackIcon sx={{ fontSize: 16 }} /> Back
-          </Button>
-        )}
-        <div className="toolbar-spacer" />
-        {currentStep === 4 && (
-          <Button
-            variant="ghost"
-            disabled={fastieAliases.length > 0}
-            onClick={() => {
-              setSkippedSteps((prev) => new Set([...prev, 4]));
-              setCurrentStep(5);
-            }}
-          >
-            Skip →
-          </Button>
-        )}
-        {currentStep < STEPS.length - 1 ? (
-          <Button variant="primary" onClick={goNext}>
-            Next <ArrowForwardIcon sx={{ fontSize: 16 }} />
-          </Button>
-        ) : (
-          <Button variant="primary" onClick={() => setShowConfirm(true)}>
-            <CheckCircleOutlineIcon sx={{ fontSize: 16 }} /> Execute Onboarding
-          </Button>
-        )}
-      </div>
+      <WizardNavigation
+        currentStep={currentStep}
+        totalSteps={NEW_CLIENT_STEPS.length}
+        onBack={goBack}
+        onNext={goNext}
+        onExecute={() => setShowConfirm(true)}
+        executeLabel="Execute Onboarding"
+        skippableStepIndex={NEW_CLIENT_FASTIE_STEP_INDEX}
+        skipDisabled={fastieAliases.length > 0}
+        onSkip={() => {
+          setSkippedSteps((prev) => new Set([...prev, NEW_CLIENT_FASTIE_STEP_INDEX]));
+          setCurrentStep(NEW_CLIENT_FASTIE_STEP_INDEX + 1);
+        }}
+      />
 
       <ConfirmDialog
         open={showConfirm}

@@ -10,32 +10,16 @@
  *   - Load from existing report mapping (copy mode)
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ReactFlow,
-  Controls,
-  Background,
-  addEdge,
-  applyNodeChanges,
-  applyEdgeChanges,
-  ConnectionLineType,
-  Position,
-  type Node,
-  type Edge,
-  type OnNodesChange,
-  type OnEdgesChange,
-  type OnConnect,
-  type NodeTypes,
-  BackgroundVariant,
-} from "@xyflow/react";
-import dagre from "@dagrejs/dagre";
+import type { Node, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import api from "../api";
 import { Button, Spinner } from "../components/ui";
-import JobNode from "../components/report-mapping/JobNode";
 import OutlinedInput from "../components/ui/OutlinedInput";
-import { useUndoRedo } from "../hooks/useUndoRedo";
+import { useGraphEditor } from "../hooks/useGraphEditor";
+import { applyDagreLayout } from "../utils/dagreLayout";
+import GraphCanvas from "../components/report-mapping/GraphCanvas";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
 import AddIcon from "@mui/icons-material/Add";
@@ -44,6 +28,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import CircularProgress from "@mui/material/CircularProgress";
+import { TOOLBAR_ICON_SIZE_PX, BUTTON_SPINNER_SIZE_PX, TOAST_DISPLAY_DURATION_MS } from "../constants/reportMapping";
 
 interface Job {
   job_id: number;
@@ -51,97 +36,15 @@ interface Job {
   category: string | null;
 }
 
-// ── Dagre Sugiyama Layout ────────────────────────────────────────────────────
-const NODE_WIDTH = 220;
-const NODE_HEIGHT = 160;
-
-function applyDagreLayout(nodes: Node[], edges: Edge[], direction = "LR"): Node[] {
-  if (nodes.length === 0) return nodes;
-
-  const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  const isHorizontal = direction === "LR";
-
-  dagreGraph.setGraph({
-    rankdir: direction,
-    nodesep: 80, // vertical spacing between nodes in same rank
-    ranksep: 250, // horizontal spacing between ranks
-    marginx: 40,
-    marginy: 40,
-  });
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  return nodes.map((node) => {
-    const pos = dagreGraph.node(node.id);
-    return {
-      ...node,
-      position: {
-        x: pos.x - NODE_WIDTH / 2,
-        y: pos.y - NODE_HEIGHT / 2,
-      },
-      targetPosition: isHorizontal ? Position.Left : Position.Top,
-      sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
-    } as Node;
-  });
-}
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function ReportMappingEditor() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const loadId = searchParams.get("load");
   const copyId = searchParams.get("copy");
 
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-
-  // ── Undo/Redo via hook ─────────────────────────────────────────────────────
-  const graph = useUndoRedo<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
-
-  // Sync hook state → local state (for React Flow)
-  useEffect(() => {
-    setNodes(graph.state.nodes);
-    setEdges(graph.state.edges);
-  }, [graph.state]);
-
-  // Commit: call this after any user action to record it
-  const commitChange = useCallback(
-    (newNodes: Node[], newEdges: Edge[]) => {
-      graph.set({ nodes: newNodes, edges: newEdges });
-      setDirty(true);
-    },
-    [graph],
-  );
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
-        e.preventDefault();
-        if (e.shiftKey) graph.redo();
-        else graph.undo();
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === "y") {
-        e.preventDefault();
-        graph.redo();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [graph]);
-  // ──────────────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
   const [saveToast, setSaveToast] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [mappingId, setMappingId] = useState<number | null>(loadId ? Number(loadId) : null);
@@ -149,8 +52,21 @@ export default function ReportMappingEditor() {
   const [reportName, setReportName] = useState("");
   const [appName, setAppName] = useState("");
 
-  // Node types registration
-  const nodeTypes: NodeTypes = useMemo(() => ({ jobNode: JobNode }), []);
+  const {
+    nodes,
+    setNodes,
+    edges,
+    setEdges,
+    dirty,
+    setDirty,
+    graph,
+    nodeTypes,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNode,
+    handleRelayout,
+  } = useGraphEditor({ jobs });
 
   // Load jobs + optionally load/copy mapping
   useEffect(() => {
@@ -204,184 +120,11 @@ export default function ReportMappingEditor() {
       animated: true,
       style: { stroke: "var(--accent)" },
     }));
-
-    // Apply Dagre Sugiyama layout for proper node placement
     const layoutedNodes = applyDagreLayout(flowNodes, flowEdges, "LR");
     setNodes(layoutedNodes);
     setEdges(flowEdges);
     graph.reset({ nodes: layoutedNodes, edges: flowEdges });
   };
-
-  // React Flow callbacks
-  const onNodesChange: OnNodesChange = useCallback(
-    (changes) => {
-      setNodes((nds) => {
-        const updated = applyNodeChanges(changes, nds);
-        if (changes.some((c) => c.type === "remove")) {
-          commitChange(updated, edges);
-        }
-        return updated;
-      });
-    },
-    [edges, commitChange],
-  );
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) => {
-      setEdges((eds) => {
-        const updated = applyEdgeChanges(changes, eds);
-        if (changes.some((c) => c.type === "remove")) {
-          commitChange(nodes, updated);
-        }
-        return updated;
-      });
-    },
-    [nodes, commitChange],
-  );
-  const onConnect: OnConnect = useCallback(
-    (connection) => {
-      setEdges((eds) => {
-        const updated = addEdge(
-          {
-            ...connection,
-            type: "smoothstep",
-            animated: true,
-            style: { stroke: "var(--accent)" },
-          },
-          eds,
-        );
-        commitChange(nodes, updated);
-        return updated;
-      });
-    },
-    [nodes, commitChange],
-  );
-
-  // Add node
-  const addNode = () => {
-    const id = `n${Date.now()}`;
-    const newNode: Node = {
-      id,
-      type: "jobNode",
-      position: { x: Math.random() * 400 + 50, y: Math.random() * 300 + 50 },
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
-      data: { job_id: null, job_name: "", category: "" },
-    };
-    const newNodes = [...nodes, newNode];
-    setNodes(newNodes);
-    commitChange(newNodes, edges);
-  };
-
-  // Update node job selection
-  const updateNodeJob = useCallback((nodeId: string, jobId: number, jobName: string, category: string) => {
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.id === nodeId ? { ...n, data: { ...n.data, job_id: jobId, job_name: jobName, category } } : n,
-      ),
-    );
-    setDirty(true);
-  }, []);
-
-  // Delete node
-  const deleteNode = useCallback((nodeId: string) => {
-    setNodes((prev) => prev.filter((n) => n.id !== nodeId));
-    setEdges((prev) => prev.filter((e) => e.source !== nodeId && e.target !== nodeId));
-  }, []);
-
-  // Disconnect outgoing edges only (keep incoming)
-  const disconnectRight = useCallback(
-    (nodeId: string) => {
-      setEdges((prev) => {
-        const updated = prev.filter((e) => e.source !== nodeId);
-        commitChange(nodes, updated);
-        return updated;
-      });
-    },
-    [nodes, commitChange],
-  );
-
-  // Bypass delete: connect all incoming sources to all outgoing targets, then remove node
-  const bypassDelete = useCallback(
-    (nodeId: string) => {
-      const incomingEdges = edges.filter((e) => e.target === nodeId);
-      const outgoingEdges = edges.filter((e) => e.source === nodeId);
-      const sourceNodeIds = incomingEdges.map((e) => e.source);
-      const targetNodeIds = outgoingEdges.map((e) => e.target);
-
-      // Create new edges: every source → every target
-      const bypassEdges: typeof edges = [];
-      for (const src of sourceNodeIds) {
-        for (const tgt of targetNodeIds) {
-          const edgeId = `e${src}-${tgt}`;
-          if (!edges.find((e) => e.id === edgeId)) {
-            bypassEdges.push({
-              id: edgeId,
-              source: src,
-              target: tgt,
-              type: "smoothstep",
-              animated: true,
-              style: { stroke: "var(--accent)" },
-            });
-          }
-        }
-      }
-
-      const updatedNodes = nodes.filter((n) => n.id !== nodeId);
-      const updatedEdges = [...edges.filter((e) => e.source !== nodeId && e.target !== nodeId), ...bypassEdges];
-      setNodes(updatedNodes);
-      setEdges(updatedEdges);
-      commitChange(updatedNodes, updatedEdges);
-    },
-    [nodes, edges, commitChange],
-  );
-
-  // Expose jobs and callbacks to JobNode via window (React Flow constraint)
-  useEffect(() => {
-    window.__REPORT_MAPPING_JOBS__ = jobs;
-    window.__REPORT_MAPPING_UPDATE_NODE__ = updateNodeJob;
-    window.__REPORT_MAPPING_DELETE_NODE__ = deleteNode;
-    window.__REPORT_MAPPING_DISCONNECT_RIGHT__ = disconnectRight;
-    window.__REPORT_MAPPING_BYPASS_DELETE__ = bypassDelete;
-    return () => {
-      delete window.__REPORT_MAPPING_JOBS__;
-      delete window.__REPORT_MAPPING_UPDATE_NODE__;
-      delete window.__REPORT_MAPPING_DELETE_NODE__;
-      delete window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
-      delete window.__REPORT_MAPPING_BYPASS_DELETE__;
-    };
-  }, [jobs, updateNodeJob, deleteNode, disconnectRight, bypassDelete]);
-
-  // Compute dynamic translate extent from node positions
-  const graphExtent = useMemo((): [[number, number], [number, number]] => {
-    if (nodes.length === 0) {
-      return [
-        [-1000, -1000],
-        [2000, 2000],
-      ];
-    }
-    const MARGIN = 500;
-    const NODE_W = 220;
-    const NODE_H = 100;
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-    for (const node of nodes) {
-      minX = Math.min(minX, node.position.x);
-      minY = Math.min(minY, node.position.y);
-      maxX = Math.max(maxX, node.position.x + NODE_W);
-      maxY = Math.max(maxY, node.position.y + NODE_H);
-    }
-    return [
-      [minX - MARGIN, minY - MARGIN],
-      [maxX + MARGIN, maxY + MARGIN],
-    ];
-  }, [nodes]);
-
-  // Re-layout: apply Dagre Sugiyama algorithm to current graph
-  const handleRelayout = useCallback(() => {
-    setNodes((currentNodes) => applyDagreLayout(currentNodes, edges, "LR"));
-  }, [edges]);
 
   // Save mapping
   const handleSave = async () => {
@@ -417,7 +160,7 @@ export default function ReportMappingEditor() {
       }
       setDirty(false);
       setSaveToast(`Saved changes to "${mappingName.trim()}"`);
-      setTimeout(() => setSaveToast(""), 3000);
+      setTimeout(() => setSaveToast(""), TOAST_DISPLAY_DURATION_MS);
     } catch (e: any) {
       setError(e.response?.data?.detail || "Save failed");
     } finally {
@@ -425,14 +168,13 @@ export default function ReportMappingEditor() {
     }
   };
 
-  // Export CSV (client-side — works without saving)
-  const handleExport = () => {
+  // Export CSV
+  const handleExport = useCallback(() => {
     if (nodes.length === 0) {
       setError("Nothing to export — add some jobs first");
       return;
     }
 
-    // Build adjacency maps from edges
     const prevMap: Record<string, string[]> = {};
     const nextMap: Record<string, string[]> = {};
 
@@ -443,8 +185,6 @@ export default function ReportMappingEditor() {
       prevMap[edge.target].push(edge.source);
     }
 
-    // Build CSV rows
-    // const rows = [["job_id", "previous_job_ids", "next_job_ids"]];
     const rows: string[][] = [];
     for (const node of nodes) {
       const jobId = node.data.job_id || "";
@@ -458,7 +198,6 @@ export default function ReportMappingEditor() {
         .map((nn) => nodes.find((n) => n.id === nn)?.data.job_id)
         .filter(Boolean)
         .join(",");
-      // Skip orphan nodes (no connections at all)
       if (!prevJobIds && !nextJobIds) continue;
       rows.push([String(jobId), prevJobIds, nextJobIds]);
     }
@@ -471,7 +210,7 @@ export default function ReportMappingEditor() {
     a.download = `report_mapping_${(mappingName || "untitled").replace(/ /g, "_")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  };
+  }, [nodes, edges, mappingName]);
 
   if (loading) {
     return (
@@ -489,7 +228,7 @@ export default function ReportMappingEditor() {
       {/* Toolbar */}
       <div className="rm-editor-toolbar">
         <Button size="sm" onClick={() => navigate("/admin/report-mapping")}>
-          <ArrowBackIcon sx={{ fontSize: 14 }} /> Back
+          <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
         </Button>
         <OutlinedInput
           label="Mapping Name"
@@ -517,51 +256,43 @@ export default function ReportMappingEditor() {
         />
         <div className="toolbar-spacer" />
         <Button size="sm" onClick={addNode}>
-          <AddIcon sx={{ fontSize: 14 }} /> Add Job
+          <AddIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Add Job
         </Button>
         <Button size="sm" onClick={graph.undo} disabled={!graph.canUndo} title="Undo (Ctrl+Z)">
-          <UndoIcon sx={{ fontSize: 14 }} />
+          <UndoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
         </Button>
         <Button size="sm" onClick={graph.redo} disabled={!graph.canRedo} title="Redo (Ctrl+Shift+Z)">
-          <RedoIcon sx={{ fontSize: 14 }} />
+          <RedoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
         </Button>
         <Button size="sm" onClick={handleRelayout} title="Auto-layout (Dagre Sugiyama)">
-          <AccountTreeIcon sx={{ fontSize: 14 }} /> Layout
+          <AccountTreeIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Layout
         </Button>
         <Button size="sm" variant="primary" onClick={handleSave} disabled={saving || !dirty}>
-          {saving ? <CircularProgress size={14} sx={{ color: "#fff" }} /> : <SaveIcon sx={{ fontSize: 14 }} />} Save
+          {saving ? (
+            <CircularProgress size={BUTTON_SPINNER_SIZE_PX} sx={{ color: "#fff" }} />
+          ) : (
+            <SaveIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
+          )}{" "}
+          Save
         </Button>
         <Button size="sm" onClick={handleExport}>
-          <DownloadIcon sx={{ fontSize: 14 }} /> Export CSV
+          <DownloadIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Export CSV
         </Button>
       </div>
 
       {error && <div className="rm-editor-error">{error}</div>}
-
       {saveToast && <div className="rm-save-toast-popup">{saveToast}</div>}
 
       {/* Graph Canvas */}
       <div className="rm-editor-canvas">
-        <ReactFlow
+        <GraphCanvas
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.3 }}
-          minZoom={0.2}
-          maxZoom={2}
-          translateExtent={graphExtent}
-          deleteKeyCode="Delete"
-          connectionLineType={ConnectionLineType.SmoothStep}
-          proOptions={{ hideAttribution: true }}
-          className="report-flow-graph"
-        >
-          <Controls showInteractive={false} />
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="rgba(255,255,255,0.05)" />
-        </ReactFlow>
+        />
       </div>
 
       {/* Stats bar */}

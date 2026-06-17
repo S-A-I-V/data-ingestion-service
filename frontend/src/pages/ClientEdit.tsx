@@ -14,27 +14,24 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { Button, Spinner } from "../components/ui";
-import StepProgress, { type Step } from "../components/onboarding/StepProgress";
-import StepGroupDetails from "../components/onboarding/StepGroupDetails";
-import StepBeidMapping, { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
-import StepReportMapping, { type ReportDef } from "../components/onboarding/StepReportMapping";
-import StepEditPreview from "../components/onboarding/StepEditPreview";
+import StepProgress from "../components/onboarding/StepProgress";
+import { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
+import { type ReportDef } from "../components/onboarding/StepReportMapping";
 import ClientSearch from "../components/onboarding/ClientSearch";
 import ConfirmDialog from "../components/onboarding/ConfirmDialog";
-import StepFastieAlias from "../components/onboarding/StepFastieAlias";
+import OnboardingSuccess from "../components/onboarding/OnboardingSuccess";
+import WizardNavigation from "../components/onboarding/WizardNavigation";
+import EditClientStepContent from "../components/onboarding/EditClientStepContent";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import EditIcon from "@mui/icons-material/Edit";
-
-const STEPS: Step[] = [
-  { label: "Group", description: "Group name" },
-  { label: "BEIDs", description: "Entity mapping" },
-  { label: "Reports", description: "Report mapping" },
-  { label: "Fastie", description: "Aliases (optional)" },
-  { label: "Review", description: "Diff & confirm" },
-];
+import {
+  EDIT_CLIENT_STEPS,
+  NAV_ICON_SIZE_PX,
+  TOOLBAR_ICON_SIZE_PX,
+  EDIT_CLIENT_FASTIE_STEP_INDEX,
+  EDIT_CLIENT_REVIEW_STEP_INDEX,
+} from "../constants/onboarding";
 
 export default function ClientEdit() {
   const navigate = useNavigate();
@@ -139,7 +136,7 @@ export default function ClientEdit() {
       return;
     }
     setStepErrors((prev) => ({ ...prev, [currentStep]: null }));
-    setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
+    setCurrentStep((s) => Math.min(s + 1, EDIT_CLIENT_STEPS.length - 1));
   };
 
   const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
@@ -160,7 +157,7 @@ export default function ClientEdit() {
     setCurrentStep(idx);
   };
 
-  // Compute diff
+  // Compute diff between original and current state
   const computeDiff = () => {
     const currentBeidSet = new Set(originalBeids.map((b) => `${b.beid}:${b.org_id}`));
     const newBeidSet = new Set(beidMappings.map((b) => `${b.beid}:${b.org_id}`));
@@ -227,61 +224,32 @@ export default function ClientEdit() {
         <div className="toolbar">
           <span className="toolbar-title">Edit Client</span>
         </div>
-        <div className="onboarding-success">
-          <CheckCircleOutlineIcon sx={{ fontSize: 56, color: "var(--success)" }} />
-          <h2 className="onboarding-success-title">Client Updated Successfully</h2>
-          <div className="onboarding-success-stats">
-            <div className="onboarding-success-stat">
-              <span className="onboarding-success-stat-value">{result.executed ?? 0}</span>
-              <span className="onboarding-success-stat-label">Executed</span>
-            </div>
-            <div className="onboarding-success-stat onboarding-success-stat--warn">
-              <span className="onboarding-success-stat-value">{result.skipped ?? 0}</span>
-              <span className="onboarding-success-stat-label">Skipped</span>
-            </div>
-            <div className="onboarding-success-stat">
-              <span className="onboarding-success-stat-value">{result.total_statements ?? 0}</span>
-              <span className="onboarding-success-stat-label">Total</span>
-            </div>
-          </div>
-          <div className="onboarding-success-table">
-            <table className="data-table">
-              <tbody>
-                <tr>
-                  <td>Client ID</td>
-                  <td>
-                    <strong>{result.client_id}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Client Name</td>
-                  <td>
-                    <strong>{result.client_name}</strong>
-                  </td>
-                </tr>
-                {result.message && (
-                  <tr>
-                    <td>Status</td>
-                    <td>{result.message}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="onboarding-success-actions">
-            <Button variant="primary" onClick={() => navigate("/admin/client-onboarding")}>
-              <ArrowBackIcon sx={{ fontSize: 16 }} /> Back to Hub
-            </Button>
-            <Button
-              onClick={() => {
-                setResult(null);
-                setPhase("search");
-              }}
-            >
-              <EditIcon sx={{ fontSize: 16 }} /> Edit Another
-            </Button>
-          </div>
-        </div>
+        <OnboardingSuccess
+          title="Client Updated Successfully"
+          executed={result.executed ?? 0}
+          skipped={result.skipped ?? 0}
+          total={result.total_statements ?? 0}
+          tableRows={[
+            { label: "Client ID", value: result.client_id, bold: true },
+            { label: "Client Name", value: result.client_name, bold: true },
+            ...(result.message ? [{ label: "Status", value: result.message }] : []),
+          ]}
+          actions={
+            <>
+              <Button variant="primary" onClick={() => navigate("/admin/client-onboarding")}>
+                <ArrowBackIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Back to Hub
+              </Button>
+              <Button
+                onClick={() => {
+                  setResult(null);
+                  setPhase("search");
+                }}
+              >
+                <EditIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Edit Another
+              </Button>
+            </>
+          }
+        />
       </div>
     );
   }
@@ -294,7 +262,7 @@ export default function ClientEdit() {
           <span className="toolbar-title">Edit Existing Client</span>
           <div className="toolbar-spacer" />
           <Button size="sm" onClick={() => navigate("/admin/client-onboarding")}>
-            <ArrowBackIcon sx={{ fontSize: 14 }} /> Back
+            <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
           </Button>
         </div>
 
@@ -318,93 +286,54 @@ export default function ClientEdit() {
         </span>
         <div className="toolbar-spacer" />
         <Button size="sm" variant="danger" onClick={() => setPhase("search")} disabled={executing}>
-          <RestartAltIcon sx={{ fontSize: 14 }} /> Start Over
+          <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Start Over
         </Button>
       </div>
 
       {globalError && <div className="onboarding-global-error">{globalError}</div>}
 
-      <StepProgress steps={STEPS} currentStep={currentStep} onStepClick={goToStep} skippedSteps={skippedSteps} />
+      <StepProgress
+        steps={EDIT_CLIENT_STEPS}
+        currentStep={currentStep}
+        onStepClick={goToStep}
+        skippedSteps={skippedSteps}
+      />
 
-      <div className="onboarding-step-content">
-        {currentStep === 0 && (
-          <StepGroupDetails
-            groupName={groupName}
-            setGroupName={setGroupName}
-            nextGroupId={editGroupId}
-            error={stepErrors[0] ?? null}
-          />
-        )}
-        {currentStep === 1 && (
-          <StepBeidMapping
-            mappings={beidMappings}
-            setMappings={setBeidMappings}
-            clientName={editClientName}
-            error={stepErrors[1] ?? null}
-          />
-        )}
-        {currentStep === 2 && (
-          <StepReportMapping
-            reports={reports}
-            reportsLoading={reportsLoading}
-            selectedReportIds={selectedReportIds}
-            setSelectedReportIds={setSelectedReportIds}
-            clientName={editClientName}
-            error={stepErrors[2] ?? null}
-          />
-        )}
-        {currentStep === 3 && (
-          <StepFastieAlias
-            aliases={fastieAliases}
-            setAliases={setFastieAliases}
-            clientName={editClientName}
-            error={stepErrors[3] ?? null}
-          />
-        )}
-        {currentStep === 4 && (
-          <StepEditPreview
-            clientId={editClientId!}
-            clientName={editClientName}
-            oldGroupName={originalGroup}
-            newGroupName={groupName}
-            beidDiff={{ added: diff.beidsAdded, removed: diff.beidsRemoved }}
-            reportDiff={{ added: diff.reportsAdded, removed: diff.reportsRemoved }}
-            aliasDiff={{ added: diff.aliasesAdded, removed: diff.aliasesRemoved }}
-            reports={reports}
-            totalStatements={diff.totalStatements}
-          />
-        )}
-      </div>
+      <EditClientStepContent
+        currentStep={currentStep}
+        editClientId={editClientId!}
+        editClientName={editClientName}
+        editGroupId={editGroupId}
+        groupName={groupName}
+        setGroupName={setGroupName}
+        beidMappings={beidMappings}
+        setBeidMappings={setBeidMappings}
+        selectedReportIds={selectedReportIds}
+        setSelectedReportIds={setSelectedReportIds}
+        fastieAliases={fastieAliases}
+        setFastieAliases={setFastieAliases}
+        reports={reports}
+        reportsLoading={reportsLoading}
+        stepErrors={stepErrors}
+        diff={diff}
+        originalGroup={originalGroup}
+      />
 
-      <div className="onboarding-nav-buttons">
-        {currentStep > 0 && (
-          <Button onClick={goBack}>
-            <ArrowBackIcon sx={{ fontSize: 16 }} /> Back
-          </Button>
-        )}
-        <div className="toolbar-spacer" />
-        {currentStep === 3 && (
-          <Button
-            variant="ghost"
-            disabled={fastieAliases.length > 0}
-            onClick={() => {
-              setSkippedSteps((prev) => new Set([...prev, 3]));
-              setCurrentStep(4);
-            }}
-          >
-            Skip →
-          </Button>
-        )}
-        {currentStep < STEPS.length - 1 ? (
-          <Button variant="primary" onClick={goNext}>
-            Next <ArrowForwardIcon sx={{ fontSize: 16 }} />
-          </Button>
-        ) : (
-          <Button variant="primary" onClick={() => setShowConfirm(true)} disabled={diff.totalStatements === 0}>
-            <CheckCircleOutlineIcon sx={{ fontSize: 16 }} /> Apply Changes
-          </Button>
-        )}
-      </div>
+      <WizardNavigation
+        currentStep={currentStep}
+        totalSteps={EDIT_CLIENT_STEPS.length}
+        onBack={goBack}
+        onNext={goNext}
+        onExecute={() => setShowConfirm(true)}
+        executeLabel="Apply Changes"
+        executeDisabled={diff.totalStatements === 0}
+        skippableStepIndex={EDIT_CLIENT_FASTIE_STEP_INDEX}
+        skipDisabled={fastieAliases.length > 0}
+        onSkip={() => {
+          setSkippedSteps((prev) => new Set([...prev, EDIT_CLIENT_FASTIE_STEP_INDEX]));
+          setCurrentStep(EDIT_CLIENT_REVIEW_STEP_INDEX);
+        }}
+      />
 
       <ConfirmDialog
         open={showConfirm}

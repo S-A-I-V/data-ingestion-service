@@ -1,15 +1,26 @@
+/**
+ * Ingest — Data transfer page for uploading CSV data into database tables.
+ *
+ * Steps:
+ *   1. Select target (connection + table + operation)
+ *   2. Upload CSV file
+ *   3. Map CSV columns to database columns
+ *   4. (Optional) AI analysis
+ *   5. Execute the transfer
+ */
 import { useState, useEffect, useRef } from "react";
 import api from "../api";
 import ExecStatsPanel, { fmtBytes, type ExecStats } from "../components/ingest/ExecStatsPanel";
 import CsvPreview from "../components/ingest/CsvPreview";
+import TargetSelector from "../components/ingest/TargetSelector";
+import FileUploader from "../components/ingest/FileUploader";
+import ColumnMapper from "../components/ingest/ColumnMapper";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
-import { Button, Badge, Panel, PanelHeader, PanelBody, FormRow, Spinner } from "../components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Button } from "../components/ui";
+import { STATUS_AUTO_DISMISS_MS, INGESTION_OPERATIONS, AI_SAMPLE_ROW_COUNT } from "../constants/ingest";
 import type { Connection, ColInfo } from "../types";
 
 export default function Ingest() {
@@ -26,7 +37,7 @@ export default function Ingest() {
   const [csvFileSize, setCsvFileSize] = useState(0);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [file, setFile] = useState<File | null>(null);
-  const [operation, setOperation] = useState("INSERT");
+  const [operation, setOperation] = useState<string>(INGESTION_OPERATIONS.INSERT);
   const [aiResult, setAiResult] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -41,6 +52,7 @@ export default function Ingest() {
       .catch(() => {})
       .finally(() => setConnsLoading(false));
   }, []);
+
   useEffect(() => {
     if (!connId) {
       setTables([]);
@@ -57,7 +69,7 @@ export default function Ingest() {
       .then((r) => {
         if (!abortCtrl.signal.aborted) setTables(r.data);
       })
-      .catch((err) => {
+      .catch(() => {
         if (!abortCtrl.signal.aborted) setStatus({ ok: false, msg: "Failed to load tables" });
       })
       .finally(() => {
@@ -65,6 +77,7 @@ export default function Ingest() {
       });
     return () => abortCtrl.abort();
   }, [connId]);
+
   useEffect(() => {
     if (!connId || !table) {
       setDbCols([]);
@@ -76,14 +89,15 @@ export default function Ingest() {
       .then((r) => {
         if (!abortCtrl.signal.aborted) setDbCols(r.data);
       })
-      .catch((err) => {
+      .catch(() => {
         if (!abortCtrl.signal.aborted) setDbCols([]);
       });
     return () => abortCtrl.abort();
   }, [connId, table]);
+
   useEffect(() => {
     if (status) {
-      const t = setTimeout(() => setStatus(null), 8000);
+      const t = setTimeout(() => setStatus(null), STATUS_AUTO_DISMISS_MS);
       return () => clearTimeout(t);
     }
   }, [status]);
@@ -121,7 +135,7 @@ export default function Ingest() {
     setCsvFileSize(0);
     setMapping({});
     setFile(null);
-    setOperation("INSERT");
+    setOperation(INGESTION_OPERATIONS.INSERT);
     setAiResult(null);
     setStatus(null);
     setExecStats(null);
@@ -139,7 +153,7 @@ export default function Ingest() {
         columns: Object.values(mapping),
         row_count: csvPreview.length,
         db_type: conn?.db_type || "postgres",
-        sample_data: csvPreview.slice(0, 3),
+        sample_data: csvPreview.slice(0, AI_SAMPLE_ROW_COUNT),
       });
       setAiResult(r.data.analysis);
     } catch {
@@ -182,244 +196,122 @@ export default function Ingest() {
   return (
     <>
       <div className={`container ${isLocked ? "ingest-locked" : ""}`}>
-        <>
-          <div className="toolbar">
-            <span className="toolbar-title">Data Transfer</span>
-            <div className="toolbar-spacer" />
-            {hasAnyState && (
-              <Button size="sm" onClick={clearAll} disabled={isLocked}>
-                <ClearAllIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> Clear All
-              </Button>
-            )}
-          </div>
-        </>
+        <div className="toolbar">
+          <span className="toolbar-title">Data Transfer</span>
+          <div className="toolbar-spacer" />
+          {hasAnyState && (
+            <Button size="sm" onClick={clearAll} disabled={isLocked}>
+              <ClearAllIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> Clear All
+            </Button>
+          )}
+        </div>
 
         {/* Step 1: Select Target */}
-        <>
-          <fieldset disabled={isLocked} className="panel-fieldset">
-            <Panel>
-              <PanelHeader>
-                <span className="step-num">1</span> Select Target
-              </PanelHeader>
-              {connsLoading ? (
-                <Spinner size="lg" label="Loading connections..." />
-              ) : (
-                <PanelBody>
-                  <FormRow label="Connection:">
-                    <Select
-                      value={connId ? String(connId) : "__none__"}
-                      onValueChange={(v) => setConnId(v === "__none__" ? null : +v)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a connection..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">Choose a connection...</SelectItem>
-                        {conns.map((c) => (
-                          <SelectItem key={c.id} value={String(c.id)}>
-                            {c.name} ({c.db_type})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormRow>
-                  <FormRow label="Table:">
-                    <Select
-                      value={table || "__none__"}
-                      onValueChange={(v) => setTable(v === "__none__" ? "" : v)}
-                      disabled={!connId || tablesLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={tablesLoading ? "Loading tables..." : "Choose a table..."} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">
-                          {tablesLoading ? "Loading tables..." : "Choose a table..."}
-                        </SelectItem>
-                        {tables.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {tablesLoading && <span className="field-spinner" />}
-                  </FormRow>
-                  <FormRow label="Operation:">
-                    <Select value={operation} onValueChange={setOperation}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="INSERT">INSERT</SelectItem>
-                        <SelectItem value="INSERT_SKIP">INSERT (Skip Duplicates)</SelectItem>
-                        <SelectItem value="UPDATE">UPDATE</SelectItem>
-                        <SelectItem value="UPSERT">UPSERT</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormRow>
-                </PanelBody>
-              )}
-            </Panel>
-          </fieldset>
-        </>
+        <fieldset disabled={isLocked} className="panel-fieldset">
+          <TargetSelector
+            connections={conns}
+            connectionsLoading={connsLoading}
+            selectedConnectionId={connId}
+            onConnectionChange={setConnId}
+            tables={tables}
+            tablesLoading={tablesLoading}
+            selectedTable={table}
+            onTableChange={setTable}
+            operation={operation}
+            onOperationChange={setOperation}
+          />
+        </fieldset>
 
         {/* Step 2: Upload CSV */}
         {table && (
-          <>
-            <fieldset disabled={isLocked} className="panel-fieldset">
-              <Panel>
-                <PanelHeader>
-                  <span className="step-num">2</span> Upload CSV
-                </PanelHeader>
-                <PanelBody>
-                  <div
-                    className="file-drop"
-                    onClick={() => !isLocked && fileRef.current?.click()}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (!isLocked && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-                    }}
-                  >
-                    <span className="drop-icon">
-                      {file ? <InsertDriveFileIcon sx={{ fontSize: 32 }} /> : <CloudUploadIcon sx={{ fontSize: 32 }} />}
-                    </span>
-                    {file ? file.name : "Drop your CSV file here, or click to browse"}
-                    <span className="drop-hint">
-                      {file ? `${csvTotalRows.toLocaleString()} rows · ${fmtBytes(csvFileSize)}` : ".csv files"}
-                    </span>
-                  </div>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".csv"
-                    hidden
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) handleFile(e.target.files[0]);
-                    }}
-                  />
-                </PanelBody>
-              </Panel>
-            </fieldset>
-          </>
+          <fieldset disabled={isLocked} className="panel-fieldset">
+            <FileUploader
+              file={file}
+              csvTotalRows={csvTotalRows}
+              csvFileSize={csvFileSize}
+              disabled={isLocked}
+              onFileSelect={handleFile}
+            />
+          </fieldset>
         )}
 
         {/* File Overview */}
         {file && csvTotalRows > 0 && (
-          <>
-            <div className="exec-stats-panel pre-stats">
-              <div className="panel-header">
-                <FolderOpenIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> File Overview
+          <div className="exec-stats-panel pre-stats">
+            <div className="panel-header">
+              <FolderOpenIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> File Overview
+            </div>
+            <div className="exec-stats-grid">
+              <div className="exec-stat-card">
+                <span className="exec-stat-value">{csvTotalRows.toLocaleString()}</span>
+                <span className="exec-stat-label">Total Rows</span>
               </div>
-              <div className="exec-stats-grid">
-                <div className="exec-stat-card">
-                  <span className="exec-stat-value">{csvTotalRows.toLocaleString()}</span>
-                  <span className="exec-stat-label">Total Rows</span>
-                </div>
-                <div className="exec-stat-card">
-                  <span className="exec-stat-value">{csvHeaders.length}</span>
-                  <span className="exec-stat-label">Columns</span>
-                </div>
-                <div className="exec-stat-card">
-                  <span className="exec-stat-value">{fmtBytes(csvFileSize)}</span>
-                  <span className="exec-stat-label">File Size</span>
-                </div>
-                <div className="exec-stat-card">
-                  <span className="exec-stat-value">
-                    {mappedCount}/{csvHeaders.length}
-                  </span>
-                  <span className="exec-stat-label">Mapped</span>
-                </div>
+              <div className="exec-stat-card">
+                <span className="exec-stat-value">{csvHeaders.length}</span>
+                <span className="exec-stat-label">Columns</span>
+              </div>
+              <div className="exec-stat-card">
+                <span className="exec-stat-value">{fmtBytes(csvFileSize)}</span>
+                <span className="exec-stat-label">File Size</span>
+              </div>
+              <div className="exec-stat-card">
+                <span className="exec-stat-value">
+                  {mappedCount}/{csvHeaders.length}
+                </span>
+                <span className="exec-stat-label">Mapped</span>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* Step 3: Column Mapping */}
         {csvHeaders.length > 0 && dbCols.length > 0 && (
-          <>
-            <fieldset disabled={isLocked} className="panel-fieldset">
-              <Panel>
-                <PanelHeader>
-                  <span className="step-num">3</span> Column Mapping
-                  <Badge variant="info" className="mapper-badge">
-                    {mappedCount}/{csvHeaders.length} mapped
-                  </Badge>
-                </PanelHeader>
-                <PanelBody>
-                  <div className="mapper-header">
-                    <span className="mapper-col-label">CSV Column</span>
-                    <span className="mapper-arrow-spacer" />
-                    <span className="mapper-col-label">Database Column</span>
-                  </div>
-                  {csvHeaders.map((h) => (
-                    <div className="mapper-row" key={h}>
-                      <span className="mapper-csv-name">{h}</span>
-                      <span className="mapper-arrow">→</span>
-                      <Select
-                        value={mapping[h] || "__skip__"}
-                        onValueChange={(v) => setMapping({ ...mapping, [h]: v === "__skip__" ? "" : v })}
-                      >
-                        <SelectTrigger className="mapper-select">
-                          <SelectValue placeholder="(skip)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__skip__">(skip)</SelectItem>
-                          {dbCols.map((c) => (
-                            <SelectItem key={c.name} value={c.name}>
-                              {c.name} ({c.type})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </PanelBody>
-              </Panel>
-            </fieldset>
-          </>
+          <fieldset disabled={isLocked} className="panel-fieldset">
+            <ColumnMapper
+              csvHeaders={csvHeaders}
+              dbColumns={dbCols}
+              mapping={mapping}
+              onMappingChange={setMapping}
+              mappedCount={mappedCount}
+            />
+          </fieldset>
         )}
 
         {/* AI Analysis */}
         {mappedCount > 0 && (
-          <>
-            <fieldset disabled={isLocked} className="panel-fieldset">
-              <div className="ai-panel">
-                <div className="ai-panel-header">
-                  <AutoFixHighIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> AI Query Analysis
-                </div>
-                <Button
-                  size="sm"
-                  onClick={analyze}
-                  disabled={aiLoading || isLocked}
-                  loading={aiLoading}
-                  loadingText="Analyzing..."
-                >
-                  Analyze before executing
-                </Button>
-                {aiResult && <div className="ai-result">{aiResult}</div>}
+          <fieldset disabled={isLocked} className="panel-fieldset">
+            <div className="ai-panel">
+              <div className="ai-panel-header">
+                <AutoFixHighIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> AI Query Analysis
               </div>
-            </fieldset>
-          </>
+              <Button
+                size="sm"
+                onClick={analyze}
+                disabled={aiLoading || isLocked}
+                loading={aiLoading}
+                loadingText="Analyzing..."
+              >
+                Analyze before executing
+              </Button>
+              {aiResult && <div className="ai-result">{aiResult}</div>}
+            </div>
+          </fieldset>
         )}
 
         {/* Execute */}
         {mappedCount > 0 && (
-          <>
-            <div className="exec-action-bar">
-              <Button
-                variant="primary"
-                onClick={execute}
-                disabled={isLocked}
-                loading={loading}
-                loadingText="Executing..."
-              >
-                <PlayArrowIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execute {operation}
-              </Button>
-              {status && <span className={`badge ${status.ok ? "badge-success" : "badge-failed"}`}>{status.msg}</span>}
-            </div>
-          </>
+          <div className="exec-action-bar">
+            <Button
+              variant="primary"
+              onClick={execute}
+              disabled={isLocked}
+              loading={loading}
+              loadingText="Executing..."
+            >
+              <PlayArrowIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execute {operation}
+            </Button>
+            {status && <span className={`badge ${status.ok ? "badge-success" : "badge-failed"}`}>{status.msg}</span>}
+          </div>
         )}
 
         {execStats && <ExecStatsPanel stats={execStats} />}

@@ -710,3 +710,22 @@
 .rm-editor-page .step-progress {
   margin-bottom: 0;
 }
+
+/* Preview statement params display */
+.rm-preview-stmt-params {
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--accent);
+  font-family: "Fira Code", monospace;
+}
+
+/* Report selector description text */
+.rm-selector-description {
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px;
+}
+
+/* Toast positioned at top of canvas */
+.rm-toast-top {
+  top: 16px;
+}
