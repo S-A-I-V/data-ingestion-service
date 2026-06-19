@@ -1,0 +1,200 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Email Discrepancy Audit — Styles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Summary stat cards */
+.email-disc-summary {
+  display: flex;
+  gap: 0;
+  flex-wrap: nowrap;
+  margin: 12px 0;
+  width: 100%;
+}
+
+.email-disc-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--card-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  flex: 1;
+}
+
+.email-disc-stat:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.email-disc-stat:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.email-disc-stat:not(:last-child) {
+  border-right: none;
+}
+
+.email-disc-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text, #fff);
+  padding-right: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  margin-right: 2px;
+}
+
+.email-disc-stat-label {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.email-disc-stat--warning .email-disc-stat-value {
+  color: #f59e0b;
+}
+
+.email-disc-stat--info .email-disc-stat-value {
+  color: var(--accent, #0fb1b2);
+}
+
+/* Action bar */
+.email-disc-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.email-disc-selected-count {
+  font-size: 0.82rem;
+  opacity: 0.7;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(15, 177, 178, 0.1);
+  color: var(--accent, #0fb1b2);
+}
+
+/* Table cell highlights */
+.email-disc-cell--correct {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.email-disc-cell--stale {
+  color: #ef4444;
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+/* Selected row */
+.email-disc-row--selected {
+  background: rgba(15, 177, 178, 0.06) !important;
+}
+
+/* Fix preview modal overlay */
+.email-disc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.email-disc-modal {
+  background: var(--card-bg, #1a1a2e);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 14px;
+  padding: 28px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.email-disc-modal h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.email-disc-modal-desc {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin: 0 0 16px;
+}
+
+.email-disc-modal-summary {
+  display: flex;
+  gap: 16px;
+  margin: 12px 0;
+  font-size: 0.85rem;
+}
+
+.email-disc-modal-summary span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.email-disc-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* Status badges */
+.email-disc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.email-disc-badge--ready {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.email-disc-badge--warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+/* Warning box */
+.email-disc-warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  font-size: 0.82rem;
+  margin: 12px 0;
+}
+
+/* Results body */
+.email-disc-results-body {
+  padding: 16px;
+}
+
+.email-disc-results-body details {
+  margin: 12px 0;
+}
+
+.email-disc-results-body summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}

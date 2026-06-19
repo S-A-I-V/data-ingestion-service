@@ -558,7 +558,13 @@
 
 .audit-modal-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.audit-modal-actions .download-btn-container {
+  width: 110px;
+  flex-shrink: 0;
 }
 
 .audit-modal-body {
@@ -1334,6 +1340,7 @@
 .download-btn-label.active .download-btn-title {
   opacity: 0;
   visibility: hidden;
+  transition: none;
 }
 
 .download-btn-label.active .download-btn-title-done {

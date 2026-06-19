@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 
 interface Props {
   permissions: string[];
@@ -39,6 +40,15 @@ const ADMIN_TOOLS = [
     to: "/admin/report-mapping",
     color: "#f59e0b",
     bg: "rgba(245, 158, 11, 0.1)",
+  },
+  {
+    permission: "admin:email_discrepancy_audit",
+    title: "Email Discrepancy Audit",
+    description: "Scan CPR vs NFC to find email mismatches. Preview and batch-fix stale emails in the users table.",
+    icon: SyncProblemIcon,
+    to: "/admin/email-discrepancy",
+    color: "#a855f7",
+    bg: "rgba(168, 85, 247, 0.1)",
   },
 ];
 

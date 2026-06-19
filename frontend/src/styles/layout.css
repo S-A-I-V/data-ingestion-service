@@ -11,6 +11,13 @@
   color: var(--text-primary);
   letter-spacing: -0.3px;
 }
+.toolbar-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.5));
+  margin-left: 12px;
+  align-self: center;
+}
 .toolbar-separator {
   width: 1px;
   height: 20px;

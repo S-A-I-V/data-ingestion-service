@@ -15,6 +15,7 @@ import ReportMappingHub from "./pages/ReportMappingHub";
 import ReportMappingEditor from "./pages/ReportMappingEditor";
 import ReportMappingLiveEdit from "./pages/ReportMappingLiveEdit";
 import Admin from "./pages/Admin";
+import EmailDiscrepancyAudit from "./pages/EmailDiscrepancyAudit";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
@@ -96,6 +97,9 @@ export default function App() {
         )}
         {user.permissions?.includes("admin:associate_lookup") && (
           <Route path="/admin/associate-lookup" element={<AssociateLookup />} />
+        )}
+        {user.permissions?.includes("admin:email_discrepancy_audit") && (
+          <Route path="/admin/email-discrepancy" element={<EmailDiscrepancyAudit />} />
         )}
         {user.permissions?.includes("admin:client_onboarding") && (
           <Route path="/admin/client-onboarding" element={<ClientOnboardingHub />} />
