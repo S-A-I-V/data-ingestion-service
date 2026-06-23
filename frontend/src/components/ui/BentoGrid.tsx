@@ -9,8 +9,8 @@ interface BentoCardProps {
   Icon: React.ComponentType<{ className?: string }>;
   name: string;
   description: string;
-  cta: string;
-  href: string;
+  cta?: string;
+  href?: string;
   background: ReactNode;
   className?: string;
 }
@@ -25,9 +25,6 @@ export function BentoCard({ Icon, name, description, cta, href, background, clas
           <h3 className="bento-card__name">{name}</h3>
         </div>
         <p className="bento-card__desc">{description}</p>
-        <a href={href} className="bento-card__cta">
-          {cta} →
-        </a>
       </div>
     </div>
   );

@@ -5,10 +5,38 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BentoGrid, BentoCard } from "./ui/BentoGrid";
 import { ConnectorMarquee } from "./bento/ConnectorMarquee";
 import { IngestionPulse } from "./bento/IngestionPulse";
-import { PipelineBeam } from "./bento/PipelineBeam";
+import IconCloud from "./bento/IconCloud";
 import { SqlPreview } from "./bento/SqlPreview";
 
 gsap.registerPlugin(ScrollTrigger);
+
+/** Database icons for the 3D cloud — uses local icons from /images/db-icons/ */
+const DB_CLOUD_ICONS = [
+  "/images/db-icons/postgresql.png",
+  "/images/db-icons/mysql.png",
+  "/images/db-icons/clickhouse.png",
+  "/images/db-icons/snowflake.png",
+  "/images/db-icons/bigquery.png",
+  "/images/db-icons/oracle.png",
+  "/images/db-icons/mssql.png",
+  "/images/db-icons/mariadb.png",
+  "/images/db-icons/elasticsearch.png",
+  "/images/db-icons/hive.png",
+  "/images/db-icons/spark.png",
+  "/images/db-icons/db2.png",
+  "/images/db-icons/sybase.png",
+  "/images/db-icons/vertica.png",
+  "/images/db-icons/duckdb.png",
+  "/images/db-icons/cockroachdb.png",
+  "/images/db-icons/trino.png",
+  "/images/db-icons/athena.png",
+  "/images/db-icons/csv.png",
+  "/images/db-icons/firebird.png",
+  "/images/db-icons/greenplum.png",
+  "/images/db-icons/presto.png",
+  "/images/db-icons/teradata.png",
+  "/images/db-icons/tidb.png",
+];
 
 function DatabaseIcon({ className }: { className?: string }) {
   return (
@@ -54,8 +82,6 @@ const FEATURES = [
     Icon: DatabaseIcon,
     name: "30+ Connectors",
     description: "Connect to any database — SQL, NoSQL, cloud warehouses, and file formats out of the box.",
-    href: "#",
-    cta: "Browse connectors",
     className: "bento-card--tall",
     background: <ConnectorMarquee />,
   },
@@ -63,8 +89,6 @@ const FEATURES = [
     Icon: BoltIcon,
     name: "Real-time Ingestion",
     description: "Monitor live data pipelines with row-level status, error tracking, and auto-retry.",
-    href: "#",
-    cta: "See how it works",
     className: "bento-card--short",
     background: <IngestionPulse />,
   },
@@ -72,19 +96,15 @@ const FEATURES = [
     Icon: CodeIcon,
     name: "SQL-first Interface",
     description: "Write raw SQL or let the engine generate it. Full control, no black boxes.",
-    href: "#",
-    cta: "Open query editor",
     className: "bento-card--short",
     background: <SqlPreview />,
   },
   {
     Icon: ShareIcon,
-    name: "Pipeline Routing",
-    description: "Route data from multiple sources to any target with zero-config fan-out.",
-    href: "#",
-    cta: "Explore pipelines",
+    name: "Data Ecosystem",
+    description: "Seamlessly integrate with your entire data stack — from legacy Sybase to modern cloud warehouses.",
     className: "bento-card--tall",
-    background: <PipelineBeam />,
+    background: <IconCloud images={DB_CLOUD_ICONS} radius={100} iconSize={32} />,
   },
 ];
 

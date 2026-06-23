@@ -388,74 +388,6 @@
   color: #0fb1b2;
 }
 
-/* ===== PIPELINE BEAM ===== */
-
-.pipeline-beam {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 24px;
-  overflow: hidden;
-}
-
-.pipeline-beam__layout {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 380px;
-  height: 180px;
-  gap: 16px;
-}
-
-.pipeline-beam__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.pipeline-circle {
-  z-index: 10;
-  display: flex;
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 10, 15, 0.9);
-  padding: 8px;
-  box-shadow: 0 0 16px -6px rgba(15, 177, 178, 0.4);
-}
-
-.pipeline-circle--hub {
-  width: 56px;
-  height: 56px;
-  border-color: rgba(15, 177, 178, 0.4);
-  box-shadow: 0 0 24px -4px rgba(15, 177, 178, 0.5);
-  border-radius: 12px;
-}
-
-.pipeline-circle img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-.animated-beam__svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
 /* ===== SQL PREVIEW ===== */
 
 .bento-sql-split {
@@ -545,4 +477,41 @@
   50% {
     opacity: 0;
   }
+}
+
+/* ===== ICON CLOUD ===== */
+
+.icon-cloud {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 800px;
+  cursor: grab;
+  padding: 40px;
+  overflow: hidden;
+}
+
+.icon-cloud:active {
+  cursor: grabbing;
+}
+
+.icon-cloud-item {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.1s ease;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.icon-cloud-item img {
+  border-radius: 8px;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
 }
