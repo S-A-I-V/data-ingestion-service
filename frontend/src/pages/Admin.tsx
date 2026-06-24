@@ -17,7 +17,7 @@ const ADMIN_TOOLS = [
   {
     permission: "admin:associate_lookup",
     title: "Associate Lookup",
-    description: "Query the Sybase REDACTED_DB for associate and business entity data by BEID or DMZID.",
+    description: "Query the Sybase CustomerRepository for associate and business entity data by BEID or DMZID.",
     icon: SearchIcon,
     to: "/admin/associate-lookup",
     color: "var(--accent)",

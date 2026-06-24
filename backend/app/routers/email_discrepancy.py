@@ -4,8 +4,8 @@ Email Discrepancy Audit — Admin-only tool.
 Starts from the NFC Prod users table (source of truth for onboarded users),
 then queries CPR for only those associate IDs to compare emails:
   1. NFC Prod public.users — our onboarded users with their current email
-  2. REDACTED_DB.dbo.Associate — DMZID (originally onboarded email)
-  3. REDACTED_DB.dbo.AssociateEmailAccount — actual current CPR email
+  2. CustomerRepository.dbo.Associate — DMZID (originally onboarded email)
+  3. CustomerRepository.dbo.AssociateEmailAccount — actual current CPR email
 
 Identifies:
   - NFC users whose email differs from their current CPR email (mismatch)
@@ -66,7 +66,7 @@ SELECT
     a.firstName,
     a.lastName,
     a.DMZID
-FROM REDACTED_DB.dbo.Associate a
+FROM CustomerRepository.dbo.Associate a
 WHERE a.associateID IN ({placeholders})
 """
 
@@ -77,7 +77,7 @@ SELECT
     ae.emailAddress,
     ae.emailTypeCode,
     ae.sequenceNumber
-FROM REDACTED_DB.dbo.AssociateEmailAccount ae
+FROM CustomerRepository.dbo.AssociateEmailAccount ae
 WHERE ae.associateID IN ({placeholders})
 """
 

@@ -1,7 +1,7 @@
 """
 Associate Lookup — Admin-only tool.
 
-Queries the Sybase REDACTED_DB database for associate/business entity
+Queries the Sybase CustomerRepository database for associate/business entity
 data by businessEntityID. Requires 'admin:associate_lookup' permission.
 """
 
@@ -63,8 +63,8 @@ SELECT
     b.lastUpdateDateTime AS businessEntityLastUpdateDateTime,
     b.status AS businessEntityStatus,
     b.answersUID AS businessEntityAnswersUID
-FROM REDACTED_DB.dbo.Associate a
-INNER JOIN REDACTED_DB.dbo.BusinessEntity b
+FROM CustomerRepository.dbo.Associate a
+INNER JOIN CustomerRepository.dbo.BusinessEntity b
     ON a.businessEntityID = b.businessEntityID
 WHERE a.businessEntityID = :beid
     AND a.isDisabledFlag != '1'
@@ -107,8 +107,8 @@ SELECT
     b.lastUpdateDateTime AS businessEntityLastUpdateDateTime,
     b.status AS businessEntityStatus,
     b.answersUID AS businessEntityAnswersUID
-FROM REDACTED_DB.dbo.Associate a
-INNER JOIN REDACTED_DB.dbo.BusinessEntity b
+FROM CustomerRepository.dbo.Associate a
+INNER JOIN CustomerRepository.dbo.BusinessEntity b
     ON a.businessEntityID = b.businessEntityID
 WHERE a.DMZID = :dmzid
     AND a.isDisabledFlag != '1'
@@ -228,7 +228,7 @@ def lookup_associates(
     db: Session = Depends(get_db),
 ):
     """
-    Query associates by businessEntityID(s) or DMZID (email) from REDACTED_DB.
+    Query associates by businessEntityID(s) or DMZID (email) from CustomerRepository.
     Provide either beid (comma-separated for multiple) or dmzid.
     """
     if not beid and not dmzid:

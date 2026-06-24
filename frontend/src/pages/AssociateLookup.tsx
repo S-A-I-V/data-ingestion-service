@@ -173,7 +173,7 @@ export default function AssociateLookup() {
         </div>
       </Panel>
 
-      {loading && <Spinner size="lg" label="Querying REDACTED_DB..." />}
+      {loading && <Spinner size="lg" label="Querying CustomerRepository..." />}
       {validationError && <div className="lookup-error-badge">{validationError}</div>}
       {error && <div className="lookup-error-badge">{error}</div>}
 
