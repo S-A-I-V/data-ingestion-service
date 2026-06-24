@@ -32,6 +32,7 @@ from app.routers.auth import limiter
 from app.services.connection_status import mark_connection_active, mark_connection_failed
 from app.services.connectors.specialty import SybaseConnectionError
 from app.services.db_connector import get_connector
+from app.services.metrics import refresh_metrics_view
 from app.services.rbac import require_permission
 
 logger = logging.getLogger(__name__)
@@ -597,6 +598,7 @@ def batch_fix_emails(
     audit.seal(last.record_hash if last else None)
     db.add(audit)
     db.commit()
+    refresh_metrics_view(db)
 
     return {
         "mode": "executed",
