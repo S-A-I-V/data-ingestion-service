@@ -15,7 +15,7 @@ authlib==1.3.2
 itsdangerous==2.2.0
 psutil==5.9.8
 bcrypt==4.2.0
-slowapi==0.1.9
+slowapi==0.1.10
 cryptography==44.0.0
 
 # Core (most commonly used)
