@@ -19,7 +19,8 @@ import bcrypt
 from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError
 from pydantic import BaseModel, EmailStr
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -148,7 +149,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
         raise HTTPException(401, "Not authenticated")
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-    except JWTError as exc:
+    except (PyJWTError, Exception) as exc:
         raise HTTPException(401, "Invalid or expired token") from exc
     user = db.query(User).filter(User.id == payload["sub"]).first()
     if not user:

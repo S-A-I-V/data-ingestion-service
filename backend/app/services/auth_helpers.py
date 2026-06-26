@@ -8,8 +8,8 @@ import re
 from datetime import datetime, timedelta
 
 import bcrypt
+import jwt
 from fastapi import HTTPException
-from jose import jwt
 from sqlalchemy.orm import Session
 
 from app.config import settings
