@@ -76,6 +76,13 @@
   margin: 0;
 }
 
+.ingest-execute-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
 .panel-fieldset:disabled {
   opacity: 0.5;
   filter: grayscale(0.3);

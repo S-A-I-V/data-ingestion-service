@@ -55,6 +55,14 @@ class Settings(BaseSettings):
     AUDIT_RETENTION_DAYS: int = 365
     AUDIT_PARTITION_INTERVAL: str = "monthly"  # monthly | quarterly
 
+    # ── Admin Tool Connections ─────────────────────────────────────────────────
+    NFC_PROD_HOST: str = ""
+    NFC_PROD_PORT: int = 5432
+    NFC_PROD_DB: str = ""
+    LOOKUP_HOST: str = ""
+    LOOKUP_PORT: int = 2125
+    LOOKUP_DB: str = ""
+
     @field_validator("SECRET_KEY")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:

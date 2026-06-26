@@ -7,16 +7,16 @@ Set them in .env or via environment:
   - LOOKUP_HOST, LOOKUP_PORT, LOOKUP_DB
 """
 
-import os
+from app.config import settings
 
 # ── NFC Prod Database (Client Onboarding) ────────────────────────────────────
 
-NFC_PROD_HOST = os.environ.get("NFC_PROD_HOST", "")
-NFC_PROD_PORT = int(os.environ.get("NFC_PROD_PORT", "5432"))
-NFC_PROD_DB = os.environ.get("NFC_PROD_DB", "")
+NFC_PROD_HOST = settings.NFC_PROD_HOST
+NFC_PROD_PORT = settings.NFC_PROD_PORT
+NFC_PROD_DB = settings.NFC_PROD_DB
 
 # ── Customer Repository / Associate Lookup (Sybase) ──────────────────────────
 
-LOOKUP_HOST = os.environ.get("LOOKUP_HOST", "")
-LOOKUP_PORT = int(os.environ.get("LOOKUP_PORT", "2125"))
-LOOKUP_DB = os.environ.get("LOOKUP_DB", "")
+LOOKUP_HOST = settings.LOOKUP_HOST
+LOOKUP_PORT = settings.LOOKUP_PORT
+LOOKUP_DB = settings.LOOKUP_DB
