@@ -88,7 +88,13 @@ export default function JobsTab({ jobs }: Props) {
                         {job.delayed_required_runs > 0 && (
                           <>
                             <span style={{ color: "var(--text-muted)" }}> · </span>
-                            <span style={{ color: "var(--warning)" }}>{job.delayed_required_runs} delayed</span>
+                            <span
+                              style={{
+                                color: job.delay_status === "client_delayed" ? "var(--danger)" : "var(--warning)",
+                              }}
+                            >
+                              {job.delayed_required_runs} delayed
+                            </span>
                           </>
                         )}
                       </div>
@@ -231,7 +237,12 @@ function PerRunTable({ job }: { job: ReportJob }) {
                 <td
                   style={{
                     padding: "4px 8px",
-                    color: run.delay_status.includes("delayed") ? "var(--warning)" : "var(--text-muted)",
+                    color:
+                      run.delay_status === "client_delayed"
+                        ? "var(--danger)"
+                        : run.delay_status === "internal_delayed"
+                          ? "var(--warning)"
+                          : "var(--text-muted)",
                   }}
                 >
                   {run.delay_status.includes("delayed") ? run.delay_status.replace("_", " ") : "—"}
