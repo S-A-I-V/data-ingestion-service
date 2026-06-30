@@ -49,9 +49,11 @@ function fmtDate(iso: string) {
 function fmtUtc(ts: string | null | undefined) {
   if (!ts) return "—";
   const d = new Date(ts);
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const mon = d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
   const hh = String(d.getUTCHours()).padStart(2, "0");
   const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
+  return `${day} ${mon}, ${hh}:${mm}`;
 }
 
 function fmtDelay(mins: number) {
@@ -371,12 +373,14 @@ export default function ReportHealthDashboard() {
       {!loading && filtered.length > 0 && (
         <div className="rh-col-headers">
           <span className="rh-col--name">Report · App · Client</span>
-          <span className="rh-col--status">Status</span>
-          <span className="rh-col--delay">Delay</span>
-          <span className="rh-col--bar">Progress</span>
-          <span className="rh-col--dur">Dur.</span>
-          <span className="rh-col--sla">SLA</span>
-          <span className="rh-col--date">Data Date</span>
+          <span className="rh-col--status">Delivery Status</span>
+          <span className="rh-col--delay">Delay Status</span>
+          <span className="rh-col--bar">Steps Progress</span>
+          <span className="rh-col--dur">Delay Duration</span>
+          <span className="rh-col--sla">BAM Deadline</span>
+          <span className="rh-col--time">Report Start</span>
+          <span className="rh-col--time">Report End</span>
+          <span className="rh-col--date">Data Date · Coverage</span>
         </div>
       )}
 
@@ -463,14 +467,26 @@ export default function ReportHealthDashboard() {
               {/* BAM SLA — UTC only */}
               <div className="rh-col--sla" style={{ color: slaOver ? "var(--danger)" : undefined, fontSize: 11 }}>
                 {r.bam_sla ? fmtUtc(r.bam_sla) : "—"}
-                {slaOver && <span title="SLA breached">⚠</span>}
+              </div>
+
+              {/* Report Start */}
+              <div className="rh-col--time" style={{ fontSize: 11 }}>
+                {r.report_start_time ? fmtUtc(r.report_start_time) : "—"}
+              </div>
+
+              {/* Report End */}
+              <div
+                className="rh-col--time"
+                style={{ fontSize: 11, color: r.report_end_time ? "var(--success)" : undefined }}
+              >
+                {r.report_end_time ? fmtUtc(r.report_end_time) : "—"}
               </div>
 
               {/* Data date + coverage window */}
               <div className="rh-col--date" style={{ fontSize: 11 }}>
                 {r.data_date}
                 {r.coverage_end_date && r.coverage_end_date !== r.data_date ? (
-                  <span style={{ display: "block", opacity: 0.7 }}>→{r.coverage_end_date}</span>
+                  <span style={{ opacity: 0.7 }}> →{r.coverage_end_date}</span>
                 ) : null}
               </div>
             </div>

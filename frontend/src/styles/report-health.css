@@ -299,6 +299,13 @@
   white-space: nowrap;
   padding: 0 10px;
 }
+.rh-col--time {
+  flex: 0.8 1 55px;
+  min-width: 50px;
+  white-space: nowrap;
+  padding: 0 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
 .rh-row:hover {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.07);

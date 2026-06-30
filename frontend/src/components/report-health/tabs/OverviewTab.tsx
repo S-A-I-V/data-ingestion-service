@@ -124,7 +124,7 @@ export default function OverviewTab({ payload }: Props) {
       {delayedJobs.length > 0 && (
         <div className={alertCls}>
           <div className="rh-alert-title">
-            ⚠ {r.report_delay_status === "client_delayed" ? "Client Delayed" : "Internal Delay"} · {delayedJobs.length}{" "}
+            {r.report_delay_status === "client_delayed" ? "Client Delayed" : "Internal Delay"} · {delayedJobs.length}{" "}
             blocking job{delayedJobs.length > 1 ? "s" : ""}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>
