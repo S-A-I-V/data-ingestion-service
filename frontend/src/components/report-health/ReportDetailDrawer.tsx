@@ -14,10 +14,11 @@ import TimelineTab from "./tabs/TimelineTab";
 
 interface Props {
   payload: ReportHealthPayload;
+  loading?: boolean;
   onClose: () => void;
 }
 
-export default function ReportDetailDrawer({ payload, onClose }: Props) {
+export default function ReportDetailDrawer({ payload, loading = false, onClose }: Props) {
   const [tab, setTab] = useState<string>(DRAWER_TAB.OVERVIEW);
   const [drawerWidth, setDrawerWidth] = useState(50);
   const { report: r, jobs } = payload;
@@ -107,9 +108,18 @@ export default function ReportDetailDrawer({ payload, onClose }: Props) {
 
         {/* Body */}
         <div className="rh-drawer-body">
-          {tab === DRAWER_TAB.OVERVIEW && <OverviewTab payload={payload} />}
-          {tab === DRAWER_TAB.JOBS && <JobsTab jobs={jobs} />}
-          {tab === DRAWER_TAB.TIMELINE && <TimelineTab jobs={jobs} />}
+          {loading ? (
+            <div className="rh-drawer-loading">
+              <div className="rh-spin" />
+              <span>Loading job data…</span>
+            </div>
+          ) : (
+            <>
+              {tab === DRAWER_TAB.OVERVIEW && <OverviewTab payload={payload} />}
+              {tab === DRAWER_TAB.JOBS && <JobsTab jobs={jobs} />}
+              {tab === DRAWER_TAB.TIMELINE && <TimelineTab jobs={jobs} />}
+            </>
+          )}
         </div>
       </aside>
     </>

@@ -45,7 +45,7 @@ SELECT
     rls.coverage_end_date,
     rls.updated_at
 FROM report_live_state rls
-WHERE CAST(rls.delivery_date AS date) = CAST(:delivery_date AS date)
+WHERE CAST(rls.delivery_date AS date) BETWEEN CAST(:delivery_date_from AS date) AND CAST(:delivery_date_to AS date)
 ORDER BY
     -- Delayed first, then in-progress, then scheduled, then done
     CASE rls.report_delay_status
@@ -174,4 +174,41 @@ SELECT
 FROM sla_policies sp
 WHERE sp.entity_name = ANY(:entity_names)
   AND sp.entity_type = 'job'
+"""
+
+
+# ── Single report live state (for detail endpoint) ────────────────────────────
+
+REPORT_LIVE_STATE_BY_PK = """
+SELECT
+    rls.report_id,
+    rls.report_name,
+    rls.application_name,
+    rls.data_date,
+    rls.delivery_date,
+    rls.client_name,
+    rls.report_delivery_status,
+    rls.report_delay_status,
+    rls.report_delay_duration_minutes,
+    rls.total_no_of_steps,
+    rls.no_of_completed_steps,
+    rls.no_of_running_steps,
+    rls.no_of_delayed_steps,
+    rls.bam_sla,
+    rls.report_start_time,
+    rls.report_end_time,
+    rls.sev1_numbers,
+    rls.sev1_urls,
+    rls.delayed_job_name,
+    rls.report_metadata,
+    rls.workflow_coordinates,
+    rls.coverage_start_date,
+    rls.coverage_end_date,
+    rls.updated_at
+FROM report_live_state rls
+WHERE rls.report_id = :report_id
+  AND CAST(rls.data_date AS date) = CAST(:data_date AS date)
+  AND CAST(rls.delivery_date AS date) = CAST(:delivery_date AS date)
+  AND rls.client_name = :client_name
+LIMIT 1
 """

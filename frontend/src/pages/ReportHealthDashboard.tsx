@@ -148,6 +148,7 @@ export default function ReportHealthDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [selected, setSelected] = useState<ReportHealthPayload | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [toast, setToast] = useToast();
 
   // Derived delivery date strings from range
@@ -161,11 +162,19 @@ export default function ReportHealthDashboard() {
       if (!silent) setLoading(true);
       setError(null);
       try {
-        const res = await api.get<ReportHealthPayload[]>("/admin/report-health/", {
-          params: { delivery_date: deliveryDateFrom },
-        });
+        const params: Record<string, string> = { delivery_date: deliveryDateFrom };
+        if (deliveryDateTo !== deliveryDateFrom) {
+          params.delivery_date_to = deliveryDateTo;
+        }
+        const res = await api.get<ReportHealthPayload[]>("/admin/report-health/", { params });
         setReports(res.data ?? []);
         setLastRefreshed(new Date());
+        // Reset filters on fresh data load so stale filters don't hide new results
+        if (!silent) {
+          setSearch("");
+          setAppFilter(APP_FILTER_ALL_VALUE);
+          setStatusFilter("all");
+        }
       } catch (e: any) {
         const status = e.response?.status;
         const detail = e.response?.data?.detail;
@@ -180,7 +189,7 @@ export default function ReportHealthDashboard() {
       }
       if (!silent) setLoading(false);
     },
-    [deliveryDateFrom, setToast],
+    [deliveryDateFrom, deliveryDateTo, setToast],
   );
 
   // Initial load + re-fetch on date change
@@ -194,6 +203,33 @@ export default function ReportHealthDashboard() {
     const id = setInterval(() => fetch_(true), REPORT_HEALTH_POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, [fetch_]);
+
+  // ── Detail fetch (on-demand when report row is clicked) ──
+
+  const fetchDetail = useCallback(
+    async (payload: ReportHealthPayload) => {
+      const r = payload.report;
+      // Open drawer immediately with report-level data (no jobs yet)
+      setSelected(payload);
+      setDetailLoading(true);
+      try {
+        const res = await api.get<ReportHealthPayload>(`/admin/report-health/${r.report_id}/detail`, {
+          params: {
+            data_date: r.data_date,
+            delivery_date: r.delivery_date,
+            client_name: r.client_name ?? "",
+          },
+        });
+        setSelected(res.data);
+      } catch (e: any) {
+        const detail = e.response?.data?.detail;
+        setToast({ ok: false, msg: detail || "Failed to load report detail." });
+        // Keep drawer open with report-level data
+      }
+      setDetailLoading(false);
+    },
+    [setToast],
+  );
 
   // ── Derived ──────────────────────────────────────────────
 
@@ -417,10 +453,10 @@ export default function ReportHealthDashboard() {
             <div
               key={`${r.report_id}-${r.data_date}-${r.client_name}`}
               className={`rh-row${isSel ? " rh-row--selected" : ""}${isCrit ? " rh-row--critical" : isWarn ? " rh-row--warning" : ""}`}
-              onClick={() => setSelected(payload)}
+              onClick={() => fetchDetail(payload)}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && setSelected(payload)}
+              onKeyDown={(e) => e.key === "Enter" && fetchDetail(payload)}
             >
               {/* Name + meta */}
               <div className="rh-col--name">
@@ -494,7 +530,7 @@ export default function ReportHealthDashboard() {
         })}
 
       {/* ── Detail drawer ── */}
-      {selected && <ReportDetailDrawer payload={selected} onClose={() => setSelected(null)} />}
+      {selected && <ReportDetailDrawer payload={selected} loading={detailLoading} onClose={() => setSelected(null)} />}
 
       <Toast toast={toast} />
     </div>

@@ -29,6 +29,7 @@ from app.services.report_health.queries import (
     JOB_LIVE_STATE_WINDOW_TEMPLATE,
     REPORT_JOB_MAPPING_TEMPLATE,
     REPORT_LIVE_STATE_BY_DELIVERY_DATE,
+    REPORT_LIVE_STATE_BY_PK,
     SEV1_INCIDENTS_TEMPLATE,
 )
 from app.services.report_health.schema import (
@@ -316,31 +317,33 @@ def _build_job_response(
 def assemble_report_health_payloads(
     connector: Any,
     delivery_date: date,
+    delivery_date_to: date | None = None,
 ) -> list[ReportHealthPayload]:
     """
-    Main entry point: fetch and assemble all report health data for a delivery date.
+    Main entry point: fetch report-level health data for a delivery date (range).
 
-    Executes queries against nfc_prod in dependency order, then joins
-    results in memory to avoid complex cross-table SQL and keep each query
-    independently testable.
+    Returns lightweight payloads WITHOUT job detail — jobs are loaded on-demand
+    via assemble_single_report_detail() when the user clicks a report row.
 
     Args:
         connector: A db connector with execute_query(sql, params) → list[dict]
-        delivery_date: The delivery date to filter on (report_live_state.delivery_date)
+        delivery_date: The delivery date start to filter on
+        delivery_date_to: Optional end date for range queries (defaults to delivery_date)
 
     Returns:
-        List of ReportHealthPayload, one per report_live_state row.
+        List of ReportHealthPayload, one per report_live_state row (jobs list is empty).
 
     Raises:
         HTTPException 404: No reports found for this delivery date.
-        HTTPException 500: Query failure on any table.
+        HTTPException 500: Query failure.
     """
 
     # ── Step 1: report_live_state ─────────────────────────────────────────────
+    resolved_to = delivery_date_to or delivery_date
     try:
         raw_report_rows = connector.execute_query(
             REPORT_LIVE_STATE_BY_DELIVERY_DATE,
-            {"delivery_date": str(delivery_date)},
+            {"delivery_date_from": str(delivery_date), "delivery_date_to": str(resolved_to)},
         )
     except Exception as exc:
         logger.error("report_live_state query failed: %s", exc)
@@ -350,191 +353,15 @@ def assemble_report_health_payloads(
         ) from exc
 
     if not raw_report_rows:
+        date_label = str(delivery_date) if delivery_date == resolved_to else f"{delivery_date} to {resolved_to}"
         raise HTTPException(
             status_code=404,
-            detail=f"No reports scheduled for delivery on {delivery_date}.",
+            detail=f"No reports scheduled for delivery on {date_label}.",
         )
 
-    # ── Step 2: collect IDs needed for downstream queries ────────────────────
-    all_report_ids: list[int] = [r["report_id"] for r in raw_report_rows]
-
-    # ── Step 3: report_job_mapping ────────────────────────────────────────────
-    try:
-        placeholders, params = _build_in_clause("rid", all_report_ids)
-        mapping_sql = REPORT_JOB_MAPPING_TEMPLATE.format(report_id_placeholders=placeholders)
-        raw_mapping_rows = connector.execute_query(mapping_sql, params)
-    except Exception as exc:
-        logger.error("report_job_mapping query failed: %s", exc)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to query report-job mapping from NFC Prod.",
-        ) from exc
-
-    # Index: report_id → [mapping_row, ...]
-    mappings_by_report_id: dict[int, list[dict]] = _index_multi_by(raw_mapping_rows, "report_id")
-
-    all_job_ids: list[int] = list({r["job_id"] for r in raw_mapping_rows if r.get("job_id")})
-    all_job_names: list[str] = list({r["job_name"] for r in raw_mapping_rows if r.get("job_name")})
-
-    if not all_job_ids:
-        # Reports exist but no jobs mapped — return report-level data only
-        return _build_payloads_without_jobs(raw_report_rows)
-
-    # ── Step 4: job_definitions ───────────────────────────────────────────────
-    try:
-        placeholders, params = _build_in_clause("jid", all_job_ids)
-        definitions_sql = JOB_DEFINITIONS_TEMPLATE.format(job_id_placeholders=placeholders)
-        raw_definition_rows = connector.execute_query(definitions_sql, params)
-    except Exception as exc:
-        logger.error("job_definitions query failed: %s", exc)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to query job definitions from NFC Prod.",
-        ) from exc
-
-    definitions_by_job_id: dict[int, dict] = _index_by(raw_definition_rows, "job_id")
-
-    # ── Step 5: job_live_state (coverage window) ──────────────────────────────
-    # Determine the broadest window across all reports in this response.
-    # We fetch a single batch covering the union of all windows.
-    window_start, window_end = _compute_union_window(raw_report_rows)
-
-    try:
-        placeholders, params = _build_in_clause("jid", all_job_ids)
-        params["window_start"] = str(window_start)
-        params["window_end"] = str(window_end)
-        window_sql = JOB_LIVE_STATE_WINDOW_TEMPLATE.format(job_id_placeholders=placeholders)
-        raw_window_rows = connector.execute_query(window_sql, params)
-    except Exception as exc:
-        logger.error("job_live_state window query failed: %s", exc)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to query job live state window from NFC Prod.",
-        ) from exc
-
-    window_rows_by_job_id: dict[int, list[dict]] = _index_multi_by(raw_window_rows, "job_id")
-
-    # Index by (job_id, data_date) for single-date anchor lookups.
-    # data_date may come back as a date object OR a datetime/string — normalize it.
-    live_state_by_job_date: dict[tuple[int, date], dict] = {}
-    for row in raw_window_rows:
-        raw_date = row["data_date"]
-        if isinstance(raw_date, str):
-            # Parse "2026-06-24" or "2026-06-23T18:30:00.000Z" → date
-            normalized = date.fromisoformat(raw_date[:10])
-        elif hasattr(raw_date, "date"):
-            normalized = raw_date.date()
-        else:
-            normalized = raw_date
-        key = (row["job_id"], normalized)
-        live_state_by_job_date[key] = row
-
-    # ── Step 6: sev1_incidents ────────────────────────────────────────────────
-    # Query for the anchor data_dates present in this response.
-    all_anchor_dates: list[date] = list({r["data_date"] for r in raw_report_rows})
-    sev1_rows_by_job_name: dict[str, list[dict]] = {}
-
-    for anchor_date in all_anchor_dates:
-        try:
-            placeholders, params = _build_in_clause("jn", all_job_names)
-            params["data_date"] = str(anchor_date)
-            sev1_sql = SEV1_INCIDENTS_TEMPLATE.format(job_name_placeholders=placeholders)
-            date_sev1_rows = connector.execute_query(sev1_sql, params)
-            for row in date_sev1_rows:
-                job_name = row["job_name"]
-                sev1_rows_by_job_name.setdefault(job_name, []).append(row)
-        except Exception as exc:
-            # Non-fatal: SEV1 data enhances the view but isn't required
-            logger.warning("sev1_incidents query failed for date %s: %s", anchor_date, exc)
-
-    # ── Step 7: assemble payloads ─────────────────────────────────────────────
-    payloads: list[ReportHealthPayload] = []
-
-    for report_row in raw_report_rows:
-        report_id: int = report_row["report_id"]
-        # Normalize data_date from the row (may be date, datetime, or string)
-        raw_anchor = report_row["data_date"]
-        if isinstance(raw_anchor, str):
-            anchor_data_date = date.fromisoformat(raw_anchor[:10])
-        elif hasattr(raw_anchor, "date"):
-            anchor_data_date = raw_anchor.date()
-        else:
-            anchor_data_date = raw_anchor
-        client_name: str = report_row.get("client_name") or ""
-
-        coverage_start, coverage_end = _derive_coverage_window(
-            coverage_start=report_row.get("coverage_start_date"),
-            coverage_end=report_row.get("coverage_end_date"),
-            anchor_data_date=anchor_data_date,
-        )
-        covered_dates = _build_covered_date_list(coverage_start, coverage_end)
-
-        report_response = ReportLiveStateResponse(
-            report_id=report_id,
-            report_name=report_row["report_name"],
-            application_name=report_row.get("application_name") or "",
-            data_date=anchor_data_date,
-            delivery_date=report_row["delivery_date"],
-            client_name=client_name,
-            report_delivery_status=report_row.get("report_delivery_status") or "scheduled",
-            report_delay_status=report_row.get("report_delay_status") or "unknown_state",
-            report_delay_duration_minutes=report_row.get("report_delay_duration_minutes") or 0,
-            total_no_of_steps=report_row.get("total_no_of_steps") or 0,
-            no_of_completed_steps=report_row.get("no_of_completed_steps") or 0,
-            no_of_running_steps=report_row.get("no_of_running_steps") or 0,
-            no_of_delayed_steps=report_row.get("no_of_delayed_steps") or 0,
-            bam_sla=report_row.get("bam_sla"),
-            report_start_time=report_row.get("report_start_time"),
-            report_end_time=report_row.get("report_end_time"),
-            sev1_numbers=report_row.get("sev1_numbers"),
-            sev1_urls=report_row.get("sev1_urls"),
-            delayed_job_name=report_row.get("delayed_job_name"),
-            report_metadata=report_row.get("report_metadata"),
-            workflow_coordinates=report_row.get("workflow_coordinates"),
-            coverage_start_date=coverage_start,
-            coverage_end_date=coverage_end,
-        )
-
-        # Build job responses for this report
-        job_mapping_rows = mappings_by_report_id.get(report_id, [])
-        job_responses: list[ReportJobResponse] = []
-
-        for mapping_row in job_mapping_rows:
-            job_id: int = mapping_row["job_id"]
-            definition_row = definitions_by_job_id.get(job_id)
-            live_state_row = live_state_by_job_date.get((job_id, anchor_data_date))
-
-            run_statuses = _build_run_statuses(
-                job_id=job_id,
-                covered_dates=covered_dates,
-                window_rows_by_job_id=window_rows_by_job_id,
-                client_name=client_name,
-            )
-
-            job_sev1_rows = sev1_rows_by_job_name.get(mapping_row["job_name"], [])
-
-            job_response = _build_job_response(
-                mapping_row=mapping_row,
-                definition_row=definition_row,
-                live_state_row=live_state_row,
-                sev1_rows=job_sev1_rows,
-                run_statuses=run_statuses,
-                covered_dates=covered_dates,
-                anchor_data_date=anchor_data_date,
-            )
-            job_responses.append(job_response)
-
-        payloads.append(
-            ReportHealthPayload(
-                report=report_response,
-                jobs=job_responses,
-                coverage_start_date=coverage_start,
-                coverage_end_date=coverage_end,
-                covered_data_dates=covered_dates,
-            )
-        )
-
-    return payloads
+    # ── Return lightweight report-level payloads (no jobs) ────────────────────
+    # Jobs are loaded on-demand via assemble_single_report_detail().
+    return _build_payloads_without_jobs(raw_report_rows)
 
 
 def _compute_union_window(report_rows: list[dict]) -> tuple[date, date]:
@@ -614,3 +441,215 @@ def _build_payloads_without_jobs(report_rows: list[dict]) -> list[ReportHealthPa
             )
         )
     return payloads
+
+
+def assemble_single_report_detail(
+    connector: Any,
+    report_id: int,
+    data_date: date,
+    delivery_date: date,
+    client_name: str = "",
+) -> ReportHealthPayload:
+    """
+    Fetch full job-level detail for a single report entry.
+
+    Called on-demand when a user clicks a report row. Queries are scoped to
+    one report so they return fresh data every time.
+
+    Args:
+        connector: DB connector with execute_query(sql, params) → list[dict]
+        report_id: The report_id from report_live_state
+        data_date: The data_date for this entry
+        delivery_date: The delivery_date for this entry
+        client_name: Client name (empty string for non-client-scoped)
+
+    Returns:
+        Full ReportHealthPayload with jobs populated.
+
+    Raises:
+        HTTPException 404: Report entry not found.
+        HTTPException 500: Query failure.
+    """
+
+    # ── Step 1: Fetch fresh report_live_state row ─────────────────────────────
+    try:
+        raw_report_rows = connector.execute_query(
+            REPORT_LIVE_STATE_BY_PK,
+            {
+                "report_id": report_id,
+                "data_date": str(data_date),
+                "delivery_date": str(delivery_date),
+                "client_name": client_name,
+            },
+        )
+    except Exception as exc:
+        logger.error("report_live_state PK query failed: %s", exc)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to query report live state from NFC Prod.",
+        ) from exc
+
+    if not raw_report_rows:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Report entry not found (report_id={report_id}, data_date={data_date}).",
+        )
+
+    report_row = raw_report_rows[0]
+
+    # Normalize anchor data_date
+    raw_anchor = report_row["data_date"]
+    if isinstance(raw_anchor, str):
+        anchor_data_date = date.fromisoformat(raw_anchor[:10])
+    elif hasattr(raw_anchor, "date"):
+        anchor_data_date = raw_anchor.date()
+    else:
+        anchor_data_date = raw_anchor
+
+    coverage_start, coverage_end = _derive_coverage_window(
+        coverage_start=report_row.get("coverage_start_date"),
+        coverage_end=report_row.get("coverage_end_date"),
+        anchor_data_date=anchor_data_date,
+    )
+    covered_dates = _build_covered_date_list(coverage_start, coverage_end)
+
+    # ── Step 2: report_job_mapping ────────────────────────────────────────────
+    try:
+        placeholders, params = _build_in_clause("rid", [report_id])
+        mapping_sql = REPORT_JOB_MAPPING_TEMPLATE.format(report_id_placeholders=placeholders)
+        raw_mapping_rows = connector.execute_query(mapping_sql, params)
+    except Exception as exc:
+        logger.error("report_job_mapping query failed for report %s: %s", report_id, exc)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to query report-job mapping from NFC Prod.",
+        ) from exc
+
+    all_job_ids: list[int] = list({r["job_id"] for r in raw_mapping_rows if r.get("job_id")})
+    all_job_names: list[str] = list({r["job_name"] for r in raw_mapping_rows if r.get("job_name")})
+
+    # Build report response
+    report_response = ReportLiveStateResponse(
+        report_id=report_id,
+        report_name=report_row["report_name"],
+        application_name=report_row.get("application_name") or "",
+        data_date=anchor_data_date,
+        delivery_date=report_row["delivery_date"],
+        client_name=report_row.get("client_name") or "",
+        report_delivery_status=report_row.get("report_delivery_status") or "scheduled",
+        report_delay_status=report_row.get("report_delay_status") or "unknown_state",
+        report_delay_duration_minutes=report_row.get("report_delay_duration_minutes") or 0,
+        total_no_of_steps=report_row.get("total_no_of_steps") or 0,
+        no_of_completed_steps=report_row.get("no_of_completed_steps") or 0,
+        no_of_running_steps=report_row.get("no_of_running_steps") or 0,
+        no_of_delayed_steps=report_row.get("no_of_delayed_steps") or 0,
+        bam_sla=report_row.get("bam_sla"),
+        report_start_time=report_row.get("report_start_time"),
+        report_end_time=report_row.get("report_end_time"),
+        sev1_numbers=report_row.get("sev1_numbers"),
+        sev1_urls=report_row.get("sev1_urls"),
+        delayed_job_name=report_row.get("delayed_job_name"),
+        report_metadata=report_row.get("report_metadata"),
+        workflow_coordinates=report_row.get("workflow_coordinates"),
+        coverage_start_date=coverage_start,
+        coverage_end_date=coverage_end,
+    )
+
+    if not all_job_ids:
+        return ReportHealthPayload(
+            report=report_response,
+            jobs=[],
+            coverage_start_date=coverage_start,
+            coverage_end_date=coverage_end,
+            covered_data_dates=covered_dates,
+        )
+
+    # ── Step 3: job_definitions ───────────────────────────────────────────────
+    try:
+        placeholders, params = _build_in_clause("jid", all_job_ids)
+        definitions_sql = JOB_DEFINITIONS_TEMPLATE.format(job_id_placeholders=placeholders)
+        raw_definition_rows = connector.execute_query(definitions_sql, params)
+    except Exception as exc:
+        logger.error("job_definitions query failed: %s", exc)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to query job definitions from NFC Prod.",
+        ) from exc
+
+    definitions_by_job_id: dict[int, dict] = _index_by(raw_definition_rows, "job_id")
+
+    # ── Step 4: job_live_state (coverage window) ──────────────────────────────
+    try:
+        placeholders, params = _build_in_clause("jid", all_job_ids)
+        params["window_start"] = str(coverage_start)
+        params["window_end"] = str(coverage_end)
+        window_sql = JOB_LIVE_STATE_WINDOW_TEMPLATE.format(job_id_placeholders=placeholders)
+        raw_window_rows = connector.execute_query(window_sql, params)
+    except Exception as exc:
+        logger.error("job_live_state window query failed: %s", exc)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to query job live state window from NFC Prod.",
+        ) from exc
+
+    window_rows_by_job_id: dict[int, list[dict]] = _index_multi_by(raw_window_rows, "job_id")
+
+    # Index by (job_id, data_date) for anchor lookups
+    live_state_by_job_date: dict[tuple[int, date], dict] = {}
+    for row in raw_window_rows:
+        raw_date = row["data_date"]
+        if isinstance(raw_date, str):
+            normalized = date.fromisoformat(raw_date[:10])
+        elif hasattr(raw_date, "date"):
+            normalized = raw_date.date()
+        else:
+            normalized = raw_date
+        live_state_by_job_date[(row["job_id"], normalized)] = row
+
+    # ── Step 5: sev1_incidents ────────────────────────────────────────────────
+    sev1_rows_by_job_name: dict[str, list[dict]] = {}
+    try:
+        placeholders, params = _build_in_clause("jn", all_job_names)
+        params["data_date"] = str(anchor_data_date)
+        sev1_sql = SEV1_INCIDENTS_TEMPLATE.format(job_name_placeholders=placeholders)
+        date_sev1_rows = connector.execute_query(sev1_sql, params)
+        for row in date_sev1_rows:
+            sev1_rows_by_job_name.setdefault(row["job_name"], []).append(row)
+    except Exception as exc:
+        logger.warning("sev1_incidents query failed for report detail: %s", exc)
+
+    # ── Step 6: assemble job responses ────────────────────────────────────────
+    job_responses: list[ReportJobResponse] = []
+
+    for mapping_row in raw_mapping_rows:
+        job_id: int = mapping_row["job_id"]
+        definition_row = definitions_by_job_id.get(job_id)
+        live_state_row = live_state_by_job_date.get((job_id, anchor_data_date))
+
+        run_statuses = _build_run_statuses(
+            job_id=job_id,
+            covered_dates=covered_dates,
+            window_rows_by_job_id=window_rows_by_job_id,
+            client_name=client_name,
+        )
+
+        job_sev1_rows = sev1_rows_by_job_name.get(mapping_row["job_name"], [])
+
+        job_response = _build_job_response(
+            mapping_row=mapping_row,
+            definition_row=definition_row,
+            live_state_row=live_state_row,
+            sev1_rows=job_sev1_rows,
+            run_statuses=run_statuses,
+            covered_dates=covered_dates,
+            anchor_data_date=anchor_data_date,
+        )
+        job_responses.append(job_response)
+
+    return ReportHealthPayload(
+        report=report_response,
+        jobs=job_responses,
+        coverage_start_date=coverage_start,
+        coverage_end_date=coverage_end,
+        covered_data_dates=covered_dates,
+    )
