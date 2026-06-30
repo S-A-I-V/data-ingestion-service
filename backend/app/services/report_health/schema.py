@@ -1,3 +1,4 @@
+# ruff: noqa: UP006, UP035
 """
 Pydantic response models for the Report Health Dashboard.
 
@@ -11,10 +12,8 @@ nfc_prod table sources per field group:
   ReportHealthPayload      <- assembled composite of all the above
 """
 
-from __future__ import annotations
-
 from datetime import date, datetime
-from typing import Any
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -104,8 +103,8 @@ class ReportJobResponse(BaseModel):
     completed_required_runs: int = 0
     running_required_runs: int = 0
     delayed_required_runs: int = 0
-    covered_data_dates: list[date] = Field(default_factory=list)
-    run_statuses: list[RunStatusItem] = Field(default_factory=list)
+    covered_data_dates: List[date] = Field(default_factory=list)
+    run_statuses: List[RunStatusItem] = Field(default_factory=list)
 
 
 class ReportLiveStateResponse(BaseModel):
@@ -157,7 +156,7 @@ class ReportHealthPayload(BaseModel):
     """
 
     report: ReportLiveStateResponse
-    jobs: list[ReportJobResponse] = Field(default_factory=list)
+    jobs: List[ReportJobResponse] = Field(default_factory=list)
     coverage_start_date: date
     coverage_end_date: date
-    covered_data_dates: list[date] = Field(default_factory=list)
+    covered_data_dates: List[date] = Field(default_factory=list)
