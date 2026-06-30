@@ -8,6 +8,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import SyncProblemIcon from "@mui/icons-material/SyncProblem";
+import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 
 interface Props {
   permissions: string[];
@@ -49,6 +50,16 @@ const ADMIN_TOOLS = [
     to: "/admin/email-discrepancy",
     color: "#a855f7",
     bg: "rgba(168, 85, 247, 0.1)",
+  },
+  {
+    permission: "admin:report_health",
+    title: "Report Health Dashboard",
+    description:
+      "Full pipeline observability — SLA status, delay attribution, per-job events, proxy inference, run heatmaps, and ownership for every active report.",
+    icon: MonitorHeartIcon,
+    to: "/admin/report-health",
+    color: "#0fb1b2",
+    bg: "rgba(15, 177, 178, 0.1)",
   },
 ];
 

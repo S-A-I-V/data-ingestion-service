@@ -16,6 +16,7 @@ import ReportMappingEditor from "./pages/ReportMappingEditor";
 import ReportMappingLiveEdit from "./pages/ReportMappingLiveEdit";
 import Admin from "./pages/Admin";
 import EmailDiscrepancyAudit from "./pages/EmailDiscrepancyAudit";
+import ReportHealthDashboard from "./pages/ReportHealthDashboard";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
@@ -100,6 +101,9 @@ export default function App() {
         )}
         {user.permissions?.includes("admin:email_discrepancy_audit") && (
           <Route path="/admin/email-discrepancy" element={<EmailDiscrepancyAudit />} />
+        )}
+        {user.permissions?.includes("admin:report_health") && (
+          <Route path="/admin/report-health" element={<ReportHealthDashboard />} />
         )}
         {user.permissions?.includes("admin:client_onboarding") && (
           <Route path="/admin/client-onboarding" element={<ClientOnboardingHub />} />

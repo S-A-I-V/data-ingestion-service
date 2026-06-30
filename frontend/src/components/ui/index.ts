@@ -12,6 +12,8 @@ export { Separator } from "./separator";
 
 // Toggle Group (Radix-based)
 export { ToggleGroup, ToggleGroupItem } from "./toggle-group";
+export { Calendar } from "./calendar";
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./popover";
 
 // Custom app primitives (CSS-based, no Tailwind equivalent)
 export { Spinner } from "./Spinner";

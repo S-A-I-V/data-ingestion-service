@@ -21,6 +21,7 @@ const ADMIN_PERMISSIONS = [
   "admin:client_onboarding",
   "admin:report_mapping",
   "admin:email_discrepancy_audit",
+  "admin:report_health",
 ];
 
 function getDisplayName(name: string, email: string): string {

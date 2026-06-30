@@ -31,6 +31,7 @@ from app.routers import (
     connections,
     email_discrepancy,
     ingestion,
+    report_health,
     report_mapping,
 )
 
@@ -79,6 +80,7 @@ app.include_router(associate_lookup.router)
 app.include_router(client_onboarding.router)
 app.include_router(report_mapping.router)
 app.include_router(email_discrepancy.router)
+app.include_router(report_health.router)
 
 
 # ── Health Check ──────────────────────────────────────────────────────────────
