@@ -104,8 +104,10 @@ export default function ReportMappingLiveEdit() {
   }, [reportId]);
 
   // Load data when report is selected
+  const initDoneRef = useRef(false);
   useEffect(() => {
     if (!reportId) return;
+    if (initDoneRef.current) return; // Already loaded — skip re-init
     let cancelled = false;
     const controller = new AbortController();
 
@@ -117,6 +119,7 @@ export default function ReportMappingLiveEdit() {
           api.get(`/admin/report-mapping/existing/${reportId}`, { signal: controller.signal }),
         ]);
         if (cancelled) return;
+        initDoneRef.current = true; // Mark init as done — no re-fire
         setJobs(jobsRes.data.jobs || []);
         const data = mappingRes.data.mapping_data;
         const flowNodes: Node[] = (data.nodes || []).map((n: any) => ({
