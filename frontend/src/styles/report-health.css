@@ -618,6 +618,12 @@
   align-items: baseline;
   gap: 6px;
 }
+.rh-mini-sep {
+  color: var(--text-muted);
+}
+.rh-mini-delayed {
+  color: var(--warning);
+}
 
 /* ── Separator ───────────────────────────────────────────── */
 .rh-section-sep {

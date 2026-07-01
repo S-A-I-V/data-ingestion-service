@@ -11,97 +11,19 @@
  */
 import "../styles/report-health.css";
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { format } from "date-fns";
 
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import api from "../api";
-import { Button, Toast, useToast } from "../components/ui";
+import { Toast, useToast } from "../components/ui";
 import type { ReportHealthPayload } from "../types/reportHealth";
-import { DELAY_STATUS_META, JOB_STATUS_META, APP_FILTER_ALL_VALUE } from "../constants/reportHealth";
+import { APP_FILTER_ALL_VALUE } from "../constants/reportHealth";
 import ReportDetailDrawer from "../components/report-health/ReportDetailDrawer";
 import ReportHealthFilters from "../components/report-health/ReportHealthFilters";
 import type { DateFieldMode } from "../components/report-health/ReportHealthFilters";
-
-// ── Helpers ────────────────────────────────────────────────
-
-function todayIso() {
-  return format(new Date(), "yyyy-MM-dd");
-}
-
-function fmtDate(iso: string) {
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
-
-/** Format UTC time — always shows UTC, never locale */
-function fmtUtc(ts: string | null | undefined) {
-  if (!ts) return "—";
-  const d = new Date(ts);
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const mon = d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
-  const hh = String(d.getUTCHours()).padStart(2, "0");
-  const mm = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${day} ${mon}, ${hh}:${mm}`;
-}
-
-function fmtDelay(mins: number) {
-  if (!mins) return "—";
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h${m > 0 ? ` ${m}m` : ""}` : `${m}m`;
-}
-
-function StatusPill({ status, type = "delay" }: { status: string; type?: "delay" | "job" }) {
-  const meta =
-    type === "job"
-      ? JOB_STATUS_META[status] ?? JOB_STATUS_META["scheduled"]
-      : DELAY_STATUS_META[status] ?? DELAY_STATUS_META["unknown_state"];
-  return (
-    <span className="rh-pill" style={{ background: meta.bg, color: meta.color }}>
-      <span className="rh-pill-dot" style={{ background: meta.color }} />
-      {meta.label}
-    </span>
-  );
-}
-
-function MiniBar({
-  completed,
-  total,
-  delayed,
-  status,
-}: {
-  completed: number;
-  total: number;
-  delayed: number;
-  status: string;
-}) {
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const cls =
-    status === "client_delayed"
-      ? "rh-mini-fill--delayed"
-      : status === "internal_delayed"
-        ? "rh-mini-fill--warn"
-        : pct === 100
-          ? "rh-mini-fill--ok"
-          : "rh-mini-fill--prog";
-  return (
-    <div className="rh-mini-bar">
-      <div className="rh-mini-track">
-        <div className={`rh-mini-fill ${cls}`} style={{ width: `${pct}%` }} aria-label={`${pct}%`} />
-      </div>
-      <div className="rh-mini-numbers">
-        {completed}/{total}
-        {delayed > 0 && (
-          <>
-            <span style={{ color: "var(--text-muted)" }}>·</span>
-            <span style={{ color: "var(--warning)" }}>{delayed} delayed</span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+import StatusPill from "../components/report-health/shared/StatusPill";
+import MiniBar from "../components/report-health/shared/MiniBar";
+import { fmt, fmtMins, todayIso, fmtDateDmy } from "../components/report-health/shared/formatters";
 
 // ── Component ──────────────────────────────────────────────
 
@@ -321,7 +243,7 @@ export default function ReportHealthDashboard() {
       {loading && (
         <div className="rh-empty">
           <div className="rh-spin" />
-          Loading delivery data for {fmtDate(resolvedDateRange.from)}…
+          Loading delivery data for {fmtDateDmy(resolvedDateRange.from)}…
         </div>
       )}
 
@@ -331,7 +253,7 @@ export default function ReportHealthDashboard() {
           <SearchOffIcon sx={{ fontSize: 32, opacity: 0.3 }} />
           <span>
             {reports.length === 0
-              ? `No reports scheduled for delivery on ${fmtDate(resolvedDateRange.from)}`
+              ? `No reports scheduled for delivery on ${fmtDateDmy(resolvedDateRange.from)}`
               : "No reports match current filters"}
           </span>
         </div>
@@ -394,17 +316,17 @@ export default function ReportHealthDashboard() {
                   fontWeight: r.report_delay_duration_minutes > 0 ? 600 : 400,
                 }}
               >
-                {fmtDelay(r.report_delay_duration_minutes)}
+                {fmtMins(r.report_delay_duration_minutes)}
               </div>
 
               {/* BAM SLA — UTC only */}
               <div className="rh-col--sla" style={{ color: slaOver ? "var(--danger)" : undefined, fontSize: 11 }}>
-                {r.bam_sla ? fmtUtc(r.bam_sla) : "—"}
+                {r.bam_sla ? fmt(r.bam_sla) : "—"}
               </div>
 
               {/* Report Start */}
               <div className="rh-col--time" style={{ fontSize: 11 }}>
-                {r.report_start_time ? fmtUtc(r.report_start_time) : "—"}
+                {r.report_start_time ? fmt(r.report_start_time) : "—"}
               </div>
 
               {/* Report End */}
@@ -412,7 +334,7 @@ export default function ReportHealthDashboard() {
                 className="rh-col--time"
                 style={{ fontSize: 11, color: r.report_end_time ? "var(--success)" : undefined }}
               >
-                {r.report_end_time ? fmtUtc(r.report_end_time) : "—"}
+                {r.report_end_time ? fmt(r.report_end_time) : "—"}
               </div>
 
               {/* Data date + coverage window */}

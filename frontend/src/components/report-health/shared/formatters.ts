@@ -21,3 +21,18 @@ export function fmtMins(m: number | null | undefined): string {
   const min = m % 60;
   return h > 0 ? `${h}h ${min}m` : `${min}m`;
 }
+
+/** Get today's date as ISO string (YYYY-MM-DD) */
+export function todayIso(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Format ISO date "2026-06-30" as "30/06/2026" */
+export function fmtDateDmy(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
