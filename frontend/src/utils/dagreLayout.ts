@@ -23,6 +23,9 @@ import {
 export function applyDagreLayout(nodes: Node[], edges: Edge[], direction = "LR"): Node[] {
   if (nodes.length === 0) return nodes;
 
+  // Sort nodes by ID for deterministic layout (dagre output depends on insertion order)
+  const sortedNodes = [...nodes].sort((a, b) => a.id.localeCompare(b.id));
+
   const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
   const isHorizontal = direction === "LR";
 
@@ -34,7 +37,7 @@ export function applyDagreLayout(nodes: Node[], edges: Edge[], direction = "LR")
     marginy: DAGRE_MARGIN_PX,
   });
 
-  nodes.forEach((node) => {
+  sortedNodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: JOB_NODE_WIDTH_PX, height: JOB_NODE_HEIGHT_PX });
   });
 

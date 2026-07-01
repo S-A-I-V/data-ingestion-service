@@ -8,12 +8,16 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import Tooltip from "@mui/material/Tooltip";
 
 // Jobs are passed via a global context (set by parent)
 // We use window.__REPORT_MAPPING_JOBS__ as a simple shared store
 declare global {
   interface Window {
     __REPORT_MAPPING_JOBS__?: Array<{ job_id: number; job_name: string; category: string | null }>;
+    __REPORT_MAPPING_NODES__?: Array<{ id: string; data: any }>;
+    __REPORT_MAPPING_EDGES__?: Array<{ source: string; target: string }>;
     __REPORT_MAPPING_UPDATE_NODE__?: (nodeId: string, jobId: number, jobName: string, category: string) => void;
     __REPORT_MAPPING_DELETE_NODE__?: (nodeId: string) => void;
     __REPORT_MAPPING_DISCONNECT_RIGHT__?: (nodeId: string) => void;
@@ -27,10 +31,22 @@ function JobNode({ id, data }: NodeProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const jobs = window.__REPORT_MAPPING_JOBS__ || [];
+  const allNodes = window.__REPORT_MAPPING_NODES__ || [];
+  const allEdges = window.__REPORT_MAPPING_EDGES__ || [];
   const updateNode = window.__REPORT_MAPPING_UPDATE_NODE__;
   const deleteNode = window.__REPORT_MAPPING_DELETE_NODE__;
   const disconnectRight = window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
   const bypassDelete = window.__REPORT_MAPPING_BYPASS_DELETE__;
+
+  // Compute prev/next job names from edges
+  const prevJobNames = allEdges
+    .filter((e) => e.target === id)
+    .map((e) => allNodes.find((n) => n.id === e.source)?.data?.job_name)
+    .filter(Boolean);
+  const nextJobNames = allEdges
+    .filter((e) => e.source === id)
+    .map((e) => allNodes.find((n) => n.id === e.target)?.data?.job_name)
+    .filter(Boolean);
 
   // Close on click outside
   useEffect(() => {
@@ -61,6 +77,37 @@ function JobNode({ id, data }: NodeProps) {
 
       <div className="job-node-header">
         <span className="job-node-label">{(data as any).job_name || "Select a job..."}</span>
+        {(prevJobNames.length > 0 || nextJobNames.length > 0) && (
+          <Tooltip
+            title={
+              <div style={{ fontSize: 11, lineHeight: 1.8 }}>
+                {prevJobNames.length > 0 && (
+                  <>
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>← Prev</div>
+                    {prevJobNames.map((name, i) => (
+                      <div key={i}>• {name}</div>
+                    ))}
+                  </>
+                )}
+                {prevJobNames.length > 0 && nextJobNames.length > 0 && (
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.15)", margin: "4px 0" }} />
+                )}
+                {nextJobNames.length > 0 && (
+                  <>
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>Next →</div>
+                    {nextJobNames.map((name, i) => (
+                      <div key={i}>• {name}</div>
+                    ))}
+                  </>
+                )}
+              </div>
+            }
+            arrow
+            placement="top"
+          >
+            <InfoOutlinedIcon className="job-node-info-icon" sx={{ fontSize: 14 }} />
+          </Tooltip>
+        )}
       </div>
 
       {(data as any).job_id && <div className="job-node-id">ID: {(data as any).job_id}</div>}

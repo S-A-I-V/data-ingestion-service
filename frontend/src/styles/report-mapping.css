@@ -480,6 +480,14 @@
   white-space: nowrap;
   flex: 1;
 }
+.job-node-info-icon {
+  color: rgba(255, 255, 255, 0.4);
+  cursor: default;
+  flex-shrink: 0;
+}
+.job-node-info-icon:hover {
+  color: var(--accent-light);
+}
 
 /* Action panel — strip below content */
 .job-node-actions {

@@ -201,23 +201,30 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
   // Expose callbacks to JobNode via window (React Flow constraint)
   useEffect(() => {
     window.__REPORT_MAPPING_JOBS__ = jobs;
+    window.__REPORT_MAPPING_NODES__ = nodes;
+    window.__REPORT_MAPPING_EDGES__ = edges;
     window.__REPORT_MAPPING_UPDATE_NODE__ = updateNodeJob;
     window.__REPORT_MAPPING_DELETE_NODE__ = deleteNode;
     window.__REPORT_MAPPING_DISCONNECT_RIGHT__ = disconnectRight;
     window.__REPORT_MAPPING_BYPASS_DELETE__ = bypassDelete;
     return () => {
       delete window.__REPORT_MAPPING_JOBS__;
+      delete window.__REPORT_MAPPING_NODES__;
+      delete window.__REPORT_MAPPING_EDGES__;
       delete window.__REPORT_MAPPING_UPDATE_NODE__;
       delete window.__REPORT_MAPPING_DELETE_NODE__;
       delete window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
       delete window.__REPORT_MAPPING_BYPASS_DELETE__;
     };
-  }, [jobs, updateNodeJob, deleteNode, disconnectRight, bypassDelete]);
+  }, [jobs, nodes, edges, updateNodeJob, deleteNode, disconnectRight, bypassDelete]);
 
-  // Re-layout nodes using Dagre algorithm
+  // Re-layout nodes using Dagre algorithm (uses graph.state for latest edges)
   const handleRelayout = useCallback(() => {
-    setNodes((cur) => applyDagreLayout(cur, edges));
-  }, [edges]);
+    const latestEdges = graph.state.edges;
+    const layouted = applyDagreLayout(nodes, latestEdges);
+    setNodes(layouted);
+    commitChange(layouted, latestEdges);
+  }, [nodes, graph, commitChange]);
 
   return {
     nodes,
