@@ -65,6 +65,8 @@ export default function ReportMappingEditor() {
     onEdgesChange,
     onConnect,
     addNode,
+    lastAddedNodeId,
+    clearLastAddedNodeId,
     handleRelayout,
   } = useGraphEditor({ jobs });
 
@@ -292,6 +294,8 @@ export default function ReportMappingEditor() {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          panToNodeId={lastAddedNodeId}
+          onPanComplete={clearLastAddedNodeId}
         />
       </div>
 

@@ -88,6 +88,8 @@ export default function ReportMappingLiveEdit() {
     onEdgesChange,
     onConnect,
     addNode,
+    lastAddedNodeId,
+    clearLastAddedNodeId,
     handleRelayout,
   } = useGraphEditor({ jobs });
 
@@ -321,6 +323,8 @@ export default function ReportMappingLiveEdit() {
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               nodeTypes={nodeTypes}
+              panToNodeId={lastAddedNodeId}
+              onPanComplete={clearLastAddedNodeId}
             />
           </div>
           <div className="rm-editor-stats">

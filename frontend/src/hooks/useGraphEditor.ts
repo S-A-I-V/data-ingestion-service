@@ -116,6 +116,8 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
   );
 
   // Add a new empty node at a random position
+  const [lastAddedNodeId, setLastAddedNodeId] = useState<string | null>(null);
+
   const addNode = useCallback(() => {
     const id = `n${Date.now()}`;
     const newNode: Node = {
@@ -132,6 +134,7 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
     const newNodes = [...nodes, newNode];
     setNodes(newNodes);
     commitChange(newNodes, edges);
+    setLastAddedNodeId(id);
   }, [nodes, edges, commitChange]);
 
   // Update a node's job assignment
@@ -230,6 +233,8 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
     onEdgesChange,
     onConnect,
     addNode,
+    lastAddedNodeId,
+    clearLastAddedNodeId: () => setLastAddedNodeId(null),
     updateNodeJob,
     handleRelayout,
   };

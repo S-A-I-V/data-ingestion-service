@@ -2,13 +2,15 @@
  * GraphCanvas — Reusable React Flow graph canvas for report mapping editors.
  * Wraps ReactFlow with standard configuration (background, controls, extent).
  */
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Controls,
   Background,
   ConnectionLineType,
   BackgroundVariant,
+  useReactFlow,
+  ReactFlowProvider,
   type Node,
   type Edge,
   type OnNodesChange,
@@ -34,17 +36,36 @@ interface GraphCanvasProps {
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   nodeTypes: NodeTypes;
+  /** When set, pan to this node ID then clear it */
+  panToNodeId?: string | null;
+  onPanComplete?: () => void;
 }
 
-export default function GraphCanvas({
+function GraphCanvasInner({
   nodes,
   edges,
   onNodesChange,
   onEdgesChange,
   onConnect,
   nodeTypes,
+  panToNodeId,
+  onPanComplete,
 }: GraphCanvasProps) {
   const graphExtent = useMemo(() => computeGraphExtent(nodes), [nodes]);
+  const { setCenter } = useReactFlow();
+
+  // Pan to newly added node
+  useEffect(() => {
+    if (!panToNodeId) return;
+    const node = nodes.find((n) => n.id === panToNodeId);
+    if (node) {
+      // Small delay to let the node render first
+      setTimeout(() => {
+        setCenter(node.position.x + 80, node.position.y + 30, { zoom: 1, duration: 400 });
+        onPanComplete?.();
+      }, 50);
+    }
+  }, [panToNodeId, nodes, setCenter, onPanComplete]);
 
   return (
     <ReactFlow
@@ -72,5 +93,13 @@ export default function GraphCanvas({
         color={BACKGROUND_DOT_COLOR}
       />
     </ReactFlow>
+  );
+}
+
+export default function GraphCanvas(props: GraphCanvasProps) {
+  return (
+    <ReactFlowProvider>
+      <GraphCanvasInner {...props} />
+    </ReactFlowProvider>
   );
 }
