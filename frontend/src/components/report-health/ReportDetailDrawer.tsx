@@ -20,7 +20,7 @@ interface Props {
 
 export default function ReportDetailDrawer({ payload, loading = false, onClose }: Props) {
   const [tab, setTab] = useState<string>(DRAWER_TAB.OVERVIEW);
-  const [drawerWidth, setDrawerWidth] = useState(50);
+  const [drawerWidth, setDrawerWidth] = useState(70);
   const { report: r, jobs } = payload;
 
   // Close on Escape key
@@ -64,7 +64,7 @@ export default function ReportDetailDrawer({ payload, loading = false, onClose }
         className="rh-drawer"
         role="dialog"
         aria-label={`Report details: ${r.report_name}`}
-        style={{ width: `${drawerWidth}vw` }}
+        style={{ "--drawer-width": `${drawerWidth}vw` } as React.CSSProperties}
       >
         <div className="rh-drawer-resize" onMouseDown={handleMouseDown} title="Drag to resize" />
 
