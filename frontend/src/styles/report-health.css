@@ -104,6 +104,154 @@
 }
 
 /* ── Filter bar ─────────────────────────────────────────── */
+.rh-filter-panel {
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  position: relative;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.rh-filter-panel--loading {
+  min-height: 70px;
+}
+.rh-filter-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 20px 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.rh-filter-section {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+.rh-filter-section--date {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.rh-filter-divider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+.rh-filter-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.rh-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rh-filter-group--dates {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+.rh-filter-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.rh-filter-sublabel {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  display: block;
+  white-space: nowrap;
+}
+.rh-filter-field {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.rh-filter-field--action {
+  margin-left: auto;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.rh-input-date {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+  cursor: pointer;
+}
+.rh-input-date:focus {
+  border-color: var(--accent);
+}
+.rh-select-trigger {
+  min-width: 100px;
+  height: 26px;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.rh-select-trigger--sm {
+  min-width: 95px;
+}
+
+/* Date picker button (Popover trigger) */
+.rh-datepicker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 100px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 10px;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+.rh-datepicker-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.rh-datepicker-btn:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+/* Remove extra spacing in date row */
+.rh-filter-group--presets {
+  margin-left: auto;
+}
+
 .rh-filterbar {
   display: flex;
   align-items: center;
@@ -113,15 +261,16 @@
 }
 .rh-search {
   flex: 1;
-  min-width: 180px;
-  max-width: 280px;
+  min-width: 90px;
+  max-width: 130px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 5px;
   color: var(--text-primary);
   font-family: var(--font);
-  font-size: 12px;
-  padding: 5px 10px;
+  font-size: 11px;
+  padding: 4px 8px;
+  height: 26px;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -130,6 +279,48 @@
 }
 .rh-search:focus {
   border-color: var(--accent);
+}
+
+/* Combobox (searchable dropdown) */
+.rh-combobox {
+  position: relative;
+}
+.rh-combobox-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 2px;
+  background: var(--bg-surface, #1a1a2e);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 999;
+  padding: 4px 0;
+  list-style: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.rh-combobox-item {
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rh-combobox-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.rh-combobox-item--active {
+  background: rgba(15, 177, 178, 0.1);
+  color: var(--accent-light);
+}
+.rh-combobox-item--more {
+  color: var(--text-muted);
+  font-style: italic;
+  cursor: default;
 }
 
 /* Date picker trigger button */
@@ -179,9 +370,27 @@
   padding: 5px 8px;
   outline: none;
   cursor: pointer;
+  max-width: 180px;
 }
 .rh-select:focus {
   border-color: var(--accent);
+}
+.rh-select--sm {
+  max-width: 120px;
+  font-size: 11px;
+  padding: 5px 6px;
+}
+
+/* Status filter tabs — own row below filters */
+.rh-status-tabs-row {
+  display: flex;
+  gap: 4px;
+  padding: 0 0 8px;
+  flex-wrap: wrap;
+}
+.rh-status-tab-count {
+  margin-left: 4px;
+  opacity: 0.7;
 }
 
 /* Status filter tabs */

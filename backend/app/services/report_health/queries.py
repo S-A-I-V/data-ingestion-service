@@ -212,3 +212,15 @@ WHERE rls.report_id = :report_id
   AND rls.client_name = :client_name
 LIMIT 1
 """
+
+
+# ── Filter options (report names + application names) ─────────────────────────
+
+REPORT_FILTER_OPTIONS = """
+SELECT DISTINCT
+    rd.report_name,
+    rd.application_name
+FROM report_definitions rd
+WHERE rd.is_deleted IS NOT TRUE
+ORDER BY rd.report_name, rd.application_name
+"""

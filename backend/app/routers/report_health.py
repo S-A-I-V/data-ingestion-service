@@ -34,7 +34,7 @@ from app.services.connection_status import mark_connection_active, mark_connecti
 from app.services.rbac import require_permission
 from app.services.report_health.assembler import assemble_report_health_payloads
 from app.services.report_health.nfc_connection import resolve_nfc_prod_connection_with_record
-from app.services.report_health.schema import ReportHealthPayload
+from app.services.report_health.schema import ReportHealthListResponse, ReportHealthPayload, ReportHealthSummary
 
 logger = logging.getLogger(__name__)
 
@@ -48,38 +48,47 @@ RATE_LIMIT_PER_MINUTE = "30/minute"
 router = APIRouter(prefix="/api/admin/report-health", tags=["admin"])
 
 
-@router.get("/", response_model=list[ReportHealthPayload])
+@router.get("/", response_model=ReportHealthListResponse)
 @limiter.limit(RATE_LIMIT_PER_MINUTE)
 def get_report_health(
     request: Request,
     delivery_date: date = Query(
         default=None,
-        description=(
-            "The delivery date start (YYYY-MM-DD). "
-            "Filters report_live_state.delivery_date. "
-            "Defaults to today if omitted."
-        ),
+        description="Delivery date start (YYYY-MM-DD). Defaults to today.",
     ),
     delivery_date_to: date = Query(
         default=None,
-        description=(
-            "The delivery date end (YYYY-MM-DD) for range queries. "
-            "If omitted, defaults to delivery_date (single-day query)."
-        ),
+        description="Delivery date end (YYYY-MM-DD). Defaults to delivery_date.",
+    ),
+    report_name: str = Query(
+        default=None,
+        description="Filter by report name (substring match, case-insensitive).",
+    ),
+    client_name: str = Query(
+        default=None,
+        description="Filter by client name (substring match, case-insensitive).",
+    ),
+    application_name: str = Query(
+        default=None,
+        description="Filter by application name (exact match).",
+    ),
+    delay_status: str = Query(
+        default=None,
+        description="Filter by delay status: client_delayed, internal_delayed, on_track.",
+    ),
+    sev1: str = Query(
+        default=None,
+        description="Filter by SEV1 number (substring match).",
     ),
     user: User = Depends(require_permission(REQUIRED_PERMISSION)),
     db: Session = Depends(get_db),
-) -> list[ReportHealthPayload]:
+) -> ReportHealthListResponse:
     """
-    Return pipeline health for all reports scheduled for delivery on `delivery_date`
-    (or between `delivery_date` and `delivery_date_to` if both are provided).
+    Return pipeline health for reports matching the given filters.
 
-    Each item in the response includes:
-      - Report-level delivery state + SLA + delay attribution
-      - All constituent jobs with runtime status, per-date heatmap, ownership
-      - Coverage window (data_date range for multi-day reports like L+7)
+    All filtering, counting, and sorting is done server-side.
+    The frontend should just display what this returns.
     """
-    # Default to today if not provided (FastAPI doesn't support dynamic defaults)
     resolved_date: date = delivery_date or date.today()
     resolved_date_to: date | None = delivery_date_to
 
@@ -123,16 +132,96 @@ def get_report_health(
 
     mark_connection_active(nfc_connection_record, db)
 
+    # ── Server-side filtering ─────────────────────────────────────────────────
+    filtered = payloads
+    if report_name:
+        q = report_name.lower()
+        filtered = [p for p in filtered if q in p.report.report_name.lower()]
+    if client_name:
+        q = client_name.lower()
+        filtered = [p for p in filtered if q in (p.report.client_name or "").lower()]
+    if application_name:
+        filtered = [p for p in filtered if p.report.application_name == application_name]
+    if sev1:
+        q = sev1.lower()
+        filtered = [p for p in filtered if q in (p.report.sev1_numbers or "").lower()]
+    if delay_status:
+        filtered = [p for p in filtered if p.report.report_delay_status == delay_status]
+
+    # ── Compute summary counts ────────────────────────────────────────────────
+    # Counts are computed BEFORE delay_status filter so the strip shows totals
+    # for the base filter set (report_name, client, app, sev1, date range).
+    base = payloads
+    if report_name:
+        q = report_name.lower()
+        base = [p for p in base if q in p.report.report_name.lower()]
+    if client_name:
+        q = client_name.lower()
+        base = [p for p in base if q in (p.report.client_name or "").lower()]
+    if application_name:
+        base = [p for p in base if p.report.application_name == application_name]
+    if sev1:
+        q = sev1.lower()
+        base = [p for p in base if q in (p.report.sev1_numbers or "").lower()]
+
+    summary = ReportHealthSummary(
+        total=len(base),
+        in_progress=sum(1 for p in base if p.report.report_delivery_status == "in_progress"),
+        client_delayed=sum(1 for p in base if p.report.report_delay_status == "client_delayed"),
+        internal_delayed=sum(1 for p in base if p.report.report_delay_status == "internal_delayed"),
+        completed=sum(1 for p in base if p.report.report_delivery_status == "success"),
+    )
+
     logger.info(
         "report_health_fetched",
         extra={
             "user": user.email,
             "delivery_date": str(resolved_date),
-            "report_count": len(payloads),
+            "report_count": len(filtered),
         },
     )
 
-    return payloads
+    return ReportHealthListResponse(reports=filtered, summary=summary)
+
+
+@router.get("/filters", response_model=dict)
+@limiter.limit(RATE_LIMIT_PER_MINUTE)
+def get_report_health_filters(
+    request: Request,
+    user: User = Depends(require_permission(REQUIRED_PERMISSION)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    Return available filter options (report names, application names) for the
+    Report Health Dashboard combobox dropdowns.
+
+    Queries report_definitions for all active report/app combos.
+    """
+    from app.services.report_health.assembler import fetch_filter_options
+
+    try:
+        nfc_connector, nfc_connection_record = resolve_nfc_prod_connection_with_record(
+            user_id=user.id,
+            db=db,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Failed to resolve NFC Prod connection for filters: %s", exc)
+        raise HTTPException(
+            status_code=503,
+            detail="Could not establish connection to NFC Prod.",
+        ) from exc
+
+    try:
+        options = fetch_filter_options(connector=nfc_connector)
+    except Exception as exc:
+        logger.warning("Failed to fetch filter options: %s", exc)
+        mark_connection_failed(nfc_connection_record, db)
+        return {"report_names": [], "application_names": []}
+
+    mark_connection_active(nfc_connection_record, db)
+    return options
 
 
 @router.get("/{report_id}/detail", response_model=ReportHealthPayload)

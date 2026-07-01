@@ -27,6 +27,7 @@ from fastapi import HTTPException
 from app.services.report_health.queries import (
     JOB_DEFINITIONS_TEMPLATE,
     JOB_LIVE_STATE_WINDOW_TEMPLATE,
+    REPORT_FILTER_OPTIONS,
     REPORT_JOB_MAPPING_TEMPLATE,
     REPORT_LIVE_STATE_BY_DELIVERY_DATE,
     REPORT_LIVE_STATE_BY_PK,
@@ -653,3 +654,14 @@ def assemble_single_report_detail(
         coverage_end_date=coverage_end,
         covered_data_dates=covered_dates,
     )
+
+
+def fetch_filter_options(connector: Any) -> dict:
+    """
+    Fetch distinct report names and application names from report_definitions.
+    Used to populate the combobox dropdowns on the frontend before any search.
+    """
+    rows = connector.execute_query(REPORT_FILTER_OPTIONS, {})
+    report_names = sorted({r["report_name"] for r in rows if r.get("report_name")})
+    app_names = sorted({r["application_name"] for r in rows if r.get("application_name")})
+    return {"report_names": report_names, "application_names": app_names}

@@ -105,13 +105,18 @@ export default function ReportMappingLiveEdit() {
 
   // Load data when report is selected
   useEffect(() => {
+    if (!reportId) return;
+    let cancelled = false;
+    const controller = new AbortController();
+
     const init = async () => {
       setLoading(true);
       try {
         const [jobsRes, mappingRes] = await Promise.all([
-          api.get("/admin/report-mapping/jobs"),
-          api.get(`/admin/report-mapping/existing/${reportId}`),
+          api.get("/admin/report-mapping/jobs", { signal: controller.signal }),
+          api.get(`/admin/report-mapping/existing/${reportId}`, { signal: controller.signal }),
         ]);
+        if (cancelled) return;
         setJobs(jobsRes.data.jobs || []);
         const data = mappingRes.data.mapping_data;
         const flowNodes: Node[] = (data.nodes || []).map((n: any) => ({
@@ -134,12 +139,17 @@ export default function ReportMappingLiveEdit() {
         graph.reset({ nodes: layouted, edges: flowEdges });
         initialStateRef.current = { nodes: layouted, edges: flowEdges };
       } catch (e: any) {
+        if (cancelled) return;
         setError(e.response?.data?.detail || "Failed to load mapping");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
-    if (reportId) init();
+    init();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [reportId]);
 
   const handleReset = () => {

@@ -631,6 +631,12 @@
   font-size: 11px;
   font-style: italic;
 }
+.job-node-option--custom {
+  margin-top: 6px;
+  background: rgba(15, 177, 178, 0.08);
+  border: 1px dashed rgba(15, 177, 178, 0.3);
+  border-radius: 4px;
+}
 
 /* ── Live Edit Preview Panel ───────────────────────────────────────── */
 

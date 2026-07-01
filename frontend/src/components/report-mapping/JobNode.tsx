@@ -121,7 +121,22 @@ function JobNode({ id, data }: NodeProps) {
                 <span className="job-node-option-id">#{j.job_id}</span>
               </button>
             ))}
-            {filtered.length === 0 && <div className="job-node-option-empty">No jobs found</div>}
+            {filtered.length === 0 && (
+              <div className="job-node-option-empty">
+                No jobs found
+                <button
+                  className="job-node-option job-node-option--custom"
+                  onClick={() => {
+                    updateNode?.(id, -Date.now(), search, "custom");
+                    setOpen(false);
+                    setSearch("");
+                  }}
+                >
+                  <span className="job-node-option-name">Use "{search}"</span>
+                  <span className="job-node-option-id">custom</span>
+                </button>
+              </div>
+            )}
             {filtered.length > 20 && <div className="job-node-option-empty">Showing 20 of {filtered.length}...</div>}
           </div>
         </div>

@@ -135,23 +135,45 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
   }, [nodes, edges, commitChange]);
 
   // Update a node's job assignment
-  const updateNodeJob = useCallback((nodeId: string, jobId: number, jobName: string) => {
+  const updateNodeJob = useCallback((nodeId: string, jobId: number, jobName: string, category?: string) => {
     setNodes((prev) =>
-      prev.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, job_id: jobId, job_name: jobName } } : n)),
+      prev.map((n) =>
+        n.id === nodeId ? { ...n, data: { ...n.data, job_id: jobId, job_name: jobName, category: category || "" } } : n,
+      ),
     );
     setDirty(true);
   }, []);
 
   // Delete a node and its connected edges
-  const deleteNode = useCallback((nodeId: string) => {
-    setNodes((prev) => prev.filter((n) => n.id !== nodeId));
-    setEdges((prev) => prev.filter((e) => e.source !== nodeId && e.target !== nodeId));
-  }, []);
+  const deleteNode = useCallback(
+    (nodeId: string) => {
+      setNodes((prev) => {
+        const updated = prev.filter((n) => n.id !== nodeId);
+        setEdges((prevEdges) => {
+          const updatedEdges = prevEdges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+          commitChange(updated, updatedEdges);
+          return updatedEdges;
+        });
+        return updated;
+      });
+    },
+    [commitChange],
+  );
 
   // Disconnect only outgoing edges from a node
-  const disconnectRight = useCallback((nodeId: string) => {
-    setEdges((prev) => prev.filter((e) => e.source !== nodeId));
-  }, []);
+  const disconnectRight = useCallback(
+    (nodeId: string) => {
+      setEdges((prev) => {
+        const updated = prev.filter((e) => e.source !== nodeId);
+        setNodes((curNodes) => {
+          commitChange(curNodes, updated);
+          return curNodes;
+        });
+        return updated;
+      });
+    },
+    [commitChange],
+  );
 
   // Remove a node but connect its incoming sources to its outgoing targets
   const bypassDelete = useCallback(

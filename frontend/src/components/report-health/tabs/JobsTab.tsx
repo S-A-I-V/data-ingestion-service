@@ -136,38 +136,44 @@ export default function JobsTab({ jobs }: Props) {
                       <div style={{ marginBottom: 10 }}>
                         <div
                           style={{
-                            fontSize: 10,
-                            color: "var(--text-muted)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.4px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
                             marginBottom: 5,
-                            fontWeight: 600,
                           }}
                         >
-                          Run Heatmap · {job.run_statuses.length} dates
+                          <span
+                            style={{
+                              fontSize: 10,
+                              color: "var(--text-muted)",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.4px",
+                              fontWeight: 600,
+                            }}
+                          >
+                            Run Heatmap · {job.run_statuses.length} dates
+                          </span>
+                          {job.job_url && (
+                            <a
+                              href={job.job_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                color: "var(--accent-light)",
+                                fontSize: 10,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 3,
+                              }}
+                            >
+                              <OpenInNewIcon sx={{ fontSize: 10 }} />
+                              {job.orchestrator_name ?? "Open in orchestrator"}
+                            </a>
+                          )}
                         </div>
                         <Heatmap job={job} />
                       </div>
                       <PerRunTable job={job} />
-                      {job.job_url && (
-                        <div style={{ marginTop: 6 }}>
-                          <a
-                            href={job.job_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              color: "var(--accent-light)",
-                              fontSize: 10,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 3,
-                            }}
-                          >
-                            <OpenInNewIcon sx={{ fontSize: 10 }} />
-                            {job.orchestrator_name ?? "Open in orchestrator"}
-                          </a>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 )}

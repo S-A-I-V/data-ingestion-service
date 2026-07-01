@@ -160,3 +160,23 @@ class ReportHealthPayload(BaseModel):
     coverage_start_date: date
     coverage_end_date: date
     covered_data_dates: List[date] = Field(default_factory=list)
+
+
+class ReportHealthSummary(BaseModel):
+    """Summary counts for the status strip — computed server-side."""
+
+    total: int = 0
+    in_progress: int = 0
+    client_delayed: int = 0
+    internal_delayed: int = 0
+    completed: int = 0
+
+
+class ReportHealthListResponse(BaseModel):
+    """
+    Wrapper response for the report health list endpoint.
+    Contains reports + pre-computed summary counts.
+    """
+
+    reports: List[ReportHealthPayload] = Field(default_factory=list)
+    summary: ReportHealthSummary = Field(default_factory=ReportHealthSummary)

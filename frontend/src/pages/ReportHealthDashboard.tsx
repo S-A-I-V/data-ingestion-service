@@ -10,29 +10,18 @@
  * Permission: admin:report_health
  */
 import "../styles/report-health.css";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { format } from "date-fns";
 
-/** Date range type matching react-day-picker v9 range mode callback */
-interface DateRange {
-  from: Date | undefined;
-  to?: Date | undefined;
-}
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import api from "../api";
-import { Button, Toast, useToast, Popover, PopoverTrigger, PopoverContent, Calendar } from "../components/ui";
+import { Button, Toast, useToast } from "../components/ui";
 import type { ReportHealthPayload } from "../types/reportHealth";
-import {
-  DELAY_STATUS_META,
-  JOB_STATUS_META,
-  STATUS_FILTERS,
-  APP_FILTER_ALL_VALUE,
-  REPORT_HEALTH_POLL_INTERVAL_MS,
-} from "../constants/reportHealth";
+import { DELAY_STATUS_META, JOB_STATUS_META, APP_FILTER_ALL_VALUE } from "../constants/reportHealth";
 import ReportDetailDrawer from "../components/report-health/ReportDetailDrawer";
+import ReportHealthFilters from "../components/report-health/ReportHealthFilters";
+import type { DateFieldMode } from "../components/report-health/ReportHealthFilters";
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -61,19 +50,6 @@ function fmtDelay(mins: number) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return h > 0 ? `${h}h${m > 0 ? ` ${m}m` : ""}` : `${m}m`;
-}
-
-function isDelayed(r: ReportHealthPayload) {
-  return r.report.report_delay_status === "client_delayed" || r.report.report_delay_status === "internal_delayed";
-}
-
-function matchFilter(r: ReportHealthPayload, f: string) {
-  if (f === "all") return true;
-  if (f === "delayed") return isDelayed(r);
-  if (f === "in_progress") return r.report.report_delivery_status === "in_progress";
-  if (f === "success") return r.report.report_delivery_status === "success";
-  if (f === "scheduled") return r.report.report_delivery_status === "scheduled";
-  return true;
 }
 
 function StatusPill({ status, type = "delay" }: { status: string; type?: "delay" | "job" }) {
@@ -131,78 +107,100 @@ function MiniBar({
 
 export default function ReportHealthDashboard() {
   const [reports, setReports] = useState<ReportHealthPayload[]>([]);
+  const [counts, setCounts] = useState({
+    total: 0,
+    in_progress: 0,
+    client_delayed: 0,
+    internal_delayed: 0,
+    completed: 0,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
-  // Date range — from = delivery start, to = delivery end (inclusive).
-  // API queries delivery_date BETWEEN from AND to.
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(todayIso() + "T12:00:00"),
-    to: new Date(todayIso() + "T12:00:00"),
-  });
-  const [calOpen, setCalOpen] = useState(false);
+  // ── Filter state ──
+  const [dateFilterMode, setDateFilterMode] = useState<DateFieldMode>("delivery_date");
+  const [dateFrom, setDateFrom] = useState(todayIso());
+  const [dateTo, setDateTo] = useState(todayIso());
 
-  const [search, setSearch] = useState("");
-  const [appFilter, setAppFilter] = useState(APP_FILTER_ALL_VALUE);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [reportFilter, setReportFilter] = useState("");
+  const [clientFilter, setClientFilter] = useState("");
+  const [sev1Filter, setSev1Filter] = useState("");
+  const [appFilter, setAppFilter] = useState<string>(APP_FILTER_ALL_VALUE);
 
   const [selected, setSelected] = useState<ReportHealthPayload | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [toast, setToast] = useToast();
 
-  // Derived delivery date strings from range
-  const deliveryDateFrom = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : todayIso();
-  const deliveryDateTo = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : deliveryDateFrom;
+  // ── Available filter options (fetched on mount from report_definitions) ──
+  const [availableReportNames, setAvailableReportNames] = useState<string[]>([]);
+  const [availableAppNames, setAvailableAppNames] = useState<string[]>([]);
+  const [filtersLoading, setFiltersLoading] = useState(true);
 
-  // ── Fetch ────────────────────────────────────────────────
+  useEffect(() => {
+    setFiltersLoading(true);
+    api
+      .get<{ report_names: string[]; application_names: string[] }>("/admin/report-health/filters")
+      .then((res) => {
+        setAvailableReportNames(res.data.report_names ?? []);
+        setAvailableAppNames(res.data.application_names ?? []);
+      })
+      .catch(() => {
+        // Non-fatal — dropdowns will just be empty
+      })
+      .finally(() => setFiltersLoading(false));
+  }, []);
 
-  const fetch_ = useCallback(
-    async (silent = false) => {
-      if (!silent) setLoading(true);
-      setError(null);
-      try {
-        const params: Record<string, string> = { delivery_date: deliveryDateFrom };
-        if (deliveryDateTo !== deliveryDateFrom) {
-          params.delivery_date_to = deliveryDateTo;
-        }
-        const res = await api.get<ReportHealthPayload[]>("/admin/report-health/", { params });
-        setReports(res.data ?? []);
-        setLastRefreshed(new Date());
-        // Reset filters on fresh data load so stale filters don't hide new results
-        if (!silent) {
-          setSearch("");
-          setAppFilter(APP_FILTER_ALL_VALUE);
-          setStatusFilter("all");
-        }
-      } catch (e: any) {
-        const status = e.response?.status;
-        const detail = e.response?.data?.detail;
-        if (status === 404) {
-          setReports([]);
-        } else if (status === 403) {
-          setError("Permission denied — requires admin:report_health.");
-        } else {
-          setError(detail || "Failed to load.");
-          if (!silent) setToast({ ok: false, msg: detail || "Failed to load." });
-        }
+  // Delivery date range — always uses dateFrom/dateTo directly
+  const resolvedDateRange = useMemo(() => {
+    return { from: dateFrom, to: dateTo };
+  }, [dateFrom, dateTo]);
+
+  // ── Fetch (manual trigger only — all filtering done server-side) ──
+
+  const fetch_ = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params: Record<string, string> = { delivery_date: resolvedDateRange.from };
+      if (resolvedDateRange.to !== resolvedDateRange.from) {
+        params.delivery_date_to = resolvedDateRange.to;
       }
-      if (!silent) setLoading(false);
-    },
-    [deliveryDateFrom, deliveryDateTo, setToast],
-  );
+      if (reportFilter) params.report_name = reportFilter;
+      if (clientFilter) params.client_name = clientFilter;
+      if (appFilter && appFilter !== APP_FILTER_ALL_VALUE) params.application_name = appFilter;
+      if (sev1Filter) params.sev1 = sev1Filter;
 
-  // Initial load + re-fetch on date change
-  useEffect(() => {
-    fetch_();
-  }, [fetch_]);
+      const res = await api.get<{
+        reports: ReportHealthPayload[];
+        summary: {
+          total: number;
+          in_progress: number;
+          client_delayed: number;
+          internal_delayed: number;
+          completed: number;
+        };
+      }>("/admin/report-health/", { params });
+      setReports(res.data.reports ?? []);
+      setCounts(res.data.summary ?? { total: 0, in_progress: 0, client_delayed: 0, internal_delayed: 0, completed: 0 });
+      setLastRefreshed(new Date());
+    } catch (e: any) {
+      const status = e.response?.status;
+      const detail = e.response?.data?.detail;
+      if (status === 404) {
+        setReports([]);
+        setCounts({ total: 0, in_progress: 0, client_delayed: 0, internal_delayed: 0, completed: 0 });
+      } else if (status === 403) {
+        setError("Permission denied — requires admin:report_health.");
+      } else {
+        setError(detail || "Failed to load.");
+        setToast({ ok: false, msg: detail || "Failed to load." });
+      }
+    }
+    setLoading(false);
+  }, [resolvedDateRange, reportFilter, clientFilter, appFilter, sev1Filter, setToast]);
 
-  // Auto-refresh every minute
-  useEffect(() => {
-    if (!REPORT_HEALTH_POLL_INTERVAL_MS) return;
-    const id = setInterval(() => fetch_(true), REPORT_HEALTH_POLL_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [fetch_]);
+  // NO auto-fetch on mount — user must click Search
 
   // ── Detail fetch (on-demand when report row is clicked) ──
 
@@ -232,40 +230,7 @@ export default function ReportHealthDashboard() {
   );
 
   // ── Derived ──────────────────────────────────────────────
-
-  const appNames = useMemo(() => {
-    const s = new Set(reports.map((r) => r.report.application_name).filter(Boolean));
-    return Array.from(s).sort();
-  }, [reports]);
-
-  const filtered = useMemo(() => {
-    let list = reports;
-    if (appFilter !== APP_FILTER_ALL_VALUE) list = list.filter((r) => r.report.application_name === appFilter);
-    list = list.filter((r) => matchFilter(r, statusFilter));
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (r) =>
-          r.report.report_name.toLowerCase().includes(q) ||
-          r.report.application_name.toLowerCase().includes(q) ||
-          (r.report.client_name ?? "").toLowerCase().includes(q) ||
-          (r.report.delayed_job_name ?? "").toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [reports, appFilter, statusFilter, search]);
-
-  // Status strip counts
-  const counts = useMemo(
-    () => ({
-      total: reports.length,
-      prog: reports.filter((r) => r.report.report_delivery_status === "in_progress").length,
-      delayed: reports.filter((r) => isDelayed(r)).length,
-      warn: reports.filter((r) => r.report.report_delay_status === "internal_delayed").length,
-      ok: reports.filter((r) => r.report.report_delivery_status === "success").length,
-    }),
-    [reports],
-  );
+  // Frontend is dumb — no filtering, no counting. Just display what the API returns.
 
   // ── Render ───────────────────────────────────────────────
 
@@ -278,23 +243,16 @@ export default function ReportHealthDashboard() {
           Report Health
         </div>
 
-        {/* Inline status strip — clickable to set filter */}
+        {/* Status strip — display only */}
         <div className="rh-status-strip">
           {[
-            { key: "all", cls: "rh-strip-cell--total", num: counts.total, lbl: "Total" },
-            { key: "in_progress", cls: "rh-strip-cell--prog", num: counts.prog, lbl: "In Progress" },
-            { key: "delayed", cls: "rh-strip-cell--delayed", num: counts.delayed, lbl: "Client Delayed" },
-            { key: "internal", cls: "rh-strip-cell--warn", num: counts.warn, lbl: "Internal Delay" },
-            { key: "success", cls: "rh-strip-cell--ok", num: counts.ok, lbl: "Completed" },
+            { cls: "rh-strip-cell--total", num: counts.total, lbl: "Total" },
+            { cls: "rh-strip-cell--prog", num: counts.in_progress, lbl: "In Progress" },
+            { cls: "rh-strip-cell--delayed", num: counts.client_delayed, lbl: "Client Delayed" },
+            { cls: "rh-strip-cell--warn", num: counts.internal_delayed, lbl: "Internal Delay" },
+            { cls: "rh-strip-cell--ok", num: counts.completed, lbl: "Completed" },
           ].map((s) => (
-            <div
-              key={s.key}
-              className={`rh-strip-cell ${s.cls}${statusFilter === s.key ? " active" : ""}`}
-              onClick={() => setStatusFilter(s.key === "internal" ? "internal_delayed" : s.key)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && setStatusFilter(s.key)}
-            >
+            <div key={s.lbl} className={`rh-strip-cell ${s.cls}`}>
               <span className="rh-strip-num">{s.num}</span>
               <span className="rh-strip-label">{s.lbl}</span>
             </div>
@@ -307,10 +265,6 @@ export default function ReportHealthDashboard() {
             {lastRefreshed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
         )}
-        <Button variant="ghost" size="sm" onClick={() => fetch_()} disabled={loading}>
-          <RefreshIcon sx={{ fontSize: 13 }} />
-          {loading ? "…" : "Refresh"}
-        </Button>
       </div>
 
       {error && (
@@ -319,94 +273,37 @@ export default function ReportHealthDashboard() {
         </div>
       )}
 
-      {/* ── Filter bar ── */}
-      <div className="rh-filterbar">
-        <input
-          type="search"
-          className="rh-search"
-          placeholder="Search report name, app, client, delayed job…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search reports"
-        />
-
-        {/* Date range picker — delivery date filter */}
-        <Popover open={calOpen} onOpenChange={setCalOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={`rh-date-btn${calOpen ? " rh-date-btn--active" : ""}`}
-              aria-label="Select delivery date range"
-            >
-              <span className="rh-date-label">Delivery</span>
-              <CalendarTodayIcon sx={{ fontSize: 12, opacity: 0.6 }} />
-              {deliveryDateFrom === deliveryDateTo
-                ? fmtDate(deliveryDateFrom)
-                : `${fmtDate(deliveryDateFrom)} – ${fmtDate(deliveryDateTo)}`}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 rh-cal-popover" align="start">
-            <Calendar
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={(range) => {
-                setDateRange(range);
-                if (range?.from && range?.to) setTimeout(() => setCalOpen(false), 200);
-              }}
-              numberOfMonths={2}
-              className="rounded-lg border border-white/10"
-            />
-          </PopoverContent>
-        </Popover>
-
-        {/* App name filter */}
-        {appNames.length > 0 && (
-          <select
-            className="rh-select"
-            value={appFilter}
-            onChange={(e) => setAppFilter(e.target.value)}
-            aria-label="Filter by application"
-          >
-            <option value={APP_FILTER_ALL_VALUE}>All Apps</option>
-            {appNames.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        )}
-
-        {/* Status tabs */}
-        <div className="rh-status-tabs">
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              className={`rh-status-tab${statusFilter === f.value ? (f.value === "delayed" ? " active-delayed" : " active") : ""}`}
-              onClick={() => setStatusFilter(f.value)}
-            >
-              {f.label}
-              {f.value !== "all" && (
-                <span style={{ marginLeft: 4, opacity: 0.7 }}>
-                  (
-                  {f.value === "delayed"
-                    ? counts.delayed
-                    : f.value === "in_progress"
-                      ? counts.prog
-                      : f.value === "success"
-                        ? counts.ok
-                        : reports.filter((r) => r.report.report_delivery_status === f.value).length}
-                  )
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ── Filter panel ── */}
+      <ReportHealthFilters
+        filters={{ dateFilterMode, dateFrom, dateTo, reportFilter, clientFilter, sev1Filter, appFilter }}
+        onChange={(patch) => {
+          if (patch.dateFilterMode !== undefined) setDateFilterMode(patch.dateFilterMode);
+          if (patch.dateFrom !== undefined) setDateFrom(patch.dateFrom);
+          if (patch.dateTo !== undefined) setDateTo(patch.dateTo);
+          if (patch.reportFilter !== undefined) setReportFilter(patch.reportFilter);
+          if (patch.clientFilter !== undefined) setClientFilter(patch.clientFilter);
+          if (patch.sev1Filter !== undefined) setSev1Filter(patch.sev1Filter);
+          if (patch.appFilter !== undefined) setAppFilter(patch.appFilter);
+        }}
+        onSearch={() => fetch_()}
+        onReset={() => {
+          setDateFilterMode("delivery_date");
+          setDateFrom(todayIso());
+          setDateTo(todayIso());
+          setReportFilter("");
+          setClientFilter("");
+          setSev1Filter("");
+          setAppFilter(APP_FILTER_ALL_VALUE);
+        }}
+        loading={loading}
+        filtersLoading={filtersLoading}
+        appNames={availableAppNames}
+        reportNames={availableReportNames}
+        appFilterAllValue={APP_FILTER_ALL_VALUE}
+      />
 
       {/* ── Column headers ── */}
-      {!loading && filtered.length > 0 && (
+      {!loading && reports.length > 0 && (
         <div className="rh-col-headers">
           <span className="rh-col--name">Report · App · Client</span>
           <span className="rh-col--status">Delivery Status</span>
@@ -424,17 +321,17 @@ export default function ReportHealthDashboard() {
       {loading && (
         <div className="rh-empty">
           <div className="rh-spin" />
-          Loading delivery data for {fmtDate(deliveryDateFrom)}…
+          Loading delivery data for {fmtDate(resolvedDateRange.from)}…
         </div>
       )}
 
       {/* ── Empty ── */}
-      {!loading && !error && filtered.length === 0 && (
+      {!loading && !error && reports.length === 0 && (
         <div className="rh-empty">
           <SearchOffIcon sx={{ fontSize: 32, opacity: 0.3 }} />
           <span>
             {reports.length === 0
-              ? `No reports scheduled for delivery on ${fmtDate(deliveryDateFrom)}`
+              ? `No reports scheduled for delivery on ${fmtDate(resolvedDateRange.from)}`
               : "No reports match current filters"}
           </span>
         </div>
@@ -442,7 +339,7 @@ export default function ReportHealthDashboard() {
 
       {/* ── Report rows ── */}
       {!loading &&
-        filtered.map((payload) => {
+        reports.map((payload) => {
           const r = payload.report;
           const isSel = selected?.report.report_id === r.report_id && selected.report.data_date === r.data_date;
           const isCrit = r.report_delay_status === "client_delayed";
