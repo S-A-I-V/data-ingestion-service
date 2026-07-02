@@ -77,6 +77,7 @@ export default function ReportDetailDrawer({ payload, loading = false, onClose }
               <span className="rh-drawer-submeta-item">Client: {r.client_name || "—"}</span>
               <span className="rh-drawer-submeta-item">Delivery: {r.delivery_date}</span>
               <span className="rh-drawer-submeta-item">Data: {r.data_date}</span>
+              <span className="rh-drawer-submeta-sep" />
               <Pill status={r.report_delay_status} />
               <Pill status={r.report_delivery_status} type="job" />
             </div>

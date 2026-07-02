@@ -4,6 +4,7 @@
  */
 import Pill from "../shared/Pill";
 import { fmt, fmtMins } from "../shared/formatters";
+import Sev1Icon from "../shared/Sev1Icon";
 import type { ReportHealthPayload } from "../../../types/reportHealth";
 
 interface Props {
@@ -144,7 +145,9 @@ export default function OverviewTab({ payload }: Props) {
       )}
       {r.sev1_numbers && (
         <div className="rh-alert rh-alert--danger">
-          <div className="rh-alert-title">🚨 SEV1 Active — {r.sev1_numbers}</div>
+          <div className="rh-alert-title">
+            <Sev1Icon size={16} /> SEV1 Active — {r.sev1_numbers}
+          </div>
           {r.sev1_urls && (
             <a href={r.sev1_urls} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "var(--danger)" }}>
               View Incident ↗

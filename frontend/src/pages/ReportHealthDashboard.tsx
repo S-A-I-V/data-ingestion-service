@@ -14,6 +14,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
+import Tooltip from "@mui/material/Tooltip";
 import api from "../api";
 import { Toast, useToast } from "../components/ui";
 import type { ReportHealthPayload } from "../types/reportHealth";
@@ -23,6 +24,7 @@ import ReportHealthFilters from "../components/report-health/ReportHealthFilters
 import type { DateFieldMode } from "../components/report-health/ReportHealthFilters";
 import StatusPill from "../components/report-health/shared/StatusPill";
 import MiniBar from "../components/report-health/shared/MiniBar";
+import Sev1Icon from "../components/report-health/shared/Sev1Icon";
 import { fmt, fmtMins, todayIso, fmtDateDmy } from "../components/report-health/shared/formatters";
 
 // ── Component ──────────────────────────────────────────────
@@ -39,6 +41,7 @@ export default function ReportHealthDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // ── Filter state ──
   const [dateFilterMode, setDateFilterMode] = useState<DateFieldMode>("delivery_date");
@@ -103,9 +106,11 @@ export default function ReportHealthDashboard() {
           completed: number;
         };
       }>("/admin/report-health/", { params });
-      setReports(res.data.reports ?? []);
+      const reportData = res.data.reports ?? [];
+      setReports(reportData);
       setCounts(res.data.summary ?? { total: 0, in_progress: 0, client_delayed: 0, internal_delayed: 0, completed: 0 });
       setLastRefreshed(new Date());
+      setHasSearched(true);
     } catch (e: any) {
       const status = e.response?.status;
       const detail = e.response?.data?.detail;
@@ -216,6 +221,9 @@ export default function ReportHealthDashboard() {
           setClientFilter("");
           setSev1Filter("");
           setAppFilter(APP_FILTER_ALL_VALUE);
+          setReports([]);
+          setCounts({ total: 0, in_progress: 0, client_delayed: 0, internal_delayed: 0, completed: 0 });
+          setHasSearched(false);
         }}
         loading={loading}
         filtersLoading={filtersLoading}
@@ -231,10 +239,11 @@ export default function ReportHealthDashboard() {
           <span className="rh-col--status">Delivery Status</span>
           <span className="rh-col--delay">Delay Status</span>
           <span className="rh-col--bar">Steps Progress</span>
-          <span className="rh-col--dur">Delay Duration</span>
+          <span className="rh-col--dur">Delay</span>
           <span className="rh-col--sla">BAM Deadline</span>
           <span className="rh-col--time">Report Start</span>
           <span className="rh-col--time">Report End</span>
+          <span className="rh-col--sev1">SEV1</span>
           <span className="rh-col--date">Data Date · Coverage</span>
         </div>
       )}
@@ -252,9 +261,9 @@ export default function ReportHealthDashboard() {
         <div className="rh-empty">
           <SearchOffIcon sx={{ fontSize: 32, opacity: 0.3 }} />
           <span>
-            {reports.length === 0
-              ? `No reports scheduled for delivery on ${fmtDateDmy(resolvedDateRange.from)}`
-              : "No reports match current filters"}
+            {hasSearched
+              ? "No reports found for the selected filters"
+              : "Select filters and click Search to load report health data"}
           </span>
         </div>
       )}
@@ -335,6 +344,47 @@ export default function ReportHealthDashboard() {
                 style={{ fontSize: 11, color: r.report_end_time ? "var(--success)" : undefined }}
               >
                 {r.report_end_time ? fmt(r.report_end_time) : "—"}
+              </div>
+
+              {/* SEV1 */}
+              <div className="rh-col--sev1">
+                {r.sev1_numbers ? (
+                  (() => {
+                    const nums = r
+                      .sev1_numbers!.split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean);
+                    const urls = r.sev1_urls?.split(",").map((s) => s.trim()) ?? [];
+                    return (
+                      <Tooltip
+                        title={
+                          <div style={{ fontSize: 11, lineHeight: 1.8 }}>
+                            {nums.map((num, i) => (
+                              <div key={num}>
+                                {urls[i] ? (
+                                  <a href={urls[i]} target="_blank" rel="noreferrer" style={{ color: "#f87171" }}>
+                                    {num} ↗
+                                  </a>
+                                ) : (
+                                  num
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        }
+                        arrow
+                        placement="left"
+                      >
+                        <div className="rh-sev1-chip">
+                          <Sev1Icon size={14} />
+                          <span>{nums.length > 1 ? `+${nums.length}` : nums[0]}</span>
+                        </div>
+                      </Tooltip>
+                    );
+                  })()
+                ) : (
+                  <span className="rh-text-muted">—</span>
+                )}
               </div>
 
               {/* Data date + coverage window */}
