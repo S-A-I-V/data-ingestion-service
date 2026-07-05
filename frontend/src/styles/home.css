@@ -792,7 +792,7 @@
 }
 .modal-footer-actions {
   display: flex;
-  gap: 8px;
+  gap: 16px;
 }
 .radio-label {
   width: auto;

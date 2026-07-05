@@ -15,7 +15,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Button, Spinner } from "./ui";
+import { Spinner } from "./ui";
 import type { ConnectionForm, DbType } from "../types";
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
@@ -148,13 +148,13 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
         </span>
         <div className="modal-header-actions">
           {!isEditing && (
-            <Button size="sm" onClick={() => setShowPicker(true)}>
+            <button type="button" className="btn btn-sm" onClick={() => setShowPicker(true)}>
               ← Change DB
-            </Button>
+            </button>
           )}
-          <Button size="icon" variant="ghost" title="Close" onClick={onClose}>
+          <button type="button" className="btn btn-sm btn-danger" title="Close" onClick={onClose}>
             <CloseIcon sx={{ fontSize: 18 }} />
-          </Button>
+          </button>
         </div>
       </div>
       <div className="modal-body">
@@ -164,8 +164,6 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
               key={t.id}
               className={`modal-sidebar-item ${tab === t.id ? "active" : ""}`}
               onClick={() => setTab(t.id)}
-              whileHover={{ x: 3 }}
-              transition={{ duration: 0.15 }}
             >
               <span>{TAB_ICONS[t.icon] || t.icon}</span> {t.label}
             </motion.div>
@@ -181,14 +179,16 @@ export default function ConnectionModal({ onClose, onSaved, onToast, editId, ini
         </div>
       </div>
       <div className="modal-footer">
-        <Button onClick={testConnection} loading={testing} loadingText="Testing..." disabled={saving}>
-          Test Connection
-        </Button>
+        <button type="button" className="btn btn-sm" onClick={testConnection} disabled={saving || testing}>
+          {testing ? "Testing..." : "Test Connection"}
+        </button>
         <div className="modal-footer-actions">
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={save} loading={saving} loadingText="Saving..." disabled={testing}>
-            Save
-          </Button>
+          <button type="button" className="btn btn-sm" onClick={onClose}>
+            Cancel
+          </button>
+          <button type="button" className="btn btn-sm btn-primary" onClick={save} disabled={testing || saving}>
+            {saving ? "Saving..." : "Save"}
+          </button>
         </div>
       </div>
 
