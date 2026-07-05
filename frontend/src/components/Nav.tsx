@@ -73,7 +73,7 @@ export default function Nav({ user }: Props) {
           <Link
             key={tab.to}
             to={tab.to}
-            className={`nav-tab ${(tab.to === "/admin" ? isOnAdminPage : loc.pathname === tab.to) ? "active" : ""}`}
+            className={`btn btn-sm no-underline ${(tab.to === "/admin" ? isOnAdminPage : loc.pathname === tab.to) ? "btn--active" : "btn--ghost"}`}
           >
             {tab.label}
           </Link>

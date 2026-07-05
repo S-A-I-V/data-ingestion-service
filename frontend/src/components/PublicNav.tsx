@@ -26,8 +26,12 @@ export default function PublicNav() {
         </span>
       </Link>
 
-      {/* Center: empty — matches page grid alignment */}
-      <div className="nav-center-links" />
+      {/* Center: nav links */}
+      <div className="nav-center-links">
+        <Link to="/home" className="btn btn-sm btn--active no-underline" onClick={goHome}>
+          Home
+        </Link>
+      </div>
 
       {/* Right: Sign In */}
       <div className="nav-right-ctas">

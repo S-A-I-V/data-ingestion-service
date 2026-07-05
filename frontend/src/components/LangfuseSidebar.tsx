@@ -72,11 +72,11 @@ function SidebarItem({
     >
       <CornerHoverEffect />
       <div className={cn("flex w-full items-center justify-between gap-2", date && "flex-col items-start gap-1.5")}>
-        <span className="font-sans text-[13px] font-normal leading-[1.2] tracking-[-0.02em] text-neutral-500 group-hover:text-neutral-900">
+        <span className="font-sans text-[12px] font-normal leading-[1.2] tracking-[-0.02em] text-neutral-500 group-hover:text-neutral-900">
           {label}
         </span>
         {value && (
-          <span className="shrink-0 font-sans text-[13px] font-normal leading-[1.2] tracking-[-0.02em] text-neutral-400 group-hover:text-neutral-900 tabular-nums">
+          <span className="shrink-0 font-sans text-[12px] font-normal leading-[1.2] tracking-[-0.02em] text-neutral-400 group-hover:text-neutral-900 tabular-nums">
             {value}
           </span>
         )}
@@ -100,12 +100,12 @@ function SectionHeader({
   viewAllHref?: string;
 }) {
   return (
-    <div className="mb-3 flex items-center justify-between px-2">
+    <div className="sidebar-card-title flex items-center justify-between">
       <h2 className="font-sans text-[13px] font-medium leading-[1.2] tracking-[-0.02em] text-neutral-900">{title}</h2>
       {showViewAll && (
         <a
           href={viewAllHref}
-          className="font-mono text-[10px] font-normal tracking-[-0.02em] text-neutral-400 underline underline-offset-2 transition-colors hover:text-neutral-900 no-underline"
+          className="font-mono text-[10px] font-normal tracking-[-0.02em] text-neutral-400 transition-colors hover:text-neutral-900 no-underline"
         >
           View All
         </a>
@@ -127,9 +127,9 @@ export default function LangfuseSidebar() {
     >
       {/* Community Stats */}
       <div className="sidebar-card">
-        <div className="px-2 py-4">
+        <div className="sidebar-card-content">
           <SectionHeader title="Community Stats" />
-          <div className="flex flex-col gap-[2px]">
+          <div className="sidebar-card-list">
             {COMMUNITY_STATS.map((item) => (
               <SidebarItem key={item.label} label={item.label} value={item.value} href={item.href} />
             ))}
@@ -139,9 +139,9 @@ export default function LangfuseSidebar() {
 
       {/* Changelog */}
       <div className="sidebar-card">
-        <div className="px-2 py-4">
+        <div className="sidebar-card-content">
           <SectionHeader title="Changelog" showViewAll />
-          <div className="flex flex-col gap-2">
+          <div className="sidebar-card-list sidebar-card-list--loose">
             {CHANGELOG_ITEMS.map((item) => (
               <SidebarItem key={item.label} label={item.label} date={item.date} href={item.href} />
             ))}
@@ -151,9 +151,9 @@ export default function LangfuseSidebar() {
 
       {/* Self Hosting Guides */}
       <div className="sidebar-card">
-        <div className="px-2 py-4">
+        <div className="sidebar-card-content">
           <SectionHeader title="Self Hosting Guides" />
-          <div className="flex flex-col gap-[2px]">
+          <div className="sidebar-card-list">
             {HOSTING_GUIDES.map((item) => (
               <SidebarItem key={item.label} label={item.label} href={item.href} />
             ))}
@@ -163,7 +163,7 @@ export default function LangfuseSidebar() {
 
       {/* Empty placeholder card */}
       <div className="sidebar-card">
-        <div className="px-2 py-4"></div>
+        <div className="sidebar-card-content"></div>
       </div>
 
       {/* Bottom spacing */}

@@ -61,6 +61,50 @@
   opacity: 1;
 }
 
+/* Tight corners variant — corners sit on element edge (sidebar style) */
+.btn--tight::after {
+  inset: 0;
+}
+
+.btn--tight:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-hover);
+}
+
+/* Ghost variant — no visible border/bg until hover */
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.btn--ghost:hover {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: transparent;
+  color: var(--text-primary);
+}
+
+/* Active state — bold text, no border, corners only on hover */
+.btn--active {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.btn--active::after {
+  opacity: 0;
+}
+
+.btn--active:hover::after {
+  opacity: 1;
+}
+
+.btn--active:hover {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: transparent;
+}
+
 .btn:hover {
   background: var(--bg-glass-hover);
   border-color: var(--border-hover);

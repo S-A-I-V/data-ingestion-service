@@ -147,6 +147,34 @@ button[role="combobox"]:hover {
   min-height: 0;
 }
 
+.sidebar-card-content {
+  padding: 0.75rem 0.5rem 1rem;
+}
+
+.sidebar-card-title {
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.sidebar-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.sidebar-card-list--loose {
+  gap: 0.25rem;
+}
+
+.sidebar-card a {
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.sidebar-card .sidebar-card-title h2 {
+  font-size: 13px;
+}
+
 html {
   background: var(--color-chrome);
 }
