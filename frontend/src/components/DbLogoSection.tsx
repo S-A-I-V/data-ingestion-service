@@ -1,50 +1,46 @@
-import { LogoSlider } from "./ui/LogoSlider";
+/**
+ * Company/DB logo section — Langfuse style.
+ * Shows database names as text wordmarks in two rows,
+ * with some having "Read story" links (like Langfuse shows company logos).
+ * Uses grayscale text styling, no icon cards.
+ */
 
-const I = "/images/db-icons";
-
-const ALL_DBS = [
-  { label: "PostgreSQL", icon: `${I}/postgresql.png` },
-  { label: "ClickHouse", icon: `${I}/clickhouse.png` },
-  { label: "MySQL", icon: `${I}/mysql.png` },
-  { label: "MariaDB", icon: `${I}/mariadb.png` },
-  { label: "SQL Server", icon: `${I}/mssql.png` },
-  { label: "Oracle", icon: `${I}/oracle.png` },
-  { label: "Snowflake", icon: `${I}/snowflake.png` },
-  { label: "BigQuery", icon: `${I}/bigquery.png` },
-  { label: "Redshift", icon: `${I}/postgresql.png` },
-  { label: "Databricks", icon: `${I}/databricks.svg` },
-  { label: "Vertica", icon: `${I}/vertica.png` },
-  { label: "Teradata", icon: `${I}/teradata.png` },
-  { label: "SAP HANA", icon: `${I}/saphana.png` },
-  { label: "Sybase", icon: `${I}/sybase.png` },
-  { label: "CockroachDB", icon: `${I}/cockroachdb.png` },
-  { label: "TimescaleDB", icon: `${I}/timescaledb.png` },
-  { label: "Elasticsearch", icon: `${I}/elasticsearch.png` },
-  { label: "OpenSearch", icon: `${I}/opensearch.png` },
-  { label: "DuckDB", icon: `${I}/duckdb.png` },
-  { label: "SQLite", icon: `${I}/sqlite.png` },
-  { label: "Greenplum", icon: `${I}/greenplum.png` },
-  { label: "Trino", icon: `${I}/trino.png` },
-  { label: "Presto", icon: `${I}/presto.png` },
-  { label: "Apache Hive", icon: `${I}/hive.png` },
-  { label: "Azure SQL", icon: `${I}/azuresql.png` },
-  { label: "Spanner", icon: `${I}/spanner.png` },
-  { label: "Athena", icon: `${I}/athena.png` },
-  { label: "StarRocks", icon: `${I}/starrocks.svg` },
-  { label: "TiDB", icon: `${I}/tidb.png` },
-  { label: "YugabyteDB", icon: `${I}/yugabyte.png` },
+const ROW_1 = [
+  { name: "PostgreSQL", hasStory: true },
+  { name: "Snowflake", hasStory: false },
+  { name: "ClickHouse", hasStory: false },
+  { name: "BigQuery", hasStory: true },
+  { name: "Oracle", hasStory: false },
+  { name: "Databricks", hasStory: false },
 ];
 
-const mid = Math.ceil(ALL_DBS.length / 2);
-const ROW_A = ALL_DBS.slice(0, mid);
-const ROW_B = ALL_DBS.slice(mid);
+const ROW_2 = [
+  { name: "MySQL", hasStory: true },
+  { name: "Vertica", hasStory: false },
+  { name: "Teradata", hasStory: false },
+  { name: "SAP HANA", hasStory: false },
+  { name: "Elasticsearch", hasStory: false },
+  { name: "DuckDB", hasStory: true },
+];
+
+function LogoRow({ items }: { items: typeof ROW_1 }) {
+  return (
+    <div className="langfuse-logo-row">
+      {items.map((item) => (
+        <div key={item.name} className="langfuse-logo-item">
+          <span className="langfuse-logo-name">{item.name}</span>
+          {item.hasStory && <span className="langfuse-logo-story">Read story</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function DbLogoSection() {
   return (
-    <div className="db-logos-section">
-      <p className="db-logos-section__title">Databases supported</p>
-      <LogoSlider logos={ROW_A} baseVelocity={60} direction="left" />
-      <LogoSlider logos={ROW_B} baseVelocity={60} direction="right" />
+    <div className="langfuse-logos-section">
+      <LogoRow items={ROW_1} />
+      <LogoRow items={ROW_2} />
     </div>
   );
 }

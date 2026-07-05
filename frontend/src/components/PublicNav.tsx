@@ -1,6 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "./ui";
 
+/**
+ * Public navigation — Langfuse UX template.
+ * Grid: Logo (left) | empty center spacer | Sign In (right).
+ * Center column is intentionally empty — same 3-column grid alignment
+ * as the rest of the page layout.
+ */
 export default function PublicNav() {
   const loc = useLocation();
 
@@ -12,21 +17,23 @@ export default function PublicNav() {
 
   return (
     <nav className="nav">
+      {/* Left: Logo */}
       <Link to="/home" className="nav-brand-link" onClick={goHome}>
         <span className="nav-brand">
           <img src="/images/logo.jpeg" alt="NFC Logo" className="brand-logo" />
-          NFC Data Ingestion
+          <span className="nav-brand-name">NFC Data Hub</span>
+          <span className="nav-brand-sub">by NFC Team</span>
         </span>
       </Link>
-      <div className="nav-right">
-        <div className="nav-tabs">
-          <Link to="/home" className={`nav-tab ${loc.pathname === "/home" ? "active" : ""}`} onClick={goHome}>
-            Home
-          </Link>
-        </div>
-        <Button asChild size="sm" className="nav-signin-btn">
-          <Link to="/login">SIGN IN</Link>
-        </Button>
+
+      {/* Center: empty — matches page grid alignment */}
+      <div className="nav-center-links" />
+
+      {/* Right: Sign In */}
+      <div className="nav-right-ctas">
+        <Link to="/login" className="btn btn-primary btn-sm no-underline">
+          Sign In <span className="nav-cta-kbd">S</span>
+        </Link>
       </div>
     </nav>
   );

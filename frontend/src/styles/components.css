@@ -1,96 +1,148 @@
-/* ===== BUTTONS ===== */
+/* ===== BUTTONS — Langfuse corner bracket style ===== */
 .btn {
-  border-radius: var(--radius-sm);
+  position: relative;
+  border-radius: 2px;
   border: 1px solid var(--border);
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
   font-family: var(--font);
-  background: var(--bg-glass);
+  background: var(--bg-surface);
   color: var(--text-primary);
-  transition: var(--transition);
+  transition:
+    background-color 0.12s,
+    border-color 0.12s,
+    color 0.12s,
+    transform 0.1s;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  overflow: visible;
+  text-decoration: none !important;
 }
+
+/* Corner marks on all buttons — spaced out from the button edge */
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s;
+  background-color: rgb(64, 64, 57);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  -webkit-mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  mask-size: 8px 8px;
+  -webkit-mask-size: 8px 8px;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+/* Secondary/default buttons — corners appear on hover */
+.btn:hover::after {
+  opacity: 1;
+}
+
 .btn:hover {
   background: var(--bg-glass-hover);
   border-color: var(--border-hover);
-  transform: translateY(-1px);
 }
+
 .btn:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
+
+/* Primary button — dark bg, corners show on hover only */
 .btn-primary {
-  background: var(--gradient-1);
-  color: #fff;
-  border: none;
-  box-shadow: 0 2px 12px rgba(15, 177, 178, 0.3);
+  background: #20201d;
+  color: #f6f6f3;
+  border: 1px solid #20201d;
+  overflow: visible;
 }
+
+.btn-primary::after {
+  background-color: #20201d;
+}
+
 .btn-primary:hover {
-  box-shadow: 0 4px 20px rgba(15, 177, 178, 0.4);
+  background: #333;
+  border-color: #333;
 }
+
 .btn-danger {
   background: var(--danger-bg);
   color: var(--danger);
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(220, 38, 38, 0.2);
 }
 .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(220, 38, 38, 0.12);
 }
 .btn-success {
   background: var(--success-bg);
   color: var(--success);
-  border-color: rgba(34, 197, 94, 0.2);
+  border-color: rgba(22, 163, 74, 0.2);
 }
 .btn-success:hover {
-  background: rgba(34, 197, 94, 0.15);
+  background: rgba(22, 163, 74, 0.12);
 }
 .btn-sm {
   font-size: 12px;
+  padding: 5px 10px;
 }
 .btn-icon {
   padding: 6px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 .btn-google {
   background: #fff;
   color: #333;
   font-weight: 600;
-  border: none;
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 28px;
-  border-radius: var(--radius-md);
+  border-radius: 2px;
   font-size: 14px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-  transition: var(--transition);
+  transition: all 0.12s;
 }
 .btn-google:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-hover);
 }
 
-/* ===== GLASS PANELS ===== */
+/* ===== PANELS — Langfuse clean card style ===== */
 .panel {
-  background: rgba(15, 15, 28, 0.65);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   margin-bottom: 16px;
   overflow: hidden;
   transition: var(--transition);
 }
 .panel:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-hover);
 }
 .panel-header {
   padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-glass-hover);
   border-bottom: 1px solid var(--border);
   font-size: 13px;
   font-weight: 600;
@@ -103,7 +155,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--gradient-1);
+  background: var(--text-primary);
   color: #fff;
   display: flex;
   align-items: center;
@@ -116,13 +168,12 @@
   padding: 20px;
 }
 
-/* ===== MODAL ===== */
+/* ===== MODAL — Langfuse style ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -140,7 +191,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    transform: translateY(12px) scale(0.99);
   }
   to {
     opacity: 1;
@@ -149,17 +200,18 @@
 }
 
 .modal {
-  background: rgba(15, 15, 28, 0.65);
-  -webkit-backdrop-filter: blur(28px) saturate(1.5);
-  backdrop-filter: blur(28px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-xl);
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   width: 820px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.1),
+    0 2px 6px rgba(0, 0, 0, 0.04);
+  animation: slideUp 0.2s ease;
 }
 .modal-header {
   display: flex;
@@ -172,13 +224,13 @@
   color: var(--text-primary);
 }
 .close-btn {
-  background: var(--bg-glass);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   color: var(--text-secondary);
   cursor: pointer;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,9 +240,7 @@
 .close-btn:hover {
   background: var(--danger-bg);
   color: var(--danger);
-  border-color: rgba(239, 68, 68, 0.2);
-}
-.modal-header .close-btn {
+  border-color: rgba(220, 38, 38, 0.2);
 }
 .modal-body {
   display: flex;
@@ -200,7 +250,7 @@
 
 .modal-sidebar {
   width: 180px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-glass-hover);
   border-right: 1px solid var(--border);
   padding: 8px;
 }
@@ -213,18 +263,19 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   margin-bottom: 2px;
   transition: var(--transition);
 }
 .modal-sidebar-item:hover {
-  background: var(--bg-glass-hover);
+  background: var(--bg-surface);
   color: var(--text-primary);
 }
 .modal-sidebar-item.active {
-  background: var(--accent-glow);
-  color: var(--accent-light);
-  box-shadow: inset 0 0 0 1px rgba(15, 177, 178, 0.2);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
 }
 .modal-content {
   flex: 1;

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Button } from "./ui";
 
 interface Props {
   isAuthenticated: boolean;
@@ -7,34 +6,44 @@ interface Props {
 
 export default function HeroSection({ isAuthenticated }: Props) {
   return (
-    <div className="home-hero">
-      <div className="home-subtitle">THE UNIVERSAL DATA INGESTION PLATFORM</div>
-      <h1 className="home-title">
-        <span className="home-title-bold">DATA</span>
-        <span className="home-title-accent">ingest</span>
-        <span className="home-title-bold">HUB</span>
-      </h1>
-      <div className="home-byline-fade">
-        <div className="home-byline-wrap">
-          <div className="home-byline">
-            by <img src="/images/logo.jpeg" alt="NFC Logo" className="byline-logo" /> <strong>NFC Team</strong>
-          </div>
+    <>
+      {/* Stats ticker bar — like Langfuse top banner */}
+      <div className="home-stats-ticker">
+        <span className="home-stats-ticker-item">
+          Used by <strong>50+</strong> internal teams
+        </span>
+        <span className="home-stats-ticker-dot" />
+        <span className="home-stats-ticker-item">
+          <strong>10M+</strong> rows ingested/month
+        </span>
+        <span className="home-stats-ticker-dot" />
+        <span className="home-stats-ticker-item">
+          <strong>30+</strong> connectors supported
+        </span>
+      </div>
+
+      {/* Hero content */}
+      <div className="home-hero">
+        <h1 className="home-title">
+          Universal Data <span className="home-title-accent">Ingestion</span> Platform
+        </h1>
+        <p className="home-description">
+          Connect to any database, transfer data seamlessly, and monitor your pipelines in real-time. Collaborate with
+          your team to continuously improve quality, reliability and speed of your data operations.
+        </p>
+        <div className="home-ctas">
+          <Link to={isAuthenticated ? "/ingest" : "/login"} style={{ textDecoration: "none" }}>
+            <button className="home-btn-primary">
+              Start free <span className="btn-kbd">S</span>
+            </button>
+          </Link>
+          <Link to={isAuthenticated ? "/connections" : "/home"} style={{ textDecoration: "none" }}>
+            <button className="home-btn-secondary">
+              Documentation <span className="btn-kbd">D</span>
+            </button>
+          </Link>
         </div>
       </div>
-      <div className="home-ctas">
-        <Link to={isAuthenticated ? "/ingest" : "/login"}>
-          <Button variant="primary" size="lg" className="home-btn-primary">
-            Start Ingesting Data
-          </Button>
-        </Link>
-        {isAuthenticated && (
-          <Link to="/connections">
-            <Button size="lg" className="home-btn-secondary">
-              Manage Connections
-            </Button>
-          </Link>
-        )}
-      </div>
-    </div>
+    </>
   );
 }

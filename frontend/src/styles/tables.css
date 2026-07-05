@@ -1,4 +1,4 @@
-/* ===== DATA TABLE ===== */
+/* ===== DATA TABLE — Langfuse style ===== */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -7,7 +7,7 @@
 .data-table th {
   text-align: left;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-glass-hover);
   color: var(--text-secondary);
   font-weight: 600;
   font-size: 11px;
@@ -19,8 +19,9 @@
 .data-table td {
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
-  font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 12px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text-primary);
 }
 .data-table tr {
   transition: var(--transition);
@@ -32,7 +33,7 @@
 /* ===== BADGES ===== */
 .badge {
   padding: 3px 10px;
-  border-radius: 20px;
+  border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
   display: inline-flex;
@@ -48,8 +49,8 @@
   color: var(--danger);
 }
 .badge-info {
-  background: var(--accent-glow);
-  color: var(--accent-light);
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
 }
 
 /* ===== FILE DROP ===== */
@@ -64,8 +65,8 @@
   transition: var(--transition);
 }
 .file-drop:hover {
-  border-color: var(--accent);
-  background: var(--accent-glow);
+  border-color: var(--text-primary);
+  background: var(--bg-glass-hover);
   color: var(--text-primary);
 }
 .file-drop .drop-icon {
@@ -98,7 +99,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--border);
   font-size: 13px;
   transition: var(--transition);
 }
@@ -109,34 +110,34 @@
   border-radius: 6px;
 }
 .mapper-arrow {
-  color: var(--accent);
+  color: var(--text-primary);
   font-size: 16px;
 }
 .mapper-row select {
   padding: 6px 10px;
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   color: var(--text-primary);
   font-size: 12px;
   transition: var(--transition);
 }
 .mapper-row select:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
   outline: none;
 }
 
 /* ===== AI PANEL ===== */
 .ai-panel {
-  background: linear-gradient(135deg, rgba(15, 177, 178, 0.06), rgba(15, 177, 178, 0.06));
-  border: 1px solid rgba(15, 177, 178, 0.15);
+  background: var(--bg-glass-hover);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 16px 20px;
   margin-top: 16px;
 }
 .ai-panel-header {
-  color: var(--accent-light);
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 13px;
   margin-bottom: 10px;
@@ -147,8 +148,9 @@
 .ai-result {
   margin-top: 12px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--radius-sm);
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   white-space: pre-wrap;
   font-size: 12px;
   color: var(--text-secondary);

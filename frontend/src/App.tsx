@@ -21,7 +21,6 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
 import PublicNav from "./components/PublicNav";
-import Footer from "./components/Footer";
 import CookieConsent from "./components/CookieConsent";
 
 export default function App() {
@@ -79,7 +78,6 @@ export default function App() {
           <Route path="/" element={<Navigate to="/home" />} />
           <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
-        <Footer />
         <CookieConsent />
       </>
     );
@@ -128,7 +126,6 @@ export default function App() {
         <Route path="/" element={<Navigate to="/connections" />} />
         <Route path="*" element={<Navigate to="/connections" />} />
       </Routes>
-      <Footer />
       <CookieConsent />
     </>
   );

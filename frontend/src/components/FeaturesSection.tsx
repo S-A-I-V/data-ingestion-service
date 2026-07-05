@@ -10,7 +10,9 @@ import { SqlPreview } from "./bento/SqlPreview";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** Database icons for the 3D cloud — uses local icons from /images/db-icons/ */
+import Highlight from "./ui/Highlight";
+
+/** Database icons for the 3D cloud */
 const DB_CLOUD_ICONS = [
   "/images/db-icons/postgresql.png",
   "/images/db-icons/mysql.png",
@@ -116,9 +118,9 @@ export default function FeaturesSection() {
       const heading = sectionRef.current?.querySelector(".features-heading");
       if (heading) {
         gsap.from(heading, {
-          y: 48,
+          y: 24,
           opacity: 0,
-          duration: 0.8,
+          duration: 0.6,
           ease: "power3.out",
           scrollTrigger: {
             trigger: heading,
@@ -133,7 +135,9 @@ export default function FeaturesSection() {
 
   return (
     <section className="features-section" ref={sectionRef}>
-      <h2 className="features-heading">BUILT FOR SCALE</h2>
+      <h2 className="text-[32px] font-medium text-[#20201D] mb-10">
+        Works with <Highlight>any data stack.</Highlight>
+      </h2>
       <BentoGrid>
         {FEATURES.map((f, i) => (
           <BentoCard key={i} {...f} />

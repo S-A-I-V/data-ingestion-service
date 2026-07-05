@@ -1,4 +1,4 @@
-/* ===== BASE RESET & THEME ===== */
+/* ===== BASE RESET & LANGFUSE THEME ===== */
 
 * {
   margin: 0;
@@ -23,32 +23,44 @@ button[role="combobox"] {
 }
 
 button[role="combobox"]:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.02);
   border-color: var(--border-hover);
   transform: none !important;
 }
 
 [role="menu"],
 [role="listbox"] {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   font-size: 14px;
-  background: hsl(240 10% 6%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  color: hsl(240 5% 96%);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  color: #1a1a1a;
 }
 
 [role="menuitem"],
 [role="menuitemradio"],
 [role="menuitemcheckbox"],
 [role="option"] {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   font-size: 14px;
   padding: 6px 8px 6px 32px;
   border-radius: 4px;
-  color: hsl(240 5% 90%);
+  color: #4a4a4a;
   cursor: default;
   outline: none;
   position: relative;
@@ -63,72 +75,90 @@ button[role="combobox"]:hover {
 [role="option"]:focus,
 [role="option"]:hover,
 [role="option"][data-highlighted] {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: #f5f3ef;
+  color: #1a1a1a;
 }
 
 [role="separator"] {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border);
   margin: 4px -4px;
 }
 
 :root {
-  --bg-base: #0a0a0f;
-  --bg-surface: rgba(255, 255, 255, 0.03);
-  --bg-glass: rgba(255, 255, 255, 0.05);
-  --bg-glass-hover: rgba(255, 255, 255, 0.08);
-  --bg-glass-active: rgba(255, 255, 255, 0.12);
-  --bg-input: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.15);
-  --border-focus: #6366f1;
-  --text-primary: #f0f0f5;
-  --text-secondary: #71717a;
-  --text-muted: #52525b;
-  --accent: #0fb1b2;
-  --accent-light: #3dd8d9;
-  --accent-glow: rgba(15, 177, 178, 0.15);
-  --success: #22c55e;
-  --success-bg: rgba(34, 197, 94, 0.1);
-  --danger: #ef4444;
-  --danger-bg: rgba(239, 68, 68, 0.1);
-  --warning: #f59e0b;
-  --gradient-1: linear-gradient(135deg, #0fb1b2, #0d9e9f);
-  --gradient-2: linear-gradient(135deg, #06b6d4, #0fb1b2);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(15, 177, 178, 0.15);
+  --bg-base: #faf9f7;
+  --bg-surface: #ffffff;
+  --bg-glass: #ffffff;
+  --bg-glass-hover: #f5f3ef;
+  --bg-glass-active: #eceae6;
+  --bg-input: #ffffff;
+  /* === App chrome / global bg — single source of truth ===
+     Change this one value to retheme the entire app background,
+     sidebar bg, nav bg, border, and gap colors at once. */
+  --color-chrome: #cecfc8;
+
+  --border: var(--color-chrome);
+  --border-hover: #b8b9b2;
+  --border-focus: #1a1a1a;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --text-muted: #9a9a9a;
+  --accent: #1a1a1a;
+  --accent-light: #4a4a4a;
+  --accent-glow: rgba(0, 0, 0, 0.05);
+  --success: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.08);
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --warning: #d97706;
+  --gradient-1: linear-gradient(135deg, #1a1a1a, #333333);
+  --gradient-2: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-glow: none;
   --section-x: 80px;
   --section-y: 64px;
   --transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
     opacity 0.15s ease, transform 0.15s ease;
   --font: "Fira Code", "JetBrains Mono", "Courier New", monospace;
+  /* Langfuse yellow highlight */
+  --highlight-yellow: #fde047;
+  /* Sidebar widths — single source of truth */
+  --sidebar-left-width: 260px;
+  --sidebar-right-width: 260px;
+  /* Sidebar card sections — change these to update all sidebar cards at once */
+  --sidebar-card-radius: 6px;
+  --sidebar-card-bg: #edeee9;
+  --sidebar-card-border: rgba(0, 0, 0, 0.08);
+  /* --sidebar-card-margin: 6px; */
+}
+
+/* Shared sidebar card style */
+.sidebar-card {
+  border-radius: var(--sidebar-card-radius);
+  overflow: hidden;
+  border: 1px solid var(--sidebar-card-border);
+  background: var(--sidebar-card-bg);
+  min-height: 0;
 }
 
 html {
-  background: #050510;
+  background: var(--color-chrome);
 }
 
 html::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url("/images/signin-landscape.jpeg") center / cover no-repeat;
-  opacity: 0.45;
-  z-index: -1;
-  pointer-events: none;
+  display: none;
 }
 
 body {
   font-family: var(--font);
   font-size: 14px;
-  background: transparent;
+  background: var(--color-chrome);
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -137,12 +167,64 @@ body {
 }
 
 a {
-  color: var(--accent-light);
-  text-decoration: none;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 2px;
   transition: var(--transition);
 }
 a:hover {
-  color: var(--accent);
+  text-decoration-color: var(--text-primary);
+}
+
+/* ===== LANGFUSE GLOBAL INTERACTION STATES ===== */
+/* All interactive elements get consistent hover/active/focus patterns */
+
+button,
+[role="button"],
+.btn,
+a.nav-tab,
+a.nav-mega-item,
+a.footer-link,
+a.home-sidebar-guide-link,
+.problem-card,
+.admin-tool-card,
+.platform-card,
+.bento-card,
+.conn-grid-card,
+.conn-list-row,
+.db-picker-card,
+.db-picker-cat {
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease,
+    transform 0.1s ease;
+}
+
+/* Global active (pressed) state — Langfuse uses a subtle scale-down */
+button:active:not(:disabled),
+[role="button"]:active,
+.btn:active,
+.problem-card:active,
+.admin-tool-card:active,
+.platform-card:active,
+.conn-grid-card:active,
+.db-picker-card:active {
+  transform: scale(0.98);
+}
+
+/* Focus-visible ring for keyboard nav — Langfuse uses a thin dark ring */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .container {
