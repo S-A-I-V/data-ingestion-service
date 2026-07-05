@@ -6,7 +6,7 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import EditIcon from "@mui/icons-material/Edit";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { Button, Badge, EmptyState } from "./ui";
+import { Badge, EmptyState } from "./ui";
 import StorageIcon from "@mui/icons-material/Storage";
 import type { Connection } from "../types";
 
@@ -72,15 +72,20 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
 
               {/* Actions */}
               <div className="conn-list-actions">
-                <Button size="sm" onClick={() => onEdit(c)}>
+                <button type="button" className="btn btn-sm" onClick={() => onEdit(c)}>
                   <EditIcon sx={{ fontSize: 14 }} /> Edit
-                </Button>
-                <Button size="sm" variant="success" onClick={() => onTest(c.id)}>
+                </button>
+                <button type="button" className="btn btn-sm btn-success" onClick={() => onTest(c.id)}>
                   <PlayArrowIcon sx={{ fontSize: 14 }} /> Test
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => onDelete(c.id)}>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
+                  onClick={() => onDelete(c.id)}
+                  aria-label="Delete connection"
+                >
                   <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                </Button>
+                </button>
               </div>
             </div>
           );
@@ -98,7 +103,7 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
           <div key={c.id} className="conn-grid-card">
             <ConnectionStatusBadge status={statuses[c.id] ?? "unknown"} />
             <div className="conn-grid-icon">
-              <DbIcon icon={info?.icon || ""} size={40} />
+              <DbIcon icon={info?.icon || ""} size={28} />
             </div>
             <div className="conn-grid-name">{c.name}</div>
             <div className="conn-grid-type">{info?.label}</div>
@@ -118,15 +123,25 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
               )}
             </div>
             <div className="conn-grid-actions">
-              <Button size="sm" onClick={() => onEdit(c)}>
-                <EditIcon sx={{ fontSize: 14 }} /> Edit
-              </Button>
-              <Button size="sm" variant="success" onClick={() => onTest(c.id)}>
-                <PlayArrowIcon sx={{ fontSize: 14 }} /> Test
-              </Button>
-              <Button size="sm" variant="danger" onClick={() => onDelete(c.id)}>
+              <button type="button" className="btn btn-sm" onClick={() => onEdit(c)} aria-label="Edit connection">
+                <EditIcon sx={{ fontSize: 14 }} />
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-success"
+                onClick={() => onTest(c.id)}
+                aria-label="Test connection"
+              >
+                <PlayArrowIcon sx={{ fontSize: 14 }} />
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-danger"
+                onClick={() => onDelete(c.id)}
+                aria-label="Delete connection"
+              >
                 <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-              </Button>
+              </button>
             </div>
           </div>
         );

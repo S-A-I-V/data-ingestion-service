@@ -7,7 +7,8 @@ import { DB_TYPES } from "../constants/database";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { LayoutGrid, List } from "lucide-react";
-import { Button, Toast, useToast, Spinner, Panel } from "../components/ui";
+import { Toast, useToast, Spinner, Panel } from "../components/ui";
+import LangfuseSidebar from "../components/LangfuseSidebar";
 import type { Connection } from "../types";
 import type { ConnStatus } from "../components/ConnectionStatusBadge";
 
@@ -131,164 +132,168 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="container">
-        <>
-          <div className="toolbar">
-            <span className="toolbar-title">Database Connections</span>
-            <div className="toolbar-spacer" />
-            {/* View toggle */}
-            <div className="view-toggle">
-              <Button
-                size="icon"
-                variant={view === "grid" ? "primary" : "ghost"}
-                className="view-toggle-btn"
-                onClick={() => switchView("grid")}
-                aria-label="Grid view"
-                title="Grid view"
-              >
-                <LayoutGrid size={15} />
-              </Button>
-              <Button
-                size="icon"
-                variant={view === "list" ? "primary" : "ghost"}
-                className="view-toggle-btn"
-                onClick={() => switchView("list")}
-                aria-label="List view"
-                title="List view"
-              >
-                <List size={15} />
-              </Button>
-            </div>
-            <Button
-              variant="primary"
-              onClick={() => {
-                setEditConn(null);
-                setShowModal(true);
-              }}
-            >
-              + New Connection
-            </Button>
-          </div>
-        </>
+      <div className="lf-layout">
+        {/* LEFT SIDEBAR */}
+        <aside className="lf-sidebar-left">
+          <LangfuseSidebar />
+        </aside>
 
-        <>
-          <Panel>
-            {pageLoading ? (
-              <Spinner size="lg" label="Loading connections..." />
-            ) : (
-              <ConnectionList
-                connections={conns}
-                statuses={connStatuses}
-                onTest={testConn}
-                onDelete={del}
-                onEdit={(c) => {
-                  setEditConn(c);
+        {/* CENTER CONTENT */}
+        <main className="lf-main">
+          <div className="container">
+            <div className="toolbar">
+              <span className="toolbar-title">Database Connections</span>
+              <div className="toolbar-spacer" />
+              {/* View toggle */}
+              <div className="view-toggle">
+                <button
+                  type="button"
+                  className={`view-toggle-btn ${view === "grid" ? "active" : ""}`}
+                  onClick={() => switchView("grid")}
+                  aria-label="Grid view"
+                  title="Grid view"
+                >
+                  <LayoutGrid size={15} />
+                </button>
+                <button
+                  type="button"
+                  className={`view-toggle-btn ${view === "list" ? "active" : ""}`}
+                  onClick={() => switchView("list")}
+                  aria-label="List view"
+                  title="List view"
+                >
+                  <List size={15} />
+                </button>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  setEditConn(null);
                   setShowModal(true);
                 }}
-                view={view}
-              />
-            )}
-          </Panel>
-        </>
-
-        <Toast toast={toast} />
-
-        {showModal && (
-          <ConnectionModal
-            onClose={() => {
-              setShowModal(false);
-              setEditConn(null);
-            }}
-            onSaved={load}
-            onToast={setToast}
-            editId={editConn?.id}
-            initialData={
-              editConn
-                ? {
-                    name: editConn.name,
-                    db_type: editConn.db_type,
-                    host: editConn.host,
-                    port: editConn.port,
-                    database: editConn.database,
-                    username: editConn.username,
-                    use_ssl: editConn.use_ssl,
-                    ssh_enabled: editConn.ssh_enabled,
-                    connection_timeout: editConn.connection_timeout,
-                  }
-                : undefined
-            }
-          />
-        )}
-
-        {/* Centered Test Result Modal (DBeaver-style) */}
-        <AnimatePresence>
-          {(testing || testResult) && (
-            <div className="test-result-overlay" onClick={() => !testing && closeTestResult()}>
-              <motion.div
-                className="test-result-modal"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
-                onClick={(e) => e.stopPropagation()}
               >
-                <div className="test-result-header">Connection Test</div>
-                <div className="test-result-body">
-                  {testing ? (
-                    <div className="test-result-loading">
-                      <div className="spinner" />
-                      <span>Testing connection to {testDbInfo?.label}...</span>
-                    </div>
-                  ) : testResult ? (
-                    <>
-                      <div className={`test-result-icon ${testResult.ok ? "success" : "error"}`}>
-                        {testResult.ok ? (
-                          <CheckCircleIcon sx={{ fontSize: 32 }} />
-                        ) : (
-                          <CancelIcon sx={{ fontSize: 32 }} />
-                        )}
-                      </div>
-                      <div className="test-result-status">
-                        {testResult.ok ? "Connected" : "Connection Failed"}
-                        {testResult.elapsed != null && (
-                          <span className="test-result-time"> ({testResult.elapsed} ms)</span>
-                        )}
-                      </div>
-                      {testResult.ok && testResult.conn ? (
-                        <div className="test-result-details">
-                          <div className="test-result-row">
-                            <span className="test-result-label">Server:</span>
-                            <span>{testDbInfo?.label}</span>
-                          </div>
-                          <div className="test-result-row">
-                            <span className="test-result-label">Host:</span>
-                            <span>
-                              {testResult.conn.host}:{testResult.conn.port}
-                            </span>
-                          </div>
-                          <div className="test-result-row">
-                            <span className="test-result-label">Database:</span>
-                            <span>{testResult.conn.database}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="test-result-error-msg">{testResult.message}</div>
-                      )}
-                    </>
-                  ) : null}
-                </div>
-                {!testing && (
-                  <div className="test-result-footer">
-                    <Button variant="primary" onClick={closeTestResult}>
-                      OK
-                    </Button>
-                  </div>
-                )}
-              </motion.div>
+                + New Connection
+              </button>
             </div>
-          )}
-        </AnimatePresence>
+
+            <Panel>
+              {pageLoading ? (
+                <Spinner size="lg" label="Loading connections..." />
+              ) : (
+                <ConnectionList
+                  connections={conns}
+                  statuses={connStatuses}
+                  onTest={testConn}
+                  onDelete={del}
+                  onEdit={(c) => {
+                    setEditConn(c);
+                    setShowModal(true);
+                  }}
+                  view={view}
+                />
+              )}
+            </Panel>
+          </div>
+        </main>
+
+        {/* RIGHT SIDEBAR */}
+        <aside className="lf-sidebar-right" />
       </div>
+
+      <Toast toast={toast} />
+
+      {showModal && (
+        <ConnectionModal
+          onClose={() => {
+            setShowModal(false);
+            setEditConn(null);
+          }}
+          onSaved={load}
+          onToast={setToast}
+          editId={editConn?.id}
+          initialData={
+            editConn
+              ? {
+                  name: editConn.name,
+                  db_type: editConn.db_type,
+                  host: editConn.host,
+                  port: editConn.port,
+                  database: editConn.database,
+                  username: editConn.username,
+                  use_ssl: editConn.use_ssl,
+                  ssh_enabled: editConn.ssh_enabled,
+                  connection_timeout: editConn.connection_timeout,
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {/* Centered Test Result Modal (DBeaver-style) */}
+      <AnimatePresence>
+        {(testing || testResult) && (
+          <div className="test-result-overlay" onClick={() => !testing && closeTestResult()}>
+            <motion.div
+              className="test-result-modal"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="test-result-header">Connection Test</div>
+              <div className="test-result-body">
+                {testing ? (
+                  <div className="test-result-loading">
+                    <div className="spinner" />
+                    <span>Testing connection to {testDbInfo?.label}...</span>
+                  </div>
+                ) : testResult ? (
+                  <>
+                    <div className={`test-result-icon ${testResult.ok ? "success" : "error"}`}>
+                      {testResult.ok ? <CheckCircleIcon sx={{ fontSize: 32 }} /> : <CancelIcon sx={{ fontSize: 32 }} />}
+                    </div>
+                    <div className="test-result-status">
+                      {testResult.ok ? "Connected" : "Connection Failed"}
+                      {testResult.elapsed != null && (
+                        <span className="test-result-time"> ({testResult.elapsed} ms)</span>
+                      )}
+                    </div>
+                    {testResult.ok && testResult.conn ? (
+                      <div className="test-result-details">
+                        <div className="test-result-row">
+                          <span className="test-result-label">Server:</span>
+                          <span>{testDbInfo?.label}</span>
+                        </div>
+                        <div className="test-result-row">
+                          <span className="test-result-label">Host:</span>
+                          <span>
+                            {testResult.conn.host}:{testResult.conn.port}
+                          </span>
+                        </div>
+                        <div className="test-result-row">
+                          <span className="test-result-label">Database:</span>
+                          <span>{testResult.conn.database}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="test-result-error-msg">{testResult.message}</div>
+                    )}
+                  </>
+                ) : null}
+              </div>
+              {!testing && (
+                <div className="test-result-footer">
+                  <button type="button" className="btn btn-primary" onClick={closeTestResult}>
+                    OK
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

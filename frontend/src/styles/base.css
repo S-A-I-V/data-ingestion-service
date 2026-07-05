@@ -262,3 +262,9 @@ textarea:focus-visible {
   padding-top: 76px;
   padding-bottom: 64px;
 }
+
+/* Inside 3-col layout, no extra top padding needed */
+.lf-main .container {
+  max-width: 100%;
+  padding: 0;
+}
