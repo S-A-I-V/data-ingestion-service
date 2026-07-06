@@ -16,9 +16,14 @@ export default function SslTab({ form, setForm }: Props) {
           checked={form.use_ssl}
           onChange={(e) => setForm({ ...form, use_ssl: e.target.checked })}
           title="Enable SSL"
+          style={{ flex: "none" }}
         />
+        {form.use_ssl && (
+          <span className="form-hint" style={{ margin: 0, flex: "none" }}>
+            TLS encryption enabled.
+          </span>
+        )}
       </FormRow>
-      {form.use_ssl && <div className="form-hint">TLS encryption enabled.</div>}
     </>
   );
 }
