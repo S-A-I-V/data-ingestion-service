@@ -9,6 +9,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { LayoutGrid, List } from "lucide-react";
 import { Toast, useToast, Spinner, Panel } from "../components/ui";
 import LangfuseSidebar from "../components/LangfuseSidebar";
+import Highlight from "../components/ui/Highlight";
 import type { Connection } from "../types";
 import type { ConnStatus } from "../components/ConnectionStatusBadge";
 
@@ -142,7 +143,9 @@ export default function Dashboard() {
         <main className="lf-main">
           <div className="container">
             <div className="toolbar">
-              <span className="toolbar-title">Database Connections</span>
+              <span className="toolbar-title">
+                <Highlight>Database Connections</Highlight>
+              </span>
               <div className="toolbar-spacer" />
               {/* View toggle */}
               <div className="view-toggle">

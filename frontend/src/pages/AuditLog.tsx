@@ -10,6 +10,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import { EmptyState, Spinner, Panel, PanelHeader } from "../components/ui";
+import Highlight from "../components/ui/Highlight";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import type { AuditLog as Log } from "../types";
 
@@ -93,7 +94,9 @@ export default function AuditLog() {
         <main className="lf-main" style={{ gridColumn: "2" }}>
           <div style={{ width: "100%" }}>
             <div className="toolbar">
-              <span className="toolbar-title">Audit Log</span>
+              <span className="toolbar-title">
+                <Highlight>Audit Log</Highlight>
+              </span>
               <div className="toolbar-spacer" />
               <button type="button" className="btn btn-sm" onClick={refresh}>
                 <RefreshIcon sx={{ fontSize: 14 }} /> Refresh
