@@ -4,7 +4,7 @@
  */
 import { useState, useMemo } from "react";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
-import { Button, Panel, PanelHeader } from "../ui";
+import { Panel, PanelHeader } from "../ui";
 import { getColumnLabel } from "../../utils/columnHelpers";
 
 interface ColumnPickerProps {
@@ -42,12 +42,12 @@ export default function ColumnPicker({
           </span>
         </PanelHeader>
         <div className="lookup-col-actions">
-          <Button size="sm" variant="ghost" onClick={onSelectAll}>
+          <button type="button" className="btn btn-sm" onClick={onSelectAll}>
             All
-          </Button>
-          <Button size="sm" variant="ghost" onClick={onSelectNone}>
+          </button>
+          <button type="button" className="btn btn-sm" onClick={onSelectNone}>
             None
-          </Button>
+          </button>
         </div>
         <div className="lookup-col-search">
           <input placeholder="Filter columns..." value={colSearch} onChange={(e) => setColSearch(e.target.value)} />

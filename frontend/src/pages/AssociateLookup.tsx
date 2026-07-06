@@ -6,7 +6,10 @@ import { useState, useMemo } from "react";
 import api from "../api";
 import SearchIcon from "@mui/icons-material/Search";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
-import { Button, Spinner, Panel, PanelHeader, ToggleGroup, ToggleGroupItem, DownloadButton } from "../components/ui";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { Spinner, Panel, PanelHeader, ToggleGroup, ToggleGroupItem, DownloadButton } from "../components/ui";
+import Highlight from "../components/ui/Highlight";
 import ColumnOrderStrip from "../components/associate-lookup/ColumnOrderStrip";
 import ColumnPicker from "../components/associate-lookup/ColumnPicker";
 import { getColumnLabel, isDefaultColumn } from "../utils/columnHelpers";
@@ -28,8 +31,18 @@ export default function AssociateLookup() {
   const [searched, setSearched] = useState(false);
   const [searchedBeid, setSearchedBeid] = useState("");
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState(true);
 
   const visibleCols = useMemo(() => new Set(columnOrder), [columnOrder]);
+
+  const handleSort = (col: string) => {
+    if (sortCol === col) setSortAsc(!sortAsc);
+    else {
+      setSortCol(col);
+      setSortAsc(true);
+    }
+  };
 
   const validateInput = (): string | null => {
     if (searchType === "beid") {
@@ -102,8 +115,20 @@ export default function AssociateLookup() {
   const displayColumns = columnOrder;
   const displayRows = useMemo(() => {
     const indices = displayColumns.map((c) => allColumns.indexOf(c));
-    return rows.map((row) => indices.map((i) => row[i]));
-  }, [rows, displayColumns, allColumns]);
+    let sorted = rows.map((row) => indices.map((i) => row[i]));
+    if (sortCol && displayColumns.includes(sortCol)) {
+      const sortIdx = displayColumns.indexOf(sortCol);
+      sorted.sort((a, b) => {
+        const va = String(a[sortIdx] ?? "");
+        const vb = String(b[sortIdx] ?? "");
+        const na = Number(va),
+          nb = Number(vb);
+        if (!isNaN(na) && !isNaN(nb)) return sortAsc ? na - nb : nb - na;
+        return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+      });
+    }
+    return sorted;
+  }, [rows, displayColumns, allColumns, sortCol, sortAsc]);
 
   const downloadCsv = () => {
     if (!displayColumns.length || !displayRows.length) return;
@@ -124,7 +149,9 @@ export default function AssociateLookup() {
   return (
     <div className="container audit-container">
       <div className="toolbar">
-        <span className="toolbar-title">Associate Lookup</span>
+        <span className="toolbar-title">
+          <Highlight>Associate Lookup</Highlight>
+        </span>
         <div className="toolbar-spacer" />
         {rows.length > 0 && <DownloadButton onClick={downloadCsv} label="Download" doneLabel="Done" />}
       </div>
@@ -162,13 +189,14 @@ export default function AssociateLookup() {
                 onKeyDown={(e) => e.key === "Enter" && search()}
               />
             )}
-            <Button
-              variant="primary"
+            <button
+              type="button"
+              className="btn btn-primary"
               onClick={search}
               disabled={loading || !(searchType === "beid" ? beid.trim() : dmzid.trim())}
             >
-              <SearchIcon sx={{ fontSize: 16, verticalAlign: "middle", mr: 0.5 }} /> Search
-            </Button>
+              <SearchIcon sx={{ fontSize: 16 }} /> Search
+            </button>
           </div>
         </div>
       </Panel>
@@ -202,7 +230,17 @@ export default function AssociateLookup() {
                   <thead>
                     <tr>
                       {displayColumns.map((col) => (
-                        <th key={col}>{getColumnLabel(col)}</th>
+                        <th key={col} className="csv-sortable-th" onClick={() => handleSort(col)}>
+                          <span className="csv-th-content">
+                            {getColumnLabel(col)}
+                            {sortCol === col &&
+                              (sortAsc ? (
+                                <ArrowUpwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
+                              ) : (
+                                <ArrowDownwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
+                              ))}
+                          </span>
+                        </th>
                       ))}
                     </tr>
                   </thead>

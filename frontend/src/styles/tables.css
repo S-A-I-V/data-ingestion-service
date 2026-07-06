@@ -22,6 +22,7 @@
   font-family: var(--font);
   font-size: 13px;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 .data-table tr {
   transition: var(--transition);

@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const toggleGroupVariants = cva(
-  "relative inline-flex items-center rounded-full border border-white/[0.1] bg-white/[0.03] backdrop-blur-sm p-[3px]",
+  "relative inline-flex items-center rounded-none border border-[var(--border)] bg-[var(--bg-surface)] p-[3px]",
   {
     variants: {
       size: {
@@ -23,7 +23,7 @@ const toggleGroupVariants = cva(
 );
 
 const toggleGroupItemVariants = cva(
-  "relative z-[1] inline-flex items-center justify-center whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-colors duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 text-[#8b8b9e] hover:text-[#c0c0d0] data-[state=on]:text-white",
+  "relative z-[1] inline-flex items-center justify-center whitespace-nowrap rounded-none px-4 py-1.5 text-xs font-medium transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 text-[var(--text-secondary)] hover:text-[var(--text-primary)] data-[state=on]:text-white",
   {
     variants: {
       size: {
@@ -90,7 +90,7 @@ const ToggleGroup = React.forwardRef<React.ElementRef<typeof ToggleGroupPrimitiv
       >
         {indicatorStyle.width > 0 && (
           <motion.span
-            className="absolute top-[3px] bottom-[3px] rounded-full bg-gradient-to-br from-[#0fb1b2] to-[#0d9e9f] shadow-[0_2px_12px_rgba(15,177,178,0.3)]"
+            className="absolute top-[3px] bottom-[3px] rounded-none bg-[#20201d] shadow-none"
             initial={false}
             animate={{
               left: indicatorStyle.left,

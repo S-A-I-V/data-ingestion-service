@@ -4,7 +4,6 @@
  */
 import { useRef, useState } from "react";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { Button } from "../ui";
 import { getColumnLabel } from "../../utils/columnHelpers";
 
 interface ColumnOrderStripProps {
@@ -102,15 +101,14 @@ export default function ColumnOrderStrip({ columnOrder, onReorder, onRemove }: C
           >
             <DragIndicatorIcon className="lookup-order-grip" sx={{ fontSize: 12 }} />
             <span>{getColumnLabel(col)}</span>
-            <Button
-              size="icon"
-              variant="ghost"
+            <button
+              type="button"
               className="lookup-order-remove"
               onClick={() => onRemove(col)}
               aria-label={`Remove ${getColumnLabel(col)}`}
             >
               ×
-            </Button>
+            </button>
           </div>
         ))}
         {/* Trailing drop zone for end-drop */}
