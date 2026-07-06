@@ -106,7 +106,7 @@ const LEGAL_LINKS = [
 
 export default function LangfuseFooter() {
   return (
-    <footer className="mx-auto mt-16 w-full pb-8">
+    <footer className="mx-auto mt-16 w-full pb-8 bg-[#F6F6F3]">
       {/* Social Section */}
       <div className="relative mb-[-1px] flex items-center gap-5 border border-[#E5E5E0] p-4 bg-transparent">
         <DecorativeCorners />

@@ -9,6 +9,8 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
+import LangfuseSidebar from "../components/LangfuseSidebar";
+import Highlight from "../components/ui/Highlight";
 
 interface Props {
   permissions: string[];
@@ -21,8 +23,6 @@ const ADMIN_TOOLS = [
     description: "Query the Sybase CustomerRepository for associate and business entity data by BEID or DMZID.",
     icon: SearchIcon,
     to: "/admin/associate-lookup",
-    color: "var(--accent)",
-    bg: "rgba(15, 177, 178, 0.1)",
   },
   {
     permission: "admin:client_onboarding",
@@ -30,8 +30,6 @@ const ADMIN_TOOLS = [
     description: "Onboard new clients or edit existing client configurations — groups, BEIDs, reports, and aliases.",
     icon: GroupsIcon,
     to: "/admin/client-onboarding",
-    color: "#22c55e",
-    bg: "rgba(34, 197, 94, 0.1)",
   },
   {
     permission: "admin:report_mapping",
@@ -39,8 +37,6 @@ const ADMIN_TOOLS = [
     description: "Visual DAG editor for report→job pipelines. Create, copy, edit, and export mapping configurations.",
     icon: AccountTreeIcon,
     to: "/admin/report-mapping",
-    color: "#f59e0b",
-    bg: "rgba(245, 158, 11, 0.1)",
   },
   {
     permission: "admin:email_discrepancy_audit",
@@ -48,8 +44,6 @@ const ADMIN_TOOLS = [
     description: "Scan CPR vs NFC to find email mismatches. Preview and batch-fix stale emails in the users table.",
     icon: SyncProblemIcon,
     to: "/admin/email-discrepancy",
-    color: "#a855f7",
-    bg: "rgba(168, 85, 247, 0.1)",
   },
   {
     permission: "admin:report_health",
@@ -58,8 +52,6 @@ const ADMIN_TOOLS = [
       "Full pipeline observability — SLA status, delay attribution, per-job events, proxy inference, run heatmaps, and ownership for every active report.",
     icon: MonitorHeartIcon,
     to: "/admin/report-health",
-    color: "#0fb1b2",
-    bg: "rgba(15, 177, 178, 0.1)",
   },
 ];
 
@@ -67,25 +59,42 @@ export default function Admin({ permissions }: Props) {
   const visibleTools = ADMIN_TOOLS.filter((t) => permissions.includes(t.permission));
 
   return (
-    <div className="container audit-container">
-      <div className="toolbar">
-        <span className="toolbar-title">Admin Tools</span>
-      </div>
+    <div className="lf-layout">
+      {/* LEFT SIDEBAR */}
+      <aside className="lf-sidebar-left">
+        <LangfuseSidebar />
+      </aside>
 
-      <div className="admin-grid">
-        {visibleTools.map((tool) => {
-          const Icon = tool.icon;
-          return (
-            <Link key={tool.to} to={tool.to} className="admin-tool-card">
-              <div className="admin-tool-icon" style={{ background: tool.bg, color: tool.color }}>
-                <Icon sx={{ fontSize: 22 }} />
-              </div>
-              <h3>{tool.title}</h3>
-              <p>{tool.description}</p>
-            </Link>
-          );
-        })}
-      </div>
+      {/* CENTER CONTENT */}
+      <main className="lf-main">
+        <div style={{ width: "100%" }}>
+          <div className="toolbar">
+            <span className="toolbar-title">
+              <Highlight>Admin Tools</Highlight>
+            </span>
+          </div>
+
+          <div className="admin-grid">
+            {visibleTools.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <Link key={tool.to} to={tool.to} className="admin-tool-card lf-corners-hover no-underline">
+                  <div className="admin-tool-header">
+                    <div className="admin-tool-icon">
+                      <Icon sx={{ fontSize: 18 }} />
+                    </div>
+                    <h3>{tool.title}</h3>
+                  </div>
+                  <p>{tool.description}</p>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </main>
+
+      {/* RIGHT SIDEBAR */}
+      <aside className="lf-sidebar-right" />
     </div>
   );
 }

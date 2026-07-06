@@ -388,3 +388,13 @@ textarea:focus-visible {
   max-width: 100%;
   padding: 0;
 }
+
+/* Full-width pages that use .audit-container without .lf-layout */
+.container.audit-container {
+  background: linear-gradient(rgba(180, 160, 80, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 160, 80, 0.08) 1px, transparent 1px), #faf9f7;
+  background-size: 12px 12px;
+  min-height: 100vh;
+  padding-top: 60px;
+  padding-bottom: 0;
+}
