@@ -46,6 +46,8 @@
   border-right: 1px solid var(--border);
   background: var(--color-chrome);
   z-index: 10;
+  display: flex;
+  flex-direction: column;
 }
 
 /* RIGHT SIDEBAR — fixed position, full height, aligned with nav CTA column */

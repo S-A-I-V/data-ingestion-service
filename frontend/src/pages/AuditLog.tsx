@@ -2,13 +2,14 @@ import { useState, useMemo } from "react";
 import useAuditPolling from "../hooks/useAuditPolling";
 import AuditAnalyticsPanel from "../components/audit/AuditAnalyticsPanel";
 import AuditDetailModal from "../components/audit/AuditDetailModal";
+import LangfuseSidebar from "../components/LangfuseSidebar";
 import HistoryIcon from "@mui/icons-material/History";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import { Button, Badge, EmptyState, Spinner, Panel, PanelHeader } from "../components/ui";
+import { EmptyState, Spinner, Panel, PanelHeader } from "../components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import type { AuditLog as Log } from "../types";
 
@@ -82,228 +83,228 @@ export default function AuditLog() {
 
   return (
     <>
-      <div className="container audit-container">
-        <div className="toolbar">
-          <span className="toolbar-title">Audit Log</span>
-          <div className="toolbar-spacer" />
-          <Button size="sm" onClick={refresh}>
-            <RefreshIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Refresh
-          </Button>
-        </div>
-
-        <div className="audit-layout">
+      <div className="lf-layout" style={{ gridTemplateColumns: "var(--sidebar-left-width) 1fr" }}>
+        {/* LEFT SIDEBAR — Audit Stats */}
+        <aside className="lf-sidebar-left">
           <AuditAnalyticsPanel metrics={metrics} />
+        </aside>
 
-          <div className="audit-table-col">
-            <Panel>
-              <PanelHeader>
-                <HistoryIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execution History
-                <Badge variant="info" className="mapper-badge">
-                  {totalFiltered}/{logs.length} entries
-                </Badge>
-              </PanelHeader>
+        {/* CENTER CONTENT — full width, no right sidebar */}
+        <main className="lf-main" style={{ gridColumn: "2" }}>
+          <div style={{ width: "100%" }}>
+            <div className="toolbar">
+              <span className="toolbar-title">Audit Log</span>
+              <div className="toolbar-spacer" />
+              <button type="button" className="btn btn-sm" onClick={refresh}>
+                <RefreshIcon sx={{ fontSize: 14 }} /> Refresh
+              </button>
+            </div>
 
-              {loading ? (
-                <Spinner size="lg" label="Loading audit log..." />
-              ) : logs.length === 0 ? (
-                <EmptyState
-                  icon={<HistoryIcon sx={{ fontSize: 40 }} />}
-                  title="No operations yet"
-                  description="Run a data transfer to see it here."
-                />
-              ) : (
-                <>
-                  {/* Search & Filter */}
-                  <div className="csv-toolbar">
-                    <div className="csv-search-wrap">
-                      <SearchIcon sx={{ fontSize: 16, color: "var(--text-secondary)" }} />
-                      <input
-                        className="csv-search-input"
-                        placeholder="Search all columns"
-                        value={search}
-                        onChange={(e) => {
-                          setSearch(e.target.value);
-                          setPage(0);
-                        }}
-                      />
-                    </div>
-                    <div className="csv-filter-wrap">
-                      <Select
-                        value={filterCol || "__none__"}
-                        onValueChange={(val) => {
-                          setFilterCol(val === "__none__" ? "" : val);
-                          setFilterVal("");
-                          setPage(0);
-                        }}
-                      >
-                        <SelectTrigger className="csv-select-trigger">
-                          <SelectValue placeholder="Filter by column" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">None</SelectItem>
-                          {COLUMNS.map((c) => (
-                            <SelectItem key={c.key} value={c.key}>
-                              {c.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {filterCol && (
+            <div className="audit-table-col">
+              <Panel>
+                <PanelHeader>
+                  <HistoryIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Execution History
+                  <span className="status-pill status-pill--info" style={{ marginLeft: "auto" }}>
+                    {totalFiltered}/{logs.length} entries
+                  </span>
+                </PanelHeader>
+
+                {loading ? (
+                  <Spinner size="lg" label="Loading audit log..." />
+                ) : logs.length === 0 ? (
+                  <EmptyState
+                    icon={<HistoryIcon sx={{ fontSize: 40 }} />}
+                    title="No operations yet"
+                    description="Run a data transfer to see it here."
+                  />
+                ) : (
+                  <>
+                    {/* Search & Filter */}
+                    <div className="csv-toolbar">
+                      <div className="csv-search-wrap">
+                        <SearchIcon sx={{ fontSize: 16, color: "var(--text-secondary)" }} />
                         <input
-                          className="csv-filter-input"
-                          placeholder={`Filter ${COLUMNS.find((c) => c.key === filterCol)?.label}`}
-                          value={filterVal}
+                          className="csv-search-input"
+                          placeholder="Search all columns"
+                          value={search}
                           onChange={(e) => {
-                            setFilterVal(e.target.value);
+                            setSearch(e.target.value);
                             setPage(0);
                           }}
                         />
-                      )}
-                      {(search || filterCol) && (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setSearch("");
-                            setFilterCol("");
+                      </div>
+                      <div className="csv-filter-wrap">
+                        <Select
+                          value={filterCol || "__none__"}
+                          onValueChange={(val) => {
+                            setFilterCol(val === "__none__" ? "" : val);
                             setFilterVal("");
+                            setPage(0);
                           }}
                         >
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Table */}
-                  <div className="csv-preview-scroll">
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          {COLUMNS.map((c) => (
-                            <th key={c.key} className="csv-sortable-th" onClick={() => handleSort(c.key)}>
-                              <span className="csv-th-content">
+                          <SelectTrigger className="csv-select-trigger">
+                            <SelectValue placeholder="Filter by column" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">None</SelectItem>
+                            {COLUMNS.map((c) => (
+                              <SelectItem key={c.key} value={c.key}>
                                 {c.label}
-                                {sortCol === c.key &&
-                                  (sortAsc ? (
-                                    <ArrowUpwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
-                                  ) : (
-                                    <ArrowDownwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
-                                  ))}
-                              </span>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginated.length === 0 ? (
-                          <tr>
-                            <td colSpan={COLUMNS.length} className="csv-no-results">
-                              No matching entries
-                            </td>
-                          </tr>
-                        ) : (
-                          paginated.map((l) => (
-                            <tr key={l.id}>
-                              <td className="audit-nowrap">{new Date(l.executed_at).toLocaleString()}</td>
-                              <td>{l.user_email}</td>
-                              <td>{l.connection_name}</td>
-                              <td>
-                                <Badge variant="info">{l.operation}</Badge>
-                              </td>
-                              <td>{l.table_name}</td>
-                              <td>{l.row_count}</td>
-                              <td>
-                                <Badge variant={l.status === "success" ? "success" : "danger"}>{l.status}</Badge>
-                              </td>
-                              <td className="audit-details-cell">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="audit-details-btn"
-                                  title="View full details"
-                                  onClick={() => setDetailText(getDetail(l))}
-                                >
-                                  <ZoomInIcon sx={{ fontSize: 16 }} />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination */}
-                  {totalFiltered > 0 && (
-                    <div className="csv-pagination">
-                      <div className="csv-page-size">
-                        <span>Rows per page:</span>
-                        {[20, 50, 100].map((s) => (
-                          <Button
-                            key={s}
-                            size="sm"
-                            variant={pageSize === s ? "primary" : "ghost"}
-                            className="csv-page-size-btn"
-                            onClick={() => {
-                              setPageSize(s);
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {filterCol && (
+                          <input
+                            className="csv-filter-input"
+                            placeholder={`Filter ${COLUMNS.find((c) => c.key === filterCol)?.label}`}
+                            value={filterVal}
+                            onChange={(e) => {
+                              setFilterVal(e.target.value);
                               setPage(0);
                             }}
+                          />
+                        )}
+                        {(search || filterCol) && (
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            onClick={() => {
+                              setSearch("");
+                              setFilterCol("");
+                              setFilterVal("");
+                            }}
                           >
-                            {s}
-                          </Button>
-                        ))}
-                      </div>
-                      <div className="csv-page-info">
-                        {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalFiltered)} of {totalFiltered}
-                      </div>
-                      <div className="csv-page-nav">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="csv-page-btn"
-                          disabled={page === 0}
-                          onClick={() => setPage(0)}
-                        >
-                          ««
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="csv-page-btn"
-                          disabled={page === 0}
-                          onClick={() => setPage(page - 1)}
-                        >
-                          ‹
-                        </Button>
-                        <span className="csv-page-current">
-                          {page + 1} / {totalPages}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="csv-page-btn"
-                          disabled={page >= totalPages - 1}
-                          onClick={() => setPage(page + 1)}
-                        >
-                          ›
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="csv-page-btn"
-                          disabled={page >= totalPages - 1}
-                          onClick={() => setPage(totalPages - 1)}
-                        >
-                          »»
-                        </Button>
+                            Clear
+                          </button>
+                        )}
                       </div>
                     </div>
-                  )}
-                </>
-              )}
-            </Panel>
+
+                    {/* Table */}
+                    <div className="csv-preview-scroll">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            {COLUMNS.map((c) => (
+                              <th key={c.key} className="csv-sortable-th" onClick={() => handleSort(c.key)}>
+                                <span className="csv-th-content">
+                                  {c.label}
+                                  {sortCol === c.key &&
+                                    (sortAsc ? (
+                                      <ArrowUpwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
+                                    ) : (
+                                      <ArrowDownwardIcon sx={{ fontSize: 14, ml: 0.3 }} />
+                                    ))}
+                                </span>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginated.length === 0 ? (
+                            <tr>
+                              <td colSpan={COLUMNS.length} className="csv-no-results">
+                                No matching entries
+                              </td>
+                            </tr>
+                          ) : (
+                            paginated.map((l) => (
+                              <tr key={l.id}>
+                                <td className="audit-nowrap">{new Date(l.executed_at).toLocaleString()}</td>
+                                <td>{l.user_email}</td>
+                                <td>{l.connection_name}</td>
+                                <td>
+                                  <span className="status-pill status-pill--info">{l.operation}</span>
+                                </td>
+                                <td>{l.table_name}</td>
+                                <td>{l.row_count}</td>
+                                <td>
+                                  <span
+                                    className={`status-pill status-pill--${l.status === "success" ? "success" : "danger"}`}
+                                  >
+                                    {l.status}
+                                  </span>
+                                </td>
+                                <td className="audit-details-cell">
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm"
+                                    title="View full details"
+                                    onClick={() => setDetailText(getDetail(l))}
+                                  >
+                                    <ZoomInIcon sx={{ fontSize: 16 }} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalFiltered > 0 && (
+                      <div className="csv-pagination">
+                        <div className="csv-page-size">
+                          <span>Rows per page:</span>
+                          {[20, 50, 100].map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              className={`btn btn-sm ${pageSize === s ? "btn-primary" : ""}`}
+                              onClick={() => {
+                                setPageSize(s);
+                                setPage(0);
+                              }}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="csv-page-info">
+                          {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalFiltered)} of {totalFiltered}
+                        </div>
+                        <div className="csv-page-nav">
+                          <button type="button" className="btn btn-sm" disabled={page === 0} onClick={() => setPage(0)}>
+                            ««
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            disabled={page === 0}
+                            onClick={() => setPage(page - 1)}
+                          >
+                            ‹
+                          </button>
+                          <span className="csv-page-current">
+                            {page + 1} / {totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            disabled={page >= totalPages - 1}
+                            onClick={() => setPage(page + 1)}
+                          >
+                            ›
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            disabled={page >= totalPages - 1}
+                            onClick={() => setPage(totalPages - 1)}
+                          >
+                            »»
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </Panel>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
 
       <AuditDetailModal detailText={detailText} onClose={() => setDetailText(null)} />

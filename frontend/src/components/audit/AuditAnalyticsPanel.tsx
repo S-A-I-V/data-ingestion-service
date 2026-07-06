@@ -19,12 +19,14 @@ interface Props {
 
 export default function AuditAnalyticsPanel({ metrics }: Props) {
   return (
-    <aside className="audit-analytics-panel">
-      <div className="panel">
-        <div className="panel-header">
-          <BarChartIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> Analytics
+    <div className="sidebar-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div className="sidebar-card-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div className="sidebar-card-title flex items-center justify-between">
+          <h2 className="font-sans text-[13px] font-medium leading-[1.2] tracking-[-0.02em] text-neutral-900">
+            <BarChartIcon sx={{ fontSize: 14, verticalAlign: "middle", mr: 0.5 }} /> Analytics
+          </h2>
         </div>
-        <div className="audit-analytics-body">
+        <div className="sidebar-card-list" style={{ flex: 1, justifyContent: "space-evenly" }}>
           {metrics ? (
             <>
               <Stat label="Operations" value={metrics.total_operations} />
@@ -37,23 +39,25 @@ export default function AuditAnalyticsPanel({ metrics }: Props) {
               <Stat label="Error Rows" value={metrics.total_error_rows} variant="warn" />
               <Stat label="Duplicates" value={metrics.total_duplicates} />
               <Stat label="Peak Memory" value={fmtBytes(metrics.peak_memory_bytes)} />
-              <Stat label="Total CPU" value={`${metrics.total_cpu_time_s}s`} />
-              <Stat label="Failed Ops" value={metrics.failed} variant="warn" />
             </>
           ) : (
             <div className="analytics-empty">No metrics yet</div>
           )}
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
 
 function Stat({ label, value, variant }: { label: string; value: string | number; variant?: string }) {
   return (
-    <div className={`analytics-stat${variant ? ` ${variant}` : ""}`}>
-      <span className="analytics-stat-label">{label}</span>
-      <span className="analytics-stat-value">{value}</span>
+    <div className="flex w-full items-center justify-between px-2 py-1.5">
+      <span className="font-sans text-[12px] font-normal text-neutral-500">{label}</span>
+      <span
+        className={`font-sans text-[12px] font-normal tabular-nums ${variant === "success" ? "text-green-700" : variant === "warn" ? "text-red-600" : "text-neutral-900"}`}
+      >
+        {value}
+      </span>
     </div>
   );
 }

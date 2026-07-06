@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "../Motion";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { Button, DownloadButton } from "../ui";
+import { DownloadButton } from "../ui";
 
 interface Props {
   detailText: string | null;
@@ -90,7 +90,7 @@ export default function AuditDetailModal({ detailText, onClose }: Props) {
               <span>{manifest ? "Email Fix Report" : "Details"}</span>
               <div className="audit-modal-actions">
                 {manifest && <DownloadButton onClick={handleExportCsv} label="Download" doneLabel="Done" />}
-                <Button size="sm" title="Copy to clipboard" onClick={handleCopy}>
+                <button type="button" className="btn btn-sm" title="Copy to clipboard" onClick={handleCopy}>
                   {copied ? (
                     <>
                       <CheckIcon sx={{ fontSize: 14 }} /> Copied
@@ -100,10 +100,10 @@ export default function AuditDetailModal({ detailText, onClose }: Props) {
                       <ContentCopyIcon sx={{ fontSize: 14 }} /> Copy
                     </>
                   )}
-                </Button>
-                <Button size="icon" variant="ghost" title="Close" onClick={onClose}>
+                </button>
+                <button type="button" className="btn btn-sm btn-danger" title="Close" onClick={onClose}>
                   <CloseIcon sx={{ fontSize: 18 }} />
-                </Button>
+                </button>
               </div>
             </div>
 
