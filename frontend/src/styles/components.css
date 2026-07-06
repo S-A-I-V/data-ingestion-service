@@ -227,7 +227,7 @@
 }
 .panel-header {
   padding: 14px 20px;
-  background: var(--bg-glass-hover);
+  background: #f5f5f0;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
   font-weight: 600;

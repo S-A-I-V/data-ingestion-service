@@ -1,8 +1,7 @@
 /**
- * WizardNavigation — Shared navigation footer for onboarding wizards.
+ * WizardNavigation — Shared navigation bar for onboarding wizards.
  * Handles Back, Skip, Next, and Execute buttons.
  */
-import { Button } from "../ui";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -39,24 +38,24 @@ export default function WizardNavigation({
   return (
     <div className="onboarding-nav-buttons">
       {currentStep > 0 && (
-        <Button onClick={onBack}>
+        <button type="button" className="btn btn-sm" onClick={onBack}>
           <ArrowBackIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Back
-        </Button>
+        </button>
       )}
       <div className="toolbar-spacer" />
       {skippableStepIndex !== undefined && currentStep === skippableStepIndex && onSkip && (
-        <Button variant="ghost" disabled={skipDisabled} onClick={onSkip}>
+        <button type="button" className="btn btn-sm btn--ghost" disabled={skipDisabled} onClick={onSkip}>
           Skip →
-        </Button>
+        </button>
       )}
       {currentStep < totalSteps - 1 ? (
-        <Button variant="primary" onClick={onNext}>
+        <button type="button" className="btn btn-sm btn-primary" onClick={onNext}>
           Next <ArrowForwardIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} />
-        </Button>
+        </button>
       ) : (
-        <Button variant="primary" onClick={onExecute} disabled={executeDisabled}>
+        <button type="button" className="btn btn-sm btn-primary" onClick={onExecute} disabled={executeDisabled}>
           <CheckCircleOutlineIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> {executeLabel}
-        </Button>
+        </button>
       )}
     </div>
   );

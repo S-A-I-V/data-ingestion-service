@@ -16,10 +16,10 @@ import FileUploader from "../components/ingest/FileUploader";
 import ColumnMapper from "../components/ingest/ColumnMapper";
 import StepProgress from "../components/onboarding/StepProgress";
 import WizardNavigation from "../components/onboarding/WizardNavigation";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import Highlight from "../components/ui/Highlight";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import { Button, Spinner } from "../components/ui";
+import { Spinner } from "../components/ui";
 import { STATUS_AUTO_DISMISS_MS, INGESTION_OPERATIONS, AI_SAMPLE_ROW_COUNT } from "../constants/ingest";
 import type { Connection, ColInfo } from "../types";
 
@@ -235,217 +235,265 @@ export default function Ingest() {
   );
 
   return (
-    <div className="container audit-container">
-      <div className="toolbar">
-        <span className="toolbar-title">Data Transfer</span>
-        <span className="toolbar-subtitle">Upload CSV data into any connected database</span>
-        <div className="toolbar-spacer" />
-      </div>
+    <div className="lf-layout" style={{ gridTemplateColumns: "var(--sidebar-left-width) 1fr" }}>
+      {/* LEFT SIDEBAR — Step Timeline */}
+      <aside className="lf-sidebar-left">
+        <div className="sidebar-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <div className="sidebar-card-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div className="sidebar-card-title">
+              <h2 className="font-sans text-[13px] font-medium leading-[1.2] tracking-[-0.02em] text-neutral-900">
+                Steps
+              </h2>
+            </div>
+            <div className="step-progress-vertical" style={{ flex: 1 }}>
+              {INGEST_STEPS.map((step, idx) => {
+                const isDone = idx < currentStep;
+                const isActive = idx === currentStep;
+                const isClickable = idx <= currentStep && idx < 3;
+                return (
+                  <div
+                    key={idx}
+                    className={`step-v-item${isActive ? " active" : ""}${isDone ? " done" : ""}`}
+                    onClick={() => isClickable && setCurrentStep(idx)}
+                    role="button"
+                    tabIndex={isClickable ? 0 : -1}
+                  >
+                    <div className="step-v-circle">{isDone ? "✓" : <span>{idx + 1}</span>}</div>
+                    <div className="step-v-label">
+                      <span className="step-v-title">{step.label}</span>
+                      <span className="step-v-desc">{step.description}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </aside>
 
-      <StepProgress
-        steps={INGEST_STEPS}
-        currentStep={currentStep}
-        onStepClick={(idx) => {
-          if (idx <= currentStep && idx < 3) setCurrentStep(idx);
-        }}
-      />
+      {/* CENTER CONTENT */}
+      <main className="lf-main">
+        <div style={{ width: "100%" }}>
+          <div className="toolbar">
+            <span className="toolbar-title">
+              <Highlight>Data Transfer</Highlight>
+            </span>
+            <span className="toolbar-subtitle">Upload CSV data into any connected database</span>
+            <div className="toolbar-spacer" />
+          </div>
 
-      <div className="onboarding-step-content">
-        {/* ═══ Step 0: Configure ═══ */}
-        {currentStep === 0 && (
-          <>
-            <fieldset className="panel-fieldset">
-              <TargetSelector
-                connections={conns}
-                connectionsLoading={connsLoading}
-                selectedConnectionId={connId}
-                onConnectionChange={setConnId}
-                tables={tables}
-                tablesLoading={tablesLoading}
-                selectedTable={table}
-                onTableChange={setTable}
-                operation={operation}
-                onOperationChange={setOperation}
-              />
-            </fieldset>
+          {/* Navigation bar — always at top below title */}
+          {currentStep < 3 && (
+            <WizardNavigation
+              currentStep={currentStep}
+              totalSteps={3}
+              onBack={() => setCurrentStep((s) => Math.max(s - 1, 0))}
+              onNext={() => setCurrentStep((s) => s + 1)}
+              onExecute={execute}
+              executeLabel={`Execute ${operation}`}
+              executeDisabled={loading}
+            />
+          )}
+          {currentStep === 3 && (
+            <WizardNavigation
+              currentStep={2}
+              totalSteps={3}
+              onBack={() => {}}
+              onNext={() => {}}
+              onExecute={resetAll}
+              executeLabel="Transfer Another"
+            />
+          )}
 
-            {table && (
-              <fieldset className="panel-fieldset">
-                <FileUploader
-                  file={file}
-                  csvTotalRows={csvTotalRows}
-                  csvFileSize={csvFileSize}
-                  disabled={false}
-                  onFileSelect={handleFile}
-                />
-              </fieldset>
+          <div className="onboarding-step-content">
+            {/* ═══ Step 0: Configure ═══ */}
+            {currentStep === 0 && (
+              <>
+                <div className="ingest-configure-grid">
+                  {/* Left: Select Target */}
+                  <fieldset className="panel-fieldset">
+                    <TargetSelector
+                      connections={conns}
+                      connectionsLoading={connsLoading}
+                      selectedConnectionId={connId}
+                      onConnectionChange={setConnId}
+                      tables={tables}
+                      tablesLoading={tablesLoading}
+                      selectedTable={table}
+                      onTableChange={setTable}
+                      operation={operation}
+                      onOperationChange={setOperation}
+                    />
+                  </fieldset>
+
+                  {/* Right: Upload CSV — always visible, disabled until table selected */}
+                  <fieldset className="panel-fieldset" disabled={!table}>
+                    <FileUploader
+                      file={file}
+                      csvTotalRows={csvTotalRows}
+                      csvFileSize={csvFileSize}
+                      disabled={!table}
+                      onFileSelect={handleFile}
+                    />
+                  </fieldset>
+                </div>
+
+                {csvHeaders.length > 0 && dbCols.length > 0 && (
+                  <fieldset className="panel-fieldset">
+                    <ColumnMapper
+                      csvHeaders={csvHeaders}
+                      dbColumns={dbCols}
+                      mapping={mapping}
+                      onMappingChange={setMapping}
+                      mappedCount={mappedCount}
+                      totalRows={csvTotalRows}
+                      fileSize={csvFileSize}
+                    />
+                  </fieldset>
+                )}
+
+                {/* Step 0 has no separate nav — handled by bottom bar */}
+              </>
             )}
 
-            {file && csvTotalRows > 0 && (
-              <div className="exec-stats-panel pre-stats">
-                <div className="panel-header">
-                  <FolderOpenIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> File Overview
-                </div>
-                <div className="exec-stats-grid">
-                  <div className="exec-stat-card">
-                    <span className="exec-stat-value">{csvTotalRows.toLocaleString()}</span>
-                    <span className="exec-stat-label">Total Rows</span>
-                  </div>
-                  <div className="exec-stat-card">
-                    <span className="exec-stat-value">{csvHeaders.length}</span>
-                    <span className="exec-stat-label">Columns</span>
-                  </div>
-                  <div className="exec-stat-card">
-                    <span className="exec-stat-value">{fmtBytes(csvFileSize)}</span>
-                    <span className="exec-stat-label">File Size</span>
-                  </div>
-                  <div className="exec-stat-card">
-                    <span className="exec-stat-value">
-                      {mappedCount}/{csvHeaders.length}
+            {/* ═══ Step 1: Preview & AI ═══ */}
+            {currentStep === 1 && (
+              <>
+                <CsvPreview headers={csvHeaders} rows={csvPreview} />
+
+                {/* AI Analysis — Gemini-style input */}
+                <div className="gemini-ai-section">
+                  {aiResult && (
+                    <div className="gemini-response">
+                      <div className="gemini-response-header">
+                        <AutoFixHighIcon sx={{ fontSize: 16 }} />
+                        <span>AI Analysis</span>
+                      </div>
+                      <div className="gemini-response-body">{aiResult}</div>
+                    </div>
+                  )}
+                  <div className="gemini-input-bar">
+                    <button
+                      type="button"
+                      className="gemini-input-action"
+                      title="Analyze data"
+                      onClick={analyze}
+                      disabled={aiLoading}
+                    >
+                      <AutoFixHighIcon sx={{ fontSize: 20 }} />
+                    </button>
+                    <span className="gemini-input-placeholder">
+                      {aiLoading ? "Analyzing your data..." : "Ask about your data before executing..."}
                     </span>
-                    <span className="exec-stat-label">Mapped</span>
+                    <div className="gemini-input-right">
+                      <button
+                        type="button"
+                        className="gemini-input-send"
+                        onClick={analyze}
+                        disabled={aiLoading}
+                        title="Run analysis"
+                      >
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="22" y1="2" x2="11" y2="13" />
+                          <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
-            {csvHeaders.length > 0 && dbCols.length > 0 && (
-              <fieldset className="panel-fieldset">
-                <ColumnMapper
-                  csvHeaders={csvHeaders}
-                  dbColumns={dbCols}
-                  mapping={mapping}
-                  onMappingChange={setMapping}
-                  mappedCount={mappedCount}
-                />
-              </fieldset>
-            )}
+            {/* ═══ Step 2: Execute ═══ */}
+            {currentStep === 2 && !loading && (
+              <>
+                <div className="ingest-execute-grid">
+                  {/* Execution Plan */}
+                  <div className="panel csv-preview-panel">
+                    <div className="panel-header">Execution Plan</div>
+                    <div className="csv-preview-scroll">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Property</th>
+                            <th>Value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {executionPlanRows.map((row) => (
+                            <tr key={row.Property}>
+                              <td>{row.Property}</td>
+                              <td>
+                                <strong>{row.Value}</strong>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
 
-            {/* Step 0 has no separate nav — handled by bottom bar */}
-          </>
-        )}
-
-        {/* ═══ Step 1: Preview & AI ═══ */}
-        {currentStep === 1 && (
-          <>
-            <CsvPreview headers={csvHeaders} rows={csvPreview} />
-
-            {/* AI Analysis */}
-            <div className="ai-panel">
-              <div className="ai-panel-header">
-                <AutoFixHighIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> AI Query Analysis
-              </div>
-              <Button size="sm" onClick={analyze} disabled={aiLoading} loading={aiLoading} loadingText="Analyzing...">
-                Analyze before executing
-              </Button>
-              {aiResult && <div className="ai-result">{aiResult}</div>}
-            </div>
-          </>
-        )}
-
-        {/* ═══ Step 2: Execute ═══ */}
-        {currentStep === 2 && !loading && (
-          <>
-            <div className="ingest-execute-grid">
-              {/* Execution Plan */}
-              <div className="panel csv-preview-panel">
-                <div className="panel-header">Execution Plan</div>
-                <div className="csv-preview-scroll">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Property</th>
-                        <th>Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {executionPlanRows.map((row) => (
-                        <tr key={row.Property}>
-                          <td>{row.Property}</td>
-                          <td>
-                            <strong>{row.Value}</strong>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {/* Column Mapping */}
+                  <div className="panel csv-preview-panel">
+                    <div className="panel-header">Column Mapping — CSV{table}</div>
+                    <div className="csv-preview-scroll">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>CSV Column</th>
+                            <th>→</th>
+                            <th>Database Column ({table})</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {columnMappingRows.map((row) => (
+                            <tr key={row["CSV Column"]}>
+                              <td>{row["CSV Column"]}</td>
+                              <td>→</td>
+                              <td>
+                                <strong>{row["Database Column"]}</strong>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Column Mapping */}
-              <div className="panel csv-preview-panel">
-                <div className="panel-header">Column Mapping — CSV{table}</div>
-                <div className="csv-preview-scroll">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>CSV Column</th>
-                        <th>→</th>
-                        <th>Database Column ({table})</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {columnMappingRows.map((row) => (
-                        <tr key={row["CSV Column"]}>
-                          <td>{row["CSV Column"]}</td>
-                          <td>→</td>
-                          <td>
-                            <strong>{row["Database Column"]}</strong>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {status && <div className="lookup-error-badge">{status.msg}</div>}
-          </>
-        )}
-
-        {/* Executing spinner */}
-        {currentStep === 2 && loading && <Spinner size="lg" label={`Executing ${operation} into ${table}...`} />}
-
-        {/* ═══ Step 3: Results ═══ */}
-        {currentStep === 3 && (
-          <>
-            {status && (
-              <div
-                className={`badge ${status.ok ? "badge-success" : "badge-failed"}`}
-                style={{ marginBottom: 16, display: "inline-block" }}
-              >
-                {status.msg}
-              </div>
+                {status && <div className="lookup-error-badge">{status.msg}</div>}
+              </>
             )}
 
-            {execStats && <ExecStatsPanel stats={execStats} />}
-          </>
-        )}
-      </div>
+            {/* Executing spinner */}
+            {currentStep === 2 && loading && <Spinner size="lg" label={`Executing ${operation} into ${table}...`} />}
 
-      {/* Bottom navigation — always sticky */}
-      {currentStep < 3 && (
-        <WizardNavigation
-          currentStep={currentStep}
-          totalSteps={3}
-          onBack={() => setCurrentStep((s) => Math.max(s - 1, 0))}
-          onNext={() => setCurrentStep((s) => s + 1)}
-          onExecute={execute}
-          executeLabel={`Execute ${operation}`}
-          executeDisabled={loading}
-        />
-      )}
-      {currentStep === 3 && (
-        <WizardNavigation
-          currentStep={2}
-          totalSteps={3}
-          onBack={() => {}}
-          onNext={() => {}}
-          onExecute={resetAll}
-          executeLabel="Transfer Another"
-        />
-      )}
+            {/* ═══ Step 3: Results ═══ */}
+            {currentStep === 3 && (
+              <>
+                {status && (
+                  <span className={`status-pill ${status.ok ? "status-pill--success" : "status-pill--danger"}`}>
+                    {status.msg}
+                  </span>
+                )}
+
+                {execStats && <ExecStatsPanel stats={execStats} />}
+              </>
+            )}
+          </div>
+
+          {/* Bottom navigation removed — now at top */}
+        </div>
+      </main>
     </div>
   );
 }

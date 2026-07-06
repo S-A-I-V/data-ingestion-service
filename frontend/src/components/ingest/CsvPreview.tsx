@@ -4,7 +4,6 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { Badge, Button } from "../ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface Props {
@@ -62,9 +61,9 @@ export default function CsvPreview({ headers, rows }: Props) {
       <div className="panel csv-preview-panel">
         <div className="panel-header">
           <TableChartIcon sx={{ fontSize: 18, verticalAlign: "middle", mr: 0.5 }} /> CSV Preview
-          <Badge variant="info" className="mapper-badge">
+          <span className="status-pill status-pill--info" style={{ marginLeft: "auto" }}>
             {totalFiltered}/{rows.length} rows
-          </Badge>
+          </span>
         </div>
         <div className="csv-toolbar">
           <div className="csv-search-wrap">
@@ -112,8 +111,9 @@ export default function CsvPreview({ headers, rows }: Props) {
               />
             )}
             {(search || filterCol) && (
-              <Button
-                size="sm"
+              <button
+                type="button"
+                className="btn btn-sm"
                 onClick={() => {
                   setSearch("");
                   setFilterCol("");
@@ -121,7 +121,7 @@ export default function CsvPreview({ headers, rows }: Props) {
                 }}
               >
                 Clear
-              </Button>
+              </button>
             )}
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function CsvPreview({ headers, rows }: Props) {
                 <button
                   key={s}
                   type="button"
-                  className={`csv-page-size-btn ${pageSize === s ? "active" : ""}`}
+                  className={`btn btn-sm ${pageSize === s ? "btn-primary" : ""}`}
                   onClick={() => {
                     setPageSize(s);
                     setPage(0);
@@ -186,10 +186,10 @@ export default function CsvPreview({ headers, rows }: Props) {
               {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalFiltered)} of {totalFiltered}
             </div>
             <div className="csv-page-nav">
-              <button type="button" className="csv-page-btn" disabled={page === 0} onClick={() => setPage(0)}>
+              <button type="button" className="btn btn-sm" disabled={page === 0} onClick={() => setPage(0)}>
                 ««
               </button>
-              <button type="button" className="csv-page-btn" disabled={page === 0} onClick={() => setPage(page - 1)}>
+              <button type="button" className="btn btn-sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
                 ‹
               </button>
               <span className="csv-page-current">
@@ -197,7 +197,7 @@ export default function CsvPreview({ headers, rows }: Props) {
               </span>
               <button
                 type="button"
-                className="csv-page-btn"
+                className="btn btn-sm"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage(page + 1)}
               >
@@ -205,7 +205,7 @@ export default function CsvPreview({ headers, rows }: Props) {
               </button>
               <button
                 type="button"
-                className="csv-page-btn"
+                className="btn btn-sm"
                 disabled={page >= totalPages - 1}
                 onClick={() => setPage(totalPages - 1)}
               >
