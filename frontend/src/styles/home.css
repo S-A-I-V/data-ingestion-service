@@ -76,7 +76,9 @@
   align-items: center;
   min-width: 0;
   min-height: calc(100vh - 48px);
-  background: #faf9f7;
+  background: linear-gradient(rgba(180, 160, 80, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 160, 80, 0.1) 1px, transparent 1px), #faf9f7;
+  background-size: 12px 12px;
   border-top-left-radius: var(--sidebar-card-radius);
   border-top-right-radius: var(--sidebar-card-radius);
 }
