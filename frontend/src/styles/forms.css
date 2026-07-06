@@ -502,13 +502,10 @@
   display: flex;
   justify-content: center;
   gap: 10px;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.conn-grid-card:hover .conn-grid-actions {
   opacity: 1;
 }
+
+/* Grid actions always visible */
 
 /* ===== CONNECTION LIST (row view) ===== */
 

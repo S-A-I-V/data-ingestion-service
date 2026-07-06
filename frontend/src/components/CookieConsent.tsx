@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Button } from "./ui";
 import CookieIcon from "./icons/CookieIcon";
 
 export default function CookieConsent() {
@@ -49,9 +48,9 @@ export default function CookieConsent() {
           </div>
 
           <div className="cookie-actions">
-            <Button variant="primary" size="sm" onClick={accept}>
+            <button type="button" className="btn btn-primary btn-sm" onClick={accept}>
               Accept
-            </Button>
+            </button>
           </div>
         </motion.div>
       )}
