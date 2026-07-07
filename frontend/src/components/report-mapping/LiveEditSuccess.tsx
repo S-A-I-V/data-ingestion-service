@@ -2,9 +2,9 @@
  * Success view shown after a live edit mapping is applied successfully.
  */
 import { useNavigate } from "react-router-dom";
-import { Button } from "../ui";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import Highlight from "../ui/Highlight";
 import { SUCCESS_ICON_SIZE_PX, TOOLBAR_ICON_SIZE_PX } from "../../constants/reportMapping";
 
 interface LiveEditSuccessProps {
@@ -21,7 +21,9 @@ export default function LiveEditSuccess({ result }: LiveEditSuccessProps) {
   return (
     <div className="container audit-container">
       <div className="toolbar">
-        <span className="toolbar-title">Edit Mapping</span>
+        <span className="toolbar-title">
+          <Highlight>Edit Mapping</Highlight>
+        </span>
       </div>
       <div className="onboarding-success">
         <CheckCircleOutlineIcon sx={{ fontSize: SUCCESS_ICON_SIZE_PX, color: "var(--success)" }} />
@@ -41,9 +43,9 @@ export default function LiveEditSuccess({ result }: LiveEditSuccessProps) {
           </div>
         </div>
         <div className="onboarding-success-actions">
-          <Button variant="primary" onClick={() => navigate("/admin/report-mapping")}>
+          <button type="button" className="btn btn-sm btn-primary" onClick={() => navigate("/admin/report-mapping")}>
             <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX + 2 }} /> Back to Hub
-          </Button>
+          </button>
         </div>
       </div>
     </div>

@@ -16,14 +16,13 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Node, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import api from "../api";
-import { Button, Spinner } from "../components/ui";
+import { Spinner } from "../components/ui";
 import { useGraphEditor } from "../hooks/useGraphEditor";
 import { applyDagreLayout } from "../utils/dagreLayout";
 import GraphCanvas from "../components/report-mapping/GraphCanvas";
 import LiveEditSuccess from "../components/report-mapping/LiveEditSuccess";
 import ReportSelector from "../components/report-mapping/ReportSelector";
 import PreviewPanel from "../components/report-mapping/PreviewPanel";
-import StepProgress from "../components/onboarding/StepProgress";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
@@ -234,106 +233,130 @@ export default function ReportMappingLiveEdit() {
 
   // ── Render: Report Selection ───────────────────────────────────────────────
   if (!reportId) {
-    return <ReportSelector reports={reports} reportsLoading={reportsLoading} onSelect={handleReportSelect} />;
+    return (
+      <ReportSelector reports={reports} reportsLoading={reportsLoading} onSelect={handleReportSelect} currentStep={0} />
+    );
   }
 
   // ── Render: Loading ────────────────────────────────────────────────────────
   if (loading) {
-    return (
-      <div className="container audit-container">
-        <Spinner size="lg" label="Loading mapping from NFC Prod..." />
-      </div>
-    );
+    return <ReportSelector reports={[]} reportsLoading={true} onSelect={() => {}} currentStep={1} />;
   }
+
+  // Determine current step for sidebar
+  const activeStep = previewStatements ? 2 : 1;
 
   // ── Render: Editor ─────────────────────────────────────────────────────────
   return (
-    <div className="rm-editor-page">
-      <div className="rm-editor-toolbar">
-        <Button size="sm" onClick={() => navigate("/admin/report-mapping/live-edit")}>
-          <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
-        </Button>
-        <span className="rm-edit-title">
-          Editing: <strong>{reportName}</strong> ({appName})
-        </span>
-        <div className="toolbar-spacer" />
-        <Button size="sm" onClick={addNode}>
-          <AddIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Add Job
-        </Button>
-        <Button size="sm" onClick={graph.undo} disabled={!graph.canUndo}>
-          <UndoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
-        </Button>
-        <Button size="sm" onClick={graph.redo} disabled={!graph.canRedo}>
-          <RedoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
-        </Button>
-        <Button size="sm" onClick={handleRelayout}>
-          <AccountTreeIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Layout
-        </Button>
-        <Button size="sm" variant="danger" onClick={handleReset}>
-          <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Reset
-        </Button>
-        <Button
-          size="sm"
-          variant="primary"
-          onClick={handlePreview}
-          disabled={previewing}
-          style={{ minWidth: PREVIEW_BUTTON_MIN_WIDTH_PX }}
-        >
-          {previewing ? (
-            <CircularProgress size={BUTTON_SPINNER_SIZE_PX} sx={{ color: "#fff" }} />
-          ) : (
-            <>
-              Next: Preview <ArrowForwardIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
-            </>
-          )}
-        </Button>
-      </div>
-
-      {/* Step Progress */}
-      <div className="rm-editor-step-bar">
-        <StepProgress
-          steps={LIVE_EDIT_STEPS}
-          currentStep={previewStatements ? 2 : 1}
-          onStepClick={() => {}}
-          skippedSteps={new Set()}
-        />
-      </div>
-
-      {error && <div className="rm-editor-error">{error}</div>}
-
-      {/* Preview Panel */}
-      {previewStatements && (
-        <PreviewPanel
-          statements={previewStatements}
-          executing={executing}
-          onBackToEdit={() => setPreviewStatements(null)}
-          onApply={handleApply}
-        />
-      )}
-
-      {/* Graph Canvas */}
-      {!previewStatements && (
-        <>
-          <div className="rm-editor-canvas">
-            {toast && <div className="rm-save-toast-popup rm-toast-top">{toast}</div>}
-            <GraphCanvas
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              nodeTypes={nodeTypes}
-              panToNodeId={lastAddedNodeId}
-              onPanComplete={clearLastAddedNodeId}
-            />
+    <div className="lf-layout" style={{ gridTemplateColumns: "var(--sidebar-left-width) 1fr" }}>
+      {/* LEFT SIDEBAR — Step Timeline + Report Info */}
+      <aside className="lf-sidebar-left">
+        <div className="sidebar-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <div className="sidebar-card-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            {/* Report info card at top */}
+            <div className="rm-sidebar-report-info">
+              <p className="rm-sidebar-report-name">{reportName}</p>
+              <span className="rm-sidebar-report-app">{appName}</span>
+            </div>
+            <div className="sidebar-card-title">
+              <h2 className="font-sans text-[13px] font-medium leading-[1.2] tracking-[-0.02em] text-neutral-900">
+                Steps
+              </h2>
+            </div>
+            <div className="step-progress-vertical" style={{ flex: 1 }}>
+              {LIVE_EDIT_STEPS.map((step, idx) => {
+                const isDone = idx < activeStep;
+                const isActive = idx === activeStep;
+                return (
+                  <div key={idx} className={`step-v-item${isActive ? " active" : ""}${isDone ? " done" : ""}`}>
+                    <div className="step-v-circle">{isDone ? "✓" : <span>{idx + 1}</span>}</div>
+                    <div className="step-v-label">
+                      <span className="step-v-title">{step.label}</span>
+                      <span className="step-v-desc">{step.description}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="rm-editor-stats">
-            <span>{nodes.length} jobs</span>
-            <span>{edges.length} connections</span>
-            <span>{nodes.filter((n) => n.data.job_id).length} assigned</span>
-          </div>
-        </>
-      )}
+        </div>
+      </aside>
+
+      {/* RIGHT — Editor */}
+      <main className="lf-main rm-editor-main">
+        <div className="rm-editor-toolbar">
+          <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/report-mapping/live-edit")}>
+            <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
+          </button>
+          <div className="toolbar-spacer" />
+          <button type="button" className="btn btn-sm" onClick={addNode}>
+            <AddIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Add Job
+          </button>
+          <button type="button" className="btn btn-sm" onClick={graph.undo} disabled={!graph.canUndo} title="Undo">
+            <UndoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
+          </button>
+          <button type="button" className="btn btn-sm" onClick={graph.redo} disabled={!graph.canRedo} title="Redo">
+            <RedoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
+          </button>
+          <button type="button" className="btn btn-sm" onClick={handleRelayout}>
+            <AccountTreeIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Layout
+          </button>
+          <button type="button" className="btn btn-sm btn-danger" onClick={handleReset}>
+            <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Reset
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            onClick={handlePreview}
+            disabled={previewing}
+            style={{ minWidth: PREVIEW_BUTTON_MIN_WIDTH_PX }}
+          >
+            {previewing ? (
+              <CircularProgress size={BUTTON_SPINNER_SIZE_PX} sx={{ color: "#fff" }} />
+            ) : (
+              <>
+                Next: Preview <ArrowForwardIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
+              </>
+            )}
+          </button>
+        </div>
+
+        {error && <div className="rm-editor-error">{error}</div>}
+
+        {/* Preview Panel */}
+        {previewStatements && (
+          <PreviewPanel
+            statements={previewStatements}
+            executing={executing}
+            onBackToEdit={() => setPreviewStatements(null)}
+            onApply={handleApply}
+          />
+        )}
+
+        {/* Graph Canvas */}
+        {!previewStatements && (
+          <>
+            <div className="rm-editor-canvas">
+              {toast && <div className="rm-save-toast-popup rm-toast-top">{toast}</div>}
+              <GraphCanvas
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                panToNodeId={lastAddedNodeId}
+                onPanComplete={clearLastAddedNodeId}
+              />
+            </div>
+            <div className="rm-editor-stats">
+              <span>{nodes.length} jobs</span>
+              <span>{edges.length} connections</span>
+              <span>{nodes.filter((n) => n.data.job_id).length} assigned</span>
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }

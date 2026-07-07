@@ -2,7 +2,6 @@
  * PreviewPanel — Shows the SQL statements that will be executed
  * before applying changes to the production database.
  */
-import { Button } from "../ui";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { TOOLBAR_ICON_SIZE_PX } from "../../constants/reportMapping";
@@ -27,13 +26,18 @@ export default function PreviewPanel({ statements, executing, onBackToEdit, onAp
           {statements.length} statement{statements.length !== 1 ? "s" : ""} will be executed
         </h4>
         <div className="rm-preview-actions">
-          <Button size="sm" onClick={onBackToEdit}>
+          <button type="button" className="btn btn-sm" onClick={onBackToEdit}>
             <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back to Edit
-          </Button>
-          <Button size="sm" variant="primary" onClick={onApply} disabled={executing || statements.length === 0}>
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            onClick={onApply}
+            disabled={executing || statements.length === 0}
+          >
             <CheckCircleOutlineIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />{" "}
             {executing ? "Applying..." : "Confirm & Apply"}
-          </Button>
+          </button>
         </div>
       </div>
       <div className="rm-preview-statements">
