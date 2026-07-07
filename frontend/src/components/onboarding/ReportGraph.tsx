@@ -164,7 +164,7 @@ function FlowInner({ clientName, reports }: Props) {
       proOptions={{ hideAttribution: true }}
       className="report-flow-graph"
     >
-      <Background color="rgba(255,255,255,0.03)" gap={20} />
+      <Background variant="dots" color="rgba(180, 160, 80, 0.3)" gap={12} size={1} />
       <Controls showInteractive={false} />
     </ReactFlow>
   );

@@ -15,7 +15,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import { Button, Spinner } from "../components/ui";
+import { Spinner } from "../components/ui";
+import Highlight from "../components/ui/Highlight";
 import StepProgress from "../components/onboarding/StepProgress";
 import { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
 import { type ReportDef } from "../components/onboarding/StepReportMapping";
@@ -230,7 +231,9 @@ export default function ClientOnboarding() {
     return (
       <div className="container audit-container">
         <div className="toolbar">
-          <span className="toolbar-title">Client Onboarding</span>
+          <span className="toolbar-title">
+            <Highlight>Client Onboarding</Highlight>
+          </span>
         </div>
         <OnboardingSuccess
           title="Client Onboarded Successfully"
@@ -247,12 +250,12 @@ export default function ClientOnboarding() {
           ]}
           actions={
             <>
-              <Button variant="primary" onClick={resetForm}>
+              <button type="button" className="btn btn-sm btn-primary" onClick={resetForm}>
                 <RestartAltIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Onboard Another
-              </Button>
-              <Button onClick={() => navigate("/admin/client-onboarding")}>
+              </button>
+              <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/client-onboarding")}>
                 <ArrowBackIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Back to Hub
-              </Button>
+              </button>
             </>
           }
         />
@@ -264,7 +267,9 @@ export default function ClientOnboarding() {
     return (
       <div className="container audit-container">
         <div className="toolbar">
-          <span className="toolbar-title">Client Onboarding</span>
+          <span className="toolbar-title">
+            <Highlight>Client Onboarding</Highlight>
+          </span>
         </div>
         <Spinner size="lg" label="Connecting to NFC Database (PROD)..." />
       </div>
@@ -274,14 +279,16 @@ export default function ClientOnboarding() {
   return (
     <div className="container audit-container">
       <div className="toolbar">
-        <span className="toolbar-title">New Client Onboarding</span>
+        <span className="toolbar-title">
+          <Highlight>New Client Onboarding</Highlight>
+        </span>
         <div className="toolbar-spacer" />
-        <Button size="sm" onClick={() => navigate("/admin/client-onboarding")}>
+        <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/client-onboarding")}>
           <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
-        </Button>
-        <Button size="sm" variant="danger" onClick={resetForm} disabled={executing}>
+        </button>
+        <button type="button" className="btn btn-sm btn-danger" onClick={resetForm} disabled={executing}>
           <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Reset
-        </Button>
+        </button>
       </div>
 
       {globalError && <div className="onboarding-global-error">{globalError}</div>}

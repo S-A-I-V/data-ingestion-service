@@ -10,7 +10,7 @@
  */
 
 import { useState, useMemo } from "react";
-import { Panel, PanelHeader, PanelBody, Badge, Button, Spinner } from "../ui";
+import { Panel, PanelHeader, PanelBody, Spinner } from "../ui";
 import ReportGraph from "./ReportGraph";
 import SearchIcon from "@mui/icons-material/Search";
 
@@ -107,12 +107,17 @@ export default function StepReportMapping({
       <Panel className="onboarding-report-list-panel">
         <PanelHeader>
           <span className="step-num">4</span> Report Mapping
-          <Badge variant="info" className="mapper-badge onboarding-header-badge">
+          <span className="status-pill status-pill--info" style={{ marginLeft: "auto" }}>
             {selectedReportIds.length}/{reports.length} selected
-          </Badge>
-          <Button size="sm" variant="danger" disabled={selectedReportIds.length === 0} onClick={selectNone}>
+          </span>
+          <button
+            type="button"
+            className="btn btn-sm btn-danger"
+            disabled={selectedReportIds.length === 0}
+            onClick={selectNone}
+          >
             Clear Selection
-          </Button>
+          </button>
         </PanelHeader>
         <PanelBody>
           {/* Application filter chips */}
@@ -140,15 +145,15 @@ export default function StepReportMapping({
               />
             </div>
             <div className="onboarding-report-actions">
-              <Button size="sm" variant="ghost" onClick={selectAll}>
+              <button type="button" className="btn btn-sm" onClick={selectAll}>
                 All
-              </Button>
-              <Button size="sm" variant="ghost" onClick={selectNone}>
+              </button>
+              <button type="button" className="btn btn-sm" onClick={selectNone}>
                 None
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm"
                 disabled={!search && activeApps.size === 0}
                 onClick={() => {
                   setSearch("");
@@ -156,7 +161,7 @@ export default function StepReportMapping({
                 }}
               >
                 Clear
-              </Button>
+              </button>
             </div>
           </div>
 

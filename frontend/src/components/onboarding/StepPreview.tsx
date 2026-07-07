@@ -7,7 +7,7 @@
  *   4. Transaction summary table + SQL preview
  */
 
-import { Panel, PanelHeader, PanelBody, Badge } from "../ui";
+import { Panel, PanelHeader, PanelBody } from "../ui";
 import type { ReportDef } from "./StepReportMapping";
 import type { BeidOrgMapping } from "./StepBeidMapping";
 
@@ -111,9 +111,9 @@ export default function StepPreview({
               <span className="preview-info-label">BEIDs ({beidMappings.length})</span>
               <div className="preview-beid-chips">
                 {beidMappings.map((m) => (
-                  <Badge key={m.beid} variant="info">
+                  <span key={m.beid} className="status-pill status-pill--info">
                     {m.beid}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
@@ -121,9 +121,9 @@ export default function StepPreview({
               <span className="preview-info-label">Org IDs</span>
               <div className="preview-beid-chips">
                 {[...new Set(beidMappings.map((m) => m.org_id))].map((oid) => (
-                  <Badge key={oid} variant="info">
+                  <span key={oid} className="status-pill status-pill--info">
                     {oid}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
@@ -162,9 +162,9 @@ export default function StepPreview({
               <span className="preview-section-label">Fastie Client Aliases ({fastieAliases.length})</span>
               <div className="preview-beid-chips">
                 {fastieAliases.map((alias) => (
-                  <Badge key={alias} variant="warning">
+                  <span key={alias} className="status-pill status-pill--warning">
                     {alias}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function StepPreview({
                         <code>{t.table}</code>
                       </td>
                       <td>
-                        <Badge variant="info">{t.operation}</Badge>
+                        <span className="status-pill status-pill--info">{t.operation}</span>
                       </td>
                       <td>{t.rows}</td>
                       <td>

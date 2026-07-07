@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import GroupsIcon from "@mui/icons-material/Groups";
+import Highlight from "../components/ui/Highlight";
 
 export default function ClientOnboardingHub() {
   const navigate = useNavigate();
@@ -14,20 +15,25 @@ export default function ClientOnboardingHub() {
   return (
     <div className="container audit-container">
       <div className="toolbar">
-        <span className="toolbar-title">Client Onboarding</span>
+        <span className="toolbar-title">
+          <Highlight>Client Onboarding</Highlight>
+        </span>
       </div>
 
       <div className="onboarding-hub">
         <div className="onboarding-hub-header">
-          <GroupsIcon sx={{ fontSize: 40, color: "var(--accent)" }} />
+          <GroupsIcon sx={{ fontSize: 32, color: "var(--text-primary)" }} />
           <h2>What would you like to do?</h2>
           <p>Choose to onboard a new client or modify an existing client's configuration.</p>
         </div>
 
         <div className="onboarding-hub-cards">
-          <button className="onboarding-hub-card" onClick={() => navigate("/admin/client-onboarding/new")}>
+          <button
+            className="onboarding-hub-card lf-corners-hover"
+            onClick={() => navigate("/admin/client-onboarding/new")}
+          >
             <div className="onboarding-hub-card-icon">
-              <AddIcon sx={{ fontSize: 32 }} />
+              <AddIcon sx={{ fontSize: 24 }} />
             </div>
             <h3>Onboard New Client</h3>
             <p>
@@ -36,9 +42,12 @@ export default function ClientOnboardingHub() {
             </p>
           </button>
 
-          <button className="onboarding-hub-card" onClick={() => navigate("/admin/client-onboarding/edit")}>
-            <div className="onboarding-hub-card-icon onboarding-hub-card-icon--edit">
-              <EditIcon sx={{ fontSize: 32 }} />
+          <button
+            className="onboarding-hub-card lf-corners-hover"
+            onClick={() => navigate("/admin/client-onboarding/edit")}
+          >
+            <div className="onboarding-hub-card-icon">
+              <EditIcon sx={{ fontSize: 24 }} />
             </div>
             <h3>Edit Existing Client</h3>
             <p>

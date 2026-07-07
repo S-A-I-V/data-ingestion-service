@@ -13,7 +13,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import { Button, Spinner } from "../components/ui";
+import { Spinner } from "../components/ui";
 import StepProgress from "../components/onboarding/StepProgress";
 import { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
 import { type ReportDef } from "../components/onboarding/StepReportMapping";
@@ -236,17 +236,23 @@ export default function ClientEdit() {
           ]}
           actions={
             <>
-              <Button variant="primary" onClick={() => navigate("/admin/client-onboarding")}>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => navigate("/admin/client-onboarding")}
+              >
                 <ArrowBackIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Back to Hub
-              </Button>
-              <Button
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm"
                 onClick={() => {
                   setResult(null);
                   setPhase("search");
                 }}
               >
                 <EditIcon sx={{ fontSize: NAV_ICON_SIZE_PX }} /> Edit Another
-              </Button>
+              </button>
             </>
           }
         />
@@ -261,9 +267,9 @@ export default function ClientEdit() {
         <div className="toolbar">
           <span className="toolbar-title">Edit Existing Client</span>
           <div className="toolbar-spacer" />
-          <Button size="sm" onClick={() => navigate("/admin/client-onboarding")}>
+          <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/client-onboarding")}>
             <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
-          </Button>
+          </button>
         </div>
 
         {globalError && <div className="onboarding-global-error">{globalError}</div>}
@@ -285,9 +291,9 @@ export default function ClientEdit() {
           Editing — {editClientName} (#{editClientId})
         </span>
         <div className="toolbar-spacer" />
-        <Button size="sm" variant="danger" onClick={() => setPhase("search")} disabled={executing}>
+        <button type="button" className="btn btn-sm btn-danger" onClick={() => setPhase("search")} disabled={executing}>
           <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Start Over
-        </Button>
+        </button>
       </div>
 
       {globalError && <div className="onboarding-global-error">{globalError}</div>}

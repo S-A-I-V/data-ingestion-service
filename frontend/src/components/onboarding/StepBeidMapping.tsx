@@ -5,7 +5,7 @@
  */
 
 import { useState } from "react";
-import { Panel, PanelHeader, PanelBody, Button, Badge } from "../ui";
+import { Panel, PanelHeader, PanelBody } from "../ui";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
@@ -60,13 +60,13 @@ export default function StepBeidMapping({ mappings, setMappings, clientName, err
     <Panel>
       <PanelHeader>
         <span className="step-num">3</span> Business Entity Mapping
-        <Badge variant="info" className="mapper-badge">
+        <span className="status-pill status-pill--info ml-auto">
           {mappings.length} BEID{mappings.length !== 1 ? "s" : ""}
-        </Badge>
+        </span>
         {mappings.length > 0 && (
-          <Button size="sm" variant="danger" onClick={clearAll}>
+          <button type="button" className="btn btn-sm btn-danger" onClick={clearAll}>
             Clear All
-          </Button>
+          </button>
         )}
       </PanelHeader>
       <PanelBody>
@@ -92,9 +92,9 @@ export default function StepBeidMapping({ mappings, setMappings, clientName, err
               placeholder="org_id for all above"
             />
           </div>
-          <Button size="sm" variant="primary" onClick={addBulk} disabled={!bulkBeids.trim()}>
+          <button type="button" className="btn btn-sm btn-primary" onClick={addBulk} disabled={!bulkBeids.trim()}>
             <AddIcon sx={{ fontSize: 14 }} /> Add
-          </Button>
+          </button>
         </div>
 
         {/* Mapping table */}
@@ -126,9 +126,14 @@ export default function StepBeidMapping({ mappings, setMappings, clientName, err
                       />
                     </td>
                     <td>
-                      <Button size="icon" variant="ghost" onClick={() => removeMapping(idx)}>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger"
+                        onClick={() => removeMapping(idx)}
+                        aria-label="Remove BEID"
+                      >
                         <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                      </Button>
+                      </button>
                     </td>
                   </tr>
                 ))}

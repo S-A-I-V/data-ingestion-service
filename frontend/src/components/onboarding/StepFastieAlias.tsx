@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { Panel, PanelHeader, PanelBody, Button, Badge } from "../ui";
+import { Panel, PanelHeader, PanelBody } from "../ui";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
@@ -36,13 +36,11 @@ export default function StepFastieAlias({ aliases, setAliases, clientName, error
     <Panel>
       <PanelHeader>
         <span className="step-num">5</span> Fastie Aliases
-        <Badge variant="warning" className="mapper-badge">
-          Optional
-        </Badge>
+        <span className="status-pill status-pill--warning ml-auto">Optional</span>
         {aliases.length > 0 && (
-          <Badge variant="info">
+          <span className="status-pill status-pill--info">
             {aliases.length} alias{aliases.length !== 1 ? "es" : ""}
-          </Badge>
+          </span>
         )}
       </PanelHeader>
       <PanelBody>
@@ -70,9 +68,9 @@ export default function StepFastieAlias({ aliases, setAliases, clientName, error
               maxLength={255}
             />
           </div>
-          <Button size="sm" variant="primary" onClick={addAlias} disabled={!input.trim()}>
+          <button type="button" className="btn btn-sm btn-primary" onClick={addAlias} disabled={!input.trim()}>
             <AddIcon sx={{ fontSize: 14 }} /> Add
-          </Button>
+          </button>
         </div>
 
         {/* Alias list */}
@@ -95,12 +93,17 @@ export default function StepFastieAlias({ aliases, setAliases, clientName, error
                       <code>{alias}</code>
                     </td>
                     <td>
-                      <Badge variant="success">Active</Badge>
+                      <span className="status-pill status-pill--success">Active</span>
                     </td>
                     <td>
-                      <Button size="icon" variant="ghost" onClick={() => removeAlias(idx)}>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger"
+                        onClick={() => removeAlias(idx)}
+                        aria-label="Remove alias"
+                      >
                         <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                      </Button>
+                      </button>
                     </td>
                   </tr>
                 ))}
