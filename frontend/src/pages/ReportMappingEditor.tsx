@@ -15,7 +15,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Node, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import api from "../api";
-import { Button, Spinner } from "../components/ui";
+import { Spinner } from "../components/ui";
 import OutlinedInput from "../components/ui/OutlinedInput";
 import { useGraphEditor } from "../hooks/useGraphEditor";
 import { applyDagreLayout } from "../utils/dagreLayout";
@@ -229,9 +229,9 @@ export default function ReportMappingEditor() {
     <div className="rm-editor-page">
       {/* Toolbar */}
       <div className="rm-editor-toolbar">
-        <Button size="sm" onClick={() => navigate("/admin/report-mapping")}>
+        <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/report-mapping")}>
           <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
-        </Button>
+        </button>
         <OutlinedInput
           label="Mapping Name"
           value={mappingName}
@@ -257,29 +257,41 @@ export default function ReportMappingEditor() {
           }}
         />
         <div className="toolbar-spacer" />
-        <Button size="sm" onClick={addNode}>
+        <button type="button" className="btn btn-sm" onClick={addNode}>
           <AddIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Add Job
-        </Button>
-        <Button size="sm" onClick={graph.undo} disabled={!graph.canUndo} title="Undo (Ctrl+Z)">
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={graph.undo}
+          disabled={!graph.canUndo}
+          title="Undo (Ctrl+Z)"
+        >
           <UndoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
-        </Button>
-        <Button size="sm" onClick={graph.redo} disabled={!graph.canRedo} title="Redo (Ctrl+Shift+Z)">
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={graph.redo}
+          disabled={!graph.canRedo}
+          title="Redo (Ctrl+Shift+Z)"
+        >
           <RedoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
-        </Button>
-        <Button size="sm" onClick={handleRelayout} title="Auto-layout (Dagre Sugiyama)">
+        </button>
+        <button type="button" className="btn btn-sm" onClick={handleRelayout} title="Auto-layout (Dagre Sugiyama)">
           <AccountTreeIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Layout
-        </Button>
-        <Button size="sm" variant="primary" onClick={handleSave} disabled={saving || !dirty}>
+        </button>
+        <button type="button" className="btn btn-sm btn-primary" onClick={handleSave} disabled={saving || !dirty}>
           {saving ? (
             <CircularProgress size={BUTTON_SPINNER_SIZE_PX} sx={{ color: "#fff" }} />
           ) : (
             <SaveIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
           )}{" "}
           Save
-        </Button>
-        <Button size="sm" onClick={handleExport}>
+        </button>
+        <button type="button" className="btn btn-sm" onClick={handleExport}>
           <DownloadIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Export CSV
-        </Button>
+        </button>
       </div>
 
       {error && <div className="rm-editor-error">{error}</div>}

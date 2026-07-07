@@ -162,7 +162,7 @@
 
 .rm-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
   padding-bottom: 40px;
 }
@@ -181,15 +181,19 @@
 .rm-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 0;
   background: var(--bg-surface);
   transition: border-color 0.15s;
-  min-height: 120px;
+  height: 150px;
+  min-height: 180px;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  text-align: center;
+  min-width: 0;
 }
 
 .rm-card:hover {
@@ -239,6 +243,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  align-self: stretch;
+  text-align: left;
 }
 
 .rm-card-header h4 {
@@ -291,6 +297,7 @@
 .rm-card-stats {
   display: flex;
   gap: 12px;
+  justify-content: center;
   font-size: 11px;
   color: var(--text-secondary);
   font-family: "Fira Code", monospace;
@@ -324,6 +331,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   z-index: 20;
@@ -334,7 +342,7 @@
   padding: 6px 12px;
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 0;
   color: var(--text-primary);
   font-size: 13px;
   font-family: inherit;
@@ -347,7 +355,7 @@
 }
 
 .rm-name-input:focus {
-  border-color: var(--accent);
+  border-color: var(--text-primary);
 }
 
 .rm-name-input--small {
@@ -368,20 +376,20 @@
   padding: 10px 12px;
   font-size: 13px;
   font-family: inherit;
-  color: #fff;
+  color: var(--text-primary);
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 0;
   outline: none;
   transition: border-color 0.15s;
 }
 
 .outlined-input__field:hover {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--border-hover);
 }
 
 .outlined-input__field:focus {
-  border-color: var(--accent);
+  border-color: var(--text-primary);
 }
 
 .outlined-input__label {
@@ -390,7 +398,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-muted);
   pointer-events: none;
   transition: all 0.15s ease;
   padding: 0 4px;
@@ -403,8 +411,8 @@
   top: 0;
   transform: translateY(-50%) scale(0.8);
   transform-origin: left center;
-  color: var(--accent);
-  background: var(--bg-base, #0a0a0f);
+  color: var(--text-primary);
+  background: var(--bg-surface);
 }
 
 .outlined-input__field:not(:focus) ~ .outlined-input__label {
@@ -412,7 +420,7 @@
 }
 
 .outlined-input--filled:not(:focus-within) .outlined-input__label {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-secondary);
 }
 
 .rm-editor-error {
@@ -427,6 +435,10 @@
   flex: 1;
   min-height: 0;
   position: relative;
+  background-image: linear-gradient(rgba(180, 160, 80, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 160, 80, 0.08) 1px, transparent 1px);
+  background-size: 12px 12px;
+  background-color: #f6f6f3;
 }
 
 .rm-editor-canvas .react-flow {
@@ -463,7 +475,7 @@
   color: #000;
   font-size: 12px;
   font-weight: 600;
-  border-radius: 20px;
+  border-radius: 0;
   z-index: 30;
   pointer-events: none;
   animation: rmToastPop 3s ease-out forwards;
@@ -486,42 +498,52 @@
   }
 }
 
-/* ── React Flow Dark Theme (Editor) ────────────────────────────────── */
+/* ── React Flow Light Theme (Editor) ────────────────────────────────── */
 
 .rm-editor-canvas .react-flow {
   --xy-background-color: transparent;
-  --xy-node-background-color-default: rgba(255, 255, 255, 0.05);
+  --xy-node-background-color-default: var(--bg-surface);
   --xy-node-color-default: var(--text-primary);
-  --xy-node-border-default: 1px solid rgba(255, 255, 255, 0.12);
-  --xy-node-boxshadow-default: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --xy-node-border-radius-default: 10px;
-  --xy-edge-stroke-default: var(--accent);
-  --xy-handle-background-color-default: var(--accent);
-  --xy-handle-border-color-default: var(--accent);
-  --xy-minimap-background-color-default: rgba(10, 10, 15, 0.8);
+  --xy-node-border-default: 2px solid #16a34a;
+  --xy-node-boxshadow-default: none;
+  --xy-node-border-radius-default: 0;
+  --xy-edge-stroke-default: var(--text-secondary);
+  --xy-handle-background-color-default: var(--text-primary);
+  --xy-handle-border-color-default: var(--text-primary);
+  --xy-minimap-background-color-default: rgba(245, 245, 240, 0.9);
+}
+
+/* Green bold border on the React Flow node wrapper */
+.rm-editor-canvas .react-flow__node {
+  border: 2px solid #16a34a !important;
+  border-radius: 0 !important;
+  padding: 4px !important;
+  background: transparent !important;
+  box-shadow: 0 0 8px 2px rgba(22, 163, 74, 0.25) !important;
 }
 
 .rm-editor-canvas .react-flow__controls {
-  background: rgba(10, 10, 15, 0.9);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .rm-editor-canvas .react-flow__controls-button {
   background: transparent;
   border: none;
+  border-bottom: 1px solid var(--border);
   color: var(--text-primary);
   fill: var(--text-primary);
 }
 
 .rm-editor-canvas .react-flow__controls-button:hover {
-  background: var(--bg-glass-hover);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .rm-editor-canvas .react-flow__edge-path {
-  stroke: var(--accent);
-  stroke-width: 2;
+  stroke: var(--text-secondary);
+  stroke-width: 1.5;
 }
 
 .rm-editor-canvas .react-flow__panel {
@@ -533,18 +555,51 @@
 .job-node {
   min-width: 200px;
   padding: 12px 14px;
-  background: rgba(10, 10, 20, 0.9);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 0;
   font-family: var(--font);
   position: relative;
+  overflow: visible;
+}
+
+/* Permanent black corner brackets on job nodes */
+.job-node::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-color: rgb(64, 64, 57);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  -webkit-mask-size: 8px 8px;
+  mask-size: 8px 8px;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 .job-node-handle {
   width: 10px;
   height: 10px;
-  background: var(--accent);
-  border: 2px solid var(--bg-base);
+  background: var(--text-primary);
+  border: 2px solid var(--bg-surface);
 }
 
 .job-node-header {
@@ -557,19 +612,19 @@
 .job-node-label {
   font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
 }
 .job-node-info-icon {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   cursor: default;
   flex-shrink: 0;
 }
 .job-node-info-icon:hover {
-  color: var(--accent-light);
+  color: var(--text-primary);
 }
 
 /* Action panel — strip below content */
@@ -579,7 +634,7 @@
   margin-top: 10px;
   margin-bottom: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
 }
 
 .job-node-action-btn {
@@ -588,18 +643,18 @@
   align-items: center;
   justify-content: center;
   padding: 8px 0;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
   font-size: 16px;
   cursor: pointer;
   transition: all 0.12s;
 }
 
 .job-node-action-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
 }
 
 .job-node-action-btn--cut:hover {
@@ -608,8 +663,8 @@
 }
 
 .job-node-action-btn--bypass:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 .job-node-action-btn--delete:hover {
@@ -620,7 +675,7 @@
 .job-node-id {
   font-size: 10px;
   font-family: "Fira Code", monospace;
-  color: var(--accent);
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
@@ -634,8 +689,8 @@
   width: 100%;
   padding: 5px 8px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-glass);
+  border-radius: 0;
+  background: var(--bg-surface);
   color: var(--text-secondary);
   font-size: 11px;
   font-family: inherit;
@@ -644,7 +699,7 @@
 }
 
 .job-node-select-btn:hover {
-  border-color: var(--accent);
+  border-color: var(--text-primary);
   color: var(--text-primary);
 }
 
@@ -657,10 +712,10 @@
   right: 0;
   z-index: 100;
   margin-top: 4px;
-  background: var(--bg-base);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-radius: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
