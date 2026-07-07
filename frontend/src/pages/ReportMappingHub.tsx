@@ -6,7 +6,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import { Button, Spinner } from "../components/ui";
+import { Spinner, ToggleGroup, ToggleGroupItem } from "../components/ui";
+import Highlight from "../components/ui/Highlight";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
@@ -76,7 +77,9 @@ export default function ReportMappingHub() {
     return (
       <div className="container audit-container">
         <div className="toolbar">
-          <span className="toolbar-title">Report Job Mapping</span>
+          <span className="toolbar-title">
+            <Highlight>Report Job Mapping</Highlight>
+          </span>
         </div>
         <Spinner size="lg" label="Loading reports and saved mappings..." />
       </div>
@@ -86,25 +89,41 @@ export default function ReportMappingHub() {
   return (
     <div className="container audit-container">
       <div className="toolbar">
-        <span className="toolbar-title">Report Job Mapping</span>
+        <span className="toolbar-title">
+          <Highlight>Report Job Mapping</Highlight>
+        </span>
         <div className="toolbar-spacer" />
-        <Button variant="primary" onClick={() => navigate("/admin/report-mapping/editor")}>
+        <button
+          type="button"
+          className="btn btn-sm btn-primary"
+          onClick={() => navigate("/admin/report-mapping/editor")}
+        >
           <AddIcon sx={{ fontSize: 16 }} /> New Mapping
-        </Button>
-        <Button onClick={() => navigate("/admin/report-mapping/live-edit")}>Edit Existing</Button>
+        </button>
+        <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/report-mapping/live-edit")}>
+          Edit Existing
+        </button>
       </div>
 
       {error && <div className="onboarding-global-error">{error}</div>}
 
       {/* Tab selector */}
-      <div className="rm-tabs">
-        <button className={`rm-tab ${tab === "saved" ? "active" : ""}`} onClick={() => setTab("saved")}>
+      <ToggleGroup
+        type="single"
+        value={tab}
+        onValueChange={(v) => {
+          if (v) setTab(v as "saved" | "existing");
+        }}
+        size="lg"
+        className="w-full"
+      >
+        <ToggleGroupItem value="saved" className="flex-1">
           <FolderOpenIcon sx={{ fontSize: 16 }} /> My Saved ({saved.length})
-        </button>
-        <button className={`rm-tab ${tab === "existing" ? "active" : ""}`} onClick={() => setTab("existing")}>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="existing" className="flex-1">
           <ContentCopyIcon sx={{ fontSize: 16 }} /> Copy from Existing ({existing.length})
-        </button>
-      </div>
+        </ToggleGroupItem>
+      </ToggleGroup>
 
       {/* Saved mappings */}
       {tab === "saved" && (
@@ -118,11 +137,16 @@ export default function ReportMappingHub() {
               className="rm-filter-search"
             />
             <div className="rm-filter-chips">
-              <button className={`rm-filter-chip ${!appFilter ? "active" : ""}`} onClick={() => setAppFilter("")}>
+              <button
+                type="button"
+                className={`rm-filter-chip ${!appFilter ? "active" : ""}`}
+                onClick={() => setAppFilter("")}
+              >
                 All
               </button>
               {savedAppNames.map((app) => (
                 <button
+                  type="button"
                   key={app}
                   className={`rm-filter-chip ${appFilter === app ? "active" : ""}`}
                   onClick={() => setAppFilter(appFilter === app ? "" : app)}
@@ -173,13 +197,13 @@ export default function ReportMappingHub() {
                       <span>{m.node_count} jobs</span>
                       <span>{m.edge_count} edges</span>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="primary"
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
                       onClick={() => navigate(`/admin/report-mapping/editor?load=${m.id}`)}
                     >
                       Open
-                    </Button>
+                    </button>
                   </div>
                 ))
             )}
@@ -199,11 +223,16 @@ export default function ReportMappingHub() {
               className="rm-filter-search"
             />
             <div className="rm-filter-chips">
-              <button className={`rm-filter-chip ${!appFilter ? "active" : ""}`} onClick={() => setAppFilter("")}>
+              <button
+                type="button"
+                className={`rm-filter-chip ${!appFilter ? "active" : ""}`}
+                onClick={() => setAppFilter("")}
+              >
                 All
               </button>
               {existingAppNames.map((app) => (
                 <button
+                  type="button"
                   key={app}
                   className={`rm-filter-chip ${appFilter === app ? "active" : ""}`}
                   onClick={() => setAppFilter(appFilter === app ? "" : app)}
@@ -244,9 +273,9 @@ export default function ReportMappingHub() {
                     <div className="rm-card-stats">
                       <span>{r.job_count} jobs</span>
                     </div>
-                    <Button size="sm" onClick={() => handleCopyExisting(r.report_id)}>
+                    <button type="button" className="btn btn-sm" onClick={() => handleCopyExisting(r.report_id)}>
                       <ContentCopyIcon sx={{ fontSize: 14 }} /> Copy & Edit
-                    </Button>
+                    </button>
                   </div>
                 ))
             )}

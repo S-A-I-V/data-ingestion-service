@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { Spinner } from "../components/ui";
+import Highlight from "../components/ui/Highlight";
 import StepProgress from "../components/onboarding/StepProgress";
 import { type BeidOrgMapping } from "../components/onboarding/StepBeidMapping";
 import { type ReportDef } from "../components/onboarding/StepReportMapping";
@@ -222,7 +223,9 @@ export default function ClientEdit() {
     return (
       <div className="container audit-container">
         <div className="toolbar">
-          <span className="toolbar-title">Edit Client</span>
+          <span className="toolbar-title">
+            <Highlight>Edit Client</Highlight>
+          </span>
         </div>
         <OnboardingSuccess
           title="Client Updated Successfully"
@@ -265,7 +268,9 @@ export default function ClientEdit() {
     return (
       <div className="container audit-container">
         <div className="toolbar">
-          <span className="toolbar-title">Edit Existing Client</span>
+          <span className="toolbar-title">
+            <Highlight>Edit Existing Client</Highlight>
+          </span>
           <div className="toolbar-spacer" />
           <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/client-onboarding")}>
             <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
@@ -288,7 +293,9 @@ export default function ClientEdit() {
     <div className="container audit-container">
       <div className="toolbar">
         <span className="toolbar-title">
-          Editing — {editClientName} (#{editClientId})
+          <Highlight>
+            Editing — {editClientName} (#{editClientId})
+          </Highlight>
         </span>
         <div className="toolbar-spacer" />
         <button type="button" className="btn btn-sm btn-danger" onClick={() => setPhase("search")} disabled={executing}>
