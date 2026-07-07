@@ -4,7 +4,7 @@
  */
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { Button, Spinner, Panel, PanelHeader } from "../ui";
+import { Spinner, Panel, PanelHeader } from "../ui";
 import CsvPreview from "../ingest/CsvPreview";
 
 interface FixResult {
@@ -64,13 +64,13 @@ export default function FixStep({
         {previewResults.length > 0 && <CsvPreview headers={previewHeaders} rows={previewResults} />}
 
         <div className="email-disc-actions">
-          <Button variant="secondary" onClick={onBack}>
+          <button type="button" className="btn btn-sm" onClick={onBack}>
             ← Back to Select
-          </Button>
+          </button>
           <div className="toolbar-spacer" />
-          <Button variant="primary" onClick={onConfirm} disabled={readyCount === 0}>
+          <button type="button" className="btn btn-sm btn-primary" onClick={onConfirm} disabled={readyCount === 0}>
             Confirm &amp; Apply ({readyCount} updates)
-          </Button>
+          </button>
         </div>
       </>
     );
@@ -103,9 +103,9 @@ export default function FixStep({
             )}
           </p>
           <div className="email-disc-actions">
-            <Button variant="secondary" onClick={onBackAndRescan}>
+            <button type="button" className="btn btn-sm" onClick={onBackAndRescan}>
               ← Back &amp; Re-scan
-            </Button>
+            </button>
           </div>
         </div>
       </Panel>

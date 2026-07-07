@@ -5,74 +5,116 @@
 /* Summary stat cards */
 .email-disc-summary {
   display: flex;
-  gap: 0;
+  gap: 8px;
   flex-wrap: nowrap;
   margin: 12px 0;
   width: 100%;
 }
 
 .email-disc-stat {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--card-bg, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  gap: 3px;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
   flex: 1;
+  overflow: visible;
+}
+
+/* Permanent black corner brackets on stat cards */
+.email-disc-stat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 1;
+  background-color: rgb(64, 64, 57);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  -webkit-mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  mask-size: 8px 8px;
+  -webkit-mask-size: 8px 8px;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+
+/* Warning stat gets amber corners */
+.email-disc-stat--warning::after {
+  background-color: #b45309;
 }
 
 .email-disc-stat:first-child {
-  border-radius: 8px 0 0 8px;
+  border-radius: 0;
 }
 
 .email-disc-stat:last-child {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0;
 }
 
 .email-disc-stat:not(:last-child) {
-  border-right: none;
+  border-right: 1px solid var(--border);
 }
 
 .email-disc-stat-value {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text, #fff);
-  padding-right: 8px;
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
-  margin-right: 2px;
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", monospace;
 }
 
 .email-disc-stat-label {
-  font-size: 0.7rem;
-  opacity: 0.6;
+  font-size: 0.6rem;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 .email-disc-stat--warning .email-disc-stat-value {
-  color: #f59e0b;
+  color: #b45309;
 }
 
 .email-disc-stat--info .email-disc-stat-value {
-  color: var(--accent, #0fb1b2);
+  color: var(--text-primary);
 }
 
 /* Action bar */
 .email-disc-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   margin: 12px 0;
   flex-wrap: wrap;
 }
 
 .email-disc-selected-count {
   font-size: 0.82rem;
-  opacity: 0.7;
+  font-weight: 600;
   padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(15, 177, 178, 0.1);
-  color: var(--accent, #0fb1b2);
+  border-radius: 0;
+  background: rgba(32, 32, 29, 0.06);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 /* Table cell highlights */
@@ -89,7 +131,8 @@
 
 /* Selected row */
 .email-disc-row--selected {
-  background: rgba(15, 177, 178, 0.06) !important;
+  background: rgba(32, 32, 29, 0.04) !important;
+  border-left: 2px solid var(--text-primary);
 }
 
 /* Fix preview modal overlay */
@@ -106,15 +149,16 @@
 }
 
 .email-disc-modal {
-  background: var(--card-bg, #1a1a2e);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 0;
   padding: 28px;
   max-width: 900px;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .email-disc-modal h3 {

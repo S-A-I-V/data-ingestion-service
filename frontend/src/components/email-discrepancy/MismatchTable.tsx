@@ -4,7 +4,7 @@
  */
 import { useState, useMemo } from "react";
 import SearchIcon from "@mui/icons-material/Search";
-import { Button, Panel, PanelHeader } from "../ui";
+import { Panel, PanelHeader } from "../ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { COLUMN_LABELS, MISMATCH_COLUMNS } from "../../constants/emailDiscrepancy";
 
@@ -67,17 +67,17 @@ export default function MismatchTable({
     <>
       {/* Selection Controls */}
       <div className="email-disc-actions">
-        <Button variant="secondary" onClick={onSelectAll}>
+        <button type="button" className="btn btn-sm" onClick={onSelectAll}>
           Select All ({mismatches.length})
-        </Button>
-        <Button variant="secondary" onClick={onClearSelection} disabled={selectedIds.size === 0}>
+        </button>
+        <button type="button" className="btn btn-sm" onClick={onClearSelection} disabled={selectedIds.size === 0}>
           Clear Selection
-        </Button>
+        </button>
         <span className="email-disc-selected-count">{selectedIds.size} selected</span>
         <div className="toolbar-spacer" />
-        <Button variant="primary" onClick={onPreview} disabled={selectedIds.size === 0}>
+        <button type="button" className="btn btn-primary" onClick={onPreview} disabled={selectedIds.size === 0}>
           Preview Fix ({selectedIds.size})
-        </Button>
+        </button>
       </div>
 
       {/* Table */}
@@ -126,8 +126,9 @@ export default function MismatchTable({
               />
             )}
             {(search || filterCol) && (
-              <Button
-                size="sm"
+              <button
+                type="button"
+                className="btn btn-sm"
                 onClick={() => {
                   setSearch("");
                   setFilterCol("");
@@ -135,7 +136,7 @@ export default function MismatchTable({
                 }}
               >
                 Clear
-              </Button>
+              </button>
             )}
           </div>
         </div>
