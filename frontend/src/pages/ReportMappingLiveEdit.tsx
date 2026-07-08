@@ -30,6 +30,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
   LIVE_EDIT_STEPS,
@@ -95,6 +96,11 @@ export default function ReportMappingLiveEdit() {
   // Load report list when no report selected
   useEffect(() => {
     if (!reportId) {
+      // Reset all editor state when going back to selection
+      setPreviewStatements(null);
+      setError(null);
+      setLoading(true);
+      initDoneRef.current = false;
       setReportsLoading(true);
       api
         .get("/admin/report-mapping/existing")
@@ -217,6 +223,11 @@ export default function ReportMappingLiveEdit() {
 
   const handleReportSelect = useCallback(
     (report: ExistingReport) => {
+      // Reset preview state when selecting a new report
+      setPreviewStatements(null);
+      setError(null);
+      setResult(null);
+      initDoneRef.current = false;
       setSearchParams({
         report: report.report_name,
         app: report.application_name,
@@ -285,34 +296,61 @@ export default function ReportMappingLiveEdit() {
       {/* RIGHT — Editor */}
       <main className="lf-main rm-editor-main">
         <div className="rm-editor-toolbar">
-          <button type="button" className="btn btn-sm" onClick={() => navigate("/admin/report-mapping/live-edit")}>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => {
+              if (previewStatements) {
+                setPreviewStatements(null);
+              } else {
+                navigate("/admin/report-mapping/live-edit");
+              }
+            }}
+          >
             <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
           </button>
           <div className="toolbar-spacer" />
-          <button type="button" className="btn btn-sm" onClick={addNode}>
-            <AddIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Add Job
-          </button>
-          <button type="button" className="btn btn-sm" onClick={graph.undo} disabled={!graph.canUndo} title="Undo">
-            <UndoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
-          </button>
-          <button type="button" className="btn btn-sm" onClick={graph.redo} disabled={!graph.canRedo} title="Redo">
-            <RedoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
-          </button>
-          <button type="button" className="btn btn-sm" onClick={handleRelayout}>
-            <AccountTreeIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Layout
-          </button>
-          <button type="button" className="btn btn-sm btn-danger" onClick={handleReset}>
-            <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Reset
-          </button>
+          {!previewStatements && (
+            <>
+              <button type="button" className="btn btn-sm" onClick={addNode}>
+                <AddIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Add Job
+              </button>
+              <button type="button" className="btn btn-sm" onClick={graph.undo} disabled={!graph.canUndo} title="Undo">
+                <UndoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
+              </button>
+              <button type="button" className="btn btn-sm" onClick={graph.redo} disabled={!graph.canRedo} title="Redo">
+                <RedoIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />
+              </button>
+              <button type="button" className="btn btn-sm" onClick={handleRelayout}>
+                <AccountTreeIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Layout
+              </button>
+              <button type="button" className="btn btn-sm btn-danger" onClick={handleReset}>
+                <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Reset
+              </button>
+            </>
+          )}
+          {previewStatements && (
+            <button
+              type="button"
+              className="btn btn-sm btn-danger"
+              onClick={() => navigate("/admin/report-mapping/live-edit")}
+            >
+              <RestartAltIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Start Over
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-sm btn-primary"
-            onClick={handlePreview}
-            disabled={previewing}
+            onClick={previewStatements ? handleApply : handlePreview}
+            disabled={previewStatements ? executing : previewing}
             style={{ minWidth: PREVIEW_BUTTON_MIN_WIDTH_PX }}
           >
-            {previewing ? (
+            {previewing || executing ? (
               <CircularProgress size={BUTTON_SPINNER_SIZE_PX} sx={{ color: "#fff" }} />
+            ) : previewStatements ? (
+              <>
+                <CheckCircleOutlineIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Confirm & Apply
+              </>
             ) : (
               <>
                 Next: Preview <ArrowForwardIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} />

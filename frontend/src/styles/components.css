@@ -131,6 +131,11 @@
   border-color: #333;
 }
 
+.btn-primary .MuiCircularProgress-root {
+  display: block;
+  margin: 0 auto;
+}
+
 .btn-danger {
   background: var(--danger-bg);
   color: var(--danger);

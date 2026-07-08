@@ -844,6 +844,7 @@
   flex-direction: column;
   overflow: hidden;
   border-top: 1px solid var(--border);
+  background: var(--bg-surface);
 }
 
 .rm-preview-header {
@@ -852,12 +853,13 @@
   justify-content: space-between;
   padding: 12px 16px;
   border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .rm-preview-header h4 {
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -869,36 +871,73 @@
 .rm-preview-statements {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .rm-preview-stmt {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 12px 14px;
+  background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 0;
+  position: relative;
+  overflow: visible;
+}
+
+/* Permanent black corner brackets on preview statements */
+.rm-preview-stmt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-color: rgb(64, 64, 57);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  mask-position:
+    0px 0px,
+    0px 100%,
+    100% 100%,
+    100% 0px;
+  -webkit-mask-size: 8px 8px;
+  mask-size: 8px 8px;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 .rm-preview-stmt-num {
   font-size: 10px;
-  font-weight: 600;
-  color: var(--accent);
+  font-weight: 700;
+  color: var(--text-primary);
   min-width: 24px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 6px;
+  border-radius: 0;
 }
 
 .rm-preview-stmt code {
   font-size: 11px;
   font-family: "Fira Code", monospace;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-all;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* Remove step progress bottom margin in report mapping editor */
@@ -914,15 +953,17 @@
 
 /* Preview statement params display */
 .rm-preview-stmt-params {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 10px;
-  color: var(--accent);
+  color: var(--text-secondary);
   font-family: "Fira Code", monospace;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
 }
 
 /* Report selector description text */
 .rm-selector-description {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
   margin-bottom: 16px;
 }
 
