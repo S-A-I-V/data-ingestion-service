@@ -17,6 +17,7 @@ import SearchOffIcon from "@mui/icons-material/SearchOff";
 import Tooltip from "@mui/material/Tooltip";
 import api from "../api";
 import { Toast, useToast } from "../components/ui";
+import Highlight from "../components/ui/Highlight";
 import type { ReportHealthPayload } from "../types/reportHealth";
 import { APP_FILTER_ALL_VALUE } from "../constants/reportHealth";
 import ReportDetailDrawer from "../components/report-health/ReportDetailDrawer";
@@ -167,7 +168,7 @@ export default function ReportHealthDashboard() {
       <div className="rh-topbar">
         <div className="rh-topbar-title">
           <MonitorHeartIcon sx={{ fontSize: 15 }} />
-          Report Health
+          <Highlight>Report Health</Highlight>
         </div>
 
         {/* Status strip — display only */}

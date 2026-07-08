@@ -82,7 +82,7 @@ export default function ReportDetailDrawer({ payload, loading = false, onClose }
               <Pill status={r.report_delivery_status} type="job" />
             </div>
           </div>
-          <button type="button" className="rh-drawer-close" onClick={onClose} aria-label="Close">
+          <button type="button" className="btn btn-sm rh-drawer-close" onClick={onClose} aria-label="Close">
             <CloseIcon sx={{ fontSize: 13 }} />
           </button>
         </div>
@@ -98,7 +98,7 @@ export default function ReportDetailDrawer({ payload, loading = false, onClose }
               key={t.key}
               type="button"
               role="tab"
-              aria-selected={tab === t.key ? "true" : "false"}
+              aria-selected={tab === t.key}
               className={`rh-drawer-tab${tab === t.key ? " active" : ""}`}
               onClick={() => setTab(t.key)}
             >

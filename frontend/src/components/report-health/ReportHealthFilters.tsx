@@ -8,7 +8,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Button, Popover, PopoverTrigger, PopoverContent, Calendar } from "../ui";
+import { Popover, PopoverTrigger, PopoverContent, Calendar } from "../ui";
 import SearchIcon from "@mui/icons-material/Search";
 import Combobox from "./shared/Combobox";
 
@@ -186,13 +186,13 @@ export default function ReportHealthFilters({
 
       {/* Actions */}
       <div className="rh-filter-field rh-filter-field--action">
-        <Button variant="ghost" size="sm" onClick={onReset}>
+        <button type="button" className="btn btn-sm" onClick={onReset}>
           Reset
-        </Button>
-        <Button variant="primary" size="sm" onClick={onSearch} disabled={loading}>
+        </button>
+        <button type="button" className="btn btn-sm btn-primary" onClick={onSearch} disabled={loading}>
           <SearchIcon sx={{ fontSize: 14 }} />
           {loading ? "Searching…" : "Search"}
-        </Button>
+        </button>
       </div>
     </div>
   );
