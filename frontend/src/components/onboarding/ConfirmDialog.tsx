@@ -3,7 +3,6 @@
  * Shows a title, message, and confirm/cancel buttons.
  */
 
-import { Button } from "../ui";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 interface Props {
@@ -38,12 +37,12 @@ export default function ConfirmDialog({
         <h3 className="confirm-dialog-title">{title}</h3>
         <p className="confirm-dialog-message">{message}</p>
         <div className="confirm-dialog-actions">
-          <Button variant="ghost" onClick={onCancel} disabled={loading}>
+          <button type="button" className="btn btn-sm" onClick={onCancel} disabled={loading}>
             {cancelLabel}
-          </Button>
-          <Button variant="primary" onClick={onConfirm} loading={loading} loadingText="Executing...">
-            {confirmLabel}
-          </Button>
+          </button>
+          <button type="button" className="btn btn-sm btn-primary" onClick={onConfirm} disabled={loading}>
+            {loading ? "Executing..." : confirmLabel}
+          </button>
         </div>
       </div>
     </div>

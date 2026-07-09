@@ -2,7 +2,6 @@
  * OnboardingSuccess — Shared success state view for client onboarding/edit operations.
  * Displays execution stats and a summary table of the results.
  */
-import { Button } from "../ui";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { SUCCESS_ICON_SIZE_PX, NAV_ICON_SIZE_PX } from "../../constants/onboarding";
 

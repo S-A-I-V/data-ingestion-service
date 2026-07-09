@@ -6,7 +6,7 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import EditIcon from "@mui/icons-material/Edit";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { Badge, EmptyState } from "./ui";
+import { EmptyState } from "./ui";
 import StorageIcon from "@mui/icons-material/Storage";
 import type { Connection } from "../types";
 
@@ -59,14 +59,14 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
               {/* Badges */}
               <div className="conn-list-badges">
                 {c.use_ssl && (
-                  <Badge>
+                  <span className="status-pill">
                     <LockIcon sx={{ fontSize: 11 }} /> SSL
-                  </Badge>
+                  </span>
                 )}
                 {c.ssh_enabled && (
-                  <Badge>
+                  <span className="status-pill">
                     <VpnKeyIcon sx={{ fontSize: 11 }} /> SSH
-                  </Badge>
+                  </span>
                 )}
               </div>
 
@@ -112,14 +112,14 @@ export default function ConnectionList({ connections, statuses, onTest, onDelete
             </div>
             <div className="conn-grid-badges">
               {c.use_ssl && (
-                <Badge>
+                <span className="status-pill">
                   <LockIcon sx={{ fontSize: 12 }} /> SSL
-                </Badge>
+                </span>
               )}
               {c.ssh_enabled && (
-                <Badge>
+                <span className="status-pill">
                   <VpnKeyIcon sx={{ fontSize: 12 }} /> SSH
-                </Badge>
+                </span>
               )}
             </div>
             <div className="conn-grid-actions">

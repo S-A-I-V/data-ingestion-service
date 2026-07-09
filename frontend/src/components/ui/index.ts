@@ -1,14 +1,9 @@
 // UI Primitives — import from here, not from individual files
-// e.g. import { Button, Badge, Panel } from "../ui";
+// e.g. import { Panel, Spinner } from "../ui";
 
 // shadcn primitives (Tailwind-based)
-export { Button, buttonVariants } from "./Button";
-export type { ButtonProps } from "./Button";
-export { Badge, badgeVariants } from "./Badge";
 export { Input } from "./input";
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
-export { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./card";
-export { Separator } from "./separator";
 
 // Toggle Group (Radix-based)
 export { ToggleGroup, ToggleGroupItem } from "./toggle-group";
