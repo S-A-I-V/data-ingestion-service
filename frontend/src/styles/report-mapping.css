@@ -487,6 +487,15 @@
 .rm-editor-canvas .react-flow {
   width: 100%;
   height: 100%;
+  cursor: default;
+}
+
+.rm-editor-canvas .react-flow__pane {
+  cursor: grab;
+}
+
+.rm-editor-canvas .react-flow__pane:active {
+  cursor: grabbing;
 }
 
 .rm-editor-stats {
