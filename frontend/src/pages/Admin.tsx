@@ -53,6 +53,14 @@ const ADMIN_TOOLS = [
     icon: MonitorHeartIcon,
     to: "/admin/report-health",
   },
+  {
+    permission: "admin:report_policies",
+    title: "Report Policies",
+    description:
+      "View and edit report definitions & SLA policies. Manage expected delivery times, schedule frequencies, and window configurations.",
+    icon: MonitorHeartIcon,
+    to: "/admin/report-policies",
+  },
 ];
 
 export default function Admin({ permissions }: Props) {

@@ -3,6 +3,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  background: #ffffff;
 }
 .data-table th {
   text-align: left;

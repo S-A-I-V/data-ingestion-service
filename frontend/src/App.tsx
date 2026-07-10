@@ -17,6 +17,7 @@ import ReportMappingLiveEdit from "./pages/ReportMappingLiveEdit";
 import Admin from "./pages/Admin";
 import EmailDiscrepancyAudit from "./pages/EmailDiscrepancyAudit";
 import ReportHealthDashboard from "./pages/ReportHealthDashboard";
+import ReportPolicies from "./pages/ReportPolicies";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
@@ -120,6 +121,9 @@ export default function App() {
         )}
         {user.permissions?.includes("admin:report_mapping") && (
           <Route path="/admin/report-mapping/live-edit" element={<ReportMappingLiveEdit />} />
+        )}
+        {user.permissions?.includes("admin:report_policies") && (
+          <Route path="/admin/report-policies" element={<ReportPolicies />} />
         )}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />

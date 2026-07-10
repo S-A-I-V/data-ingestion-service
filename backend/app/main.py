@@ -33,6 +33,7 @@ from app.routers import (
     ingestion,
     report_health,
     report_mapping,
+    report_policies,
 )
 
 # ── 1. Configure Logging ─────────────────────────────────────────────────────
@@ -81,6 +82,7 @@ app.include_router(client_onboarding.router)
 app.include_router(report_mapping.router)
 app.include_router(email_discrepancy.router)
 app.include_router(report_health.router)
+app.include_router(report_policies.router)
 
 
 # ── Health Check ──────────────────────────────────────────────────────────────
