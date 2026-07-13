@@ -9,6 +9,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
+import WorkIcon from "@mui/icons-material/Work";
 import LangfuseSidebar from "../components/LangfuseSidebar";
 import Highlight from "../components/ui/Highlight";
 
@@ -30,6 +31,14 @@ const ADMIN_TOOLS = [
     description: "Onboard new clients or edit existing client configurations — groups, BEIDs, reports, and aliases.",
     icon: GroupsIcon,
     to: "/admin/client-onboarding",
+  },
+  {
+    permission: "admin:job_onboarding",
+    title: "Job Onboarding",
+    description:
+      "Onboard new jobs or edit existing jobs — SLA policies, proxy inference rules, and artifact definitions.",
+    icon: WorkIcon,
+    to: "/admin/job-onboarding",
   },
   {
     permission: "admin:report_mapping",

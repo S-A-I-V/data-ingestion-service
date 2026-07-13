@@ -31,6 +31,7 @@ from app.routers import (
     connections,
     email_discrepancy,
     ingestion,
+    job_onboarding,
     report_health,
     report_mapping,
     report_policies,
@@ -79,6 +80,7 @@ app.include_router(audit.router)
 app.include_router(ai.router)
 app.include_router(associate_lookup.router)
 app.include_router(client_onboarding.router)
+app.include_router(job_onboarding.router)
 app.include_router(report_mapping.router)
 app.include_router(email_discrepancy.router)
 app.include_router(report_health.router)

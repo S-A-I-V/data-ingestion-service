@@ -11,6 +11,9 @@ import AssociateLookup from "./pages/AssociateLookup";
 import ClientOnboarding from "./pages/ClientOnboarding";
 import ClientOnboardingHub from "./pages/ClientOnboardingHub";
 import ClientEdit from "./pages/ClientEdit";
+import JobOnboardingHub from "./pages/JobOnboardingHub";
+import JobOnboarding from "./pages/JobOnboarding";
+import JobEdit from "./pages/JobEdit";
 import ReportMappingHub from "./pages/ReportMappingHub";
 import ReportMappingEditor from "./pages/ReportMappingEditor";
 import ReportMappingLiveEdit from "./pages/ReportMappingLiveEdit";
@@ -112,6 +115,15 @@ export default function App() {
         )}
         {user.permissions?.includes("admin:client_onboarding") && (
           <Route path="/admin/client-onboarding/edit" element={<ClientEdit />} />
+        )}
+        {user.permissions?.includes("admin:job_onboarding") && (
+          <Route path="/admin/job-onboarding" element={<JobOnboardingHub />} />
+        )}
+        {user.permissions?.includes("admin:job_onboarding") && (
+          <Route path="/admin/job-onboarding/new" element={<JobOnboarding />} />
+        )}
+        {user.permissions?.includes("admin:job_onboarding") && (
+          <Route path="/admin/job-onboarding/edit" element={<JobEdit />} />
         )}
         {user.permissions?.includes("admin:report_mapping") && (
           <Route path="/admin/report-mapping" element={<ReportMappingHub />} />
