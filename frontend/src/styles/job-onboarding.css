@@ -44,7 +44,12 @@
 }
 
 .job-input-wrap:focus-within {
-  border-color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* Suppress the global focus-visible outline — the wrapper border is enough */
+.job-input:focus-visible {
+  outline: none;
 }
 
 /* Error state — red border + red corners */

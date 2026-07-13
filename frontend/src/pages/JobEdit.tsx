@@ -200,10 +200,13 @@ export default function JobEdit() {
         <div style={{ width: "100%" }}>
           <div className="toolbar">
             <button className="btn btn-sm btn--ghost" onClick={() => navigate("/admin/job-onboarding")}>
-              <ArrowBackIcon sx={{ fontSize: 14 }} /> Back
+              <ArrowBackIcon sx={{ fontSize: 14 }} /> Back to Job Onboarding Admin
             </button>
             <span className="toolbar-title">
               <Highlight>{step === 0 ? "Edit Existing Job" : `Editing: ${form.jobName}`}</Highlight>
+              {step === 0 && (
+                <span className="toolbar-subtitle">— Start typing to search and select a job for editing.</span>
+              )}
             </span>
             <div style={{ flex: 1 }} />
             {step > 0 && (
@@ -230,10 +233,7 @@ export default function JobEdit() {
 
           {/* Step 0: Select */}
           {step === 0 && (
-            <div style={{ maxWidth: 500, margin: "40px auto" }}>
-              <p className="onboarding-hint" style={{ textAlign: "center", marginBottom: 16 }}>
-                Start typing to search and select a job for editing.
-              </p>
+            <div style={{ margin: "40px 0" }}>
               <SearchableSelect
                 options={jobs.map((j) => ({ value: String(j.job_id), label: j.job_name }))}
                 value=""
