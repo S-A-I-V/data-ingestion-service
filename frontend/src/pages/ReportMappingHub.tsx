@@ -197,13 +197,18 @@ export default function ReportMappingHub() {
                       <span>{m.node_count} jobs</span>
                       <span>{m.edge_count} edges</span>
                     </div>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-primary"
-                      onClick={() => navigate(`/admin/report-mapping/editor?load=${m.id}`)}
+                    <a
+                      href={`/admin/report-mapping/editor?load=${m.id}`}
+                      className="btn btn-sm btn-primary no-underline"
+                      onClick={(e) => {
+                        if (!e.ctrlKey && !e.metaKey) {
+                          e.preventDefault();
+                          navigate(`/admin/report-mapping/editor?load=${m.id}`);
+                        }
+                      }}
                     >
                       Open
-                    </button>
+                    </a>
                   </div>
                 ))
             )}
