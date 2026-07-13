@@ -174,3 +174,22 @@
 .onboarding-step-content {
   overflow: visible !important;
 }
+
+/* Allow the job onboarding page to scroll */
+.container.audit-container {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* Fix nav buttons overlapping content */
+.container.audit-container > .onboarding-nav-buttons {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-base, #faf9f7);
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
+  margin-top: 24px;
+  z-index: 10;
+}

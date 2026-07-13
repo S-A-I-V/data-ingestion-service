@@ -254,10 +254,10 @@ def execute_job_onboarding_endpoint(
                 detail="Proxy jobs must have at least one proxy rule linking to a trigger job.",
             )
 
-        if not payload.is_proxy and not payload.sla_policies:
+        if not payload.sla_policies:
             raise HTTPException(
                 status_code=400,
-                detail="Non-proxy jobs must have at least one SLA policy.",
+                detail="At least one SLA policy is required.",
             )
 
         # Build atomic statement list

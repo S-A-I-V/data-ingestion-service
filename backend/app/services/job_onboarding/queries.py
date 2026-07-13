@@ -215,45 +215,43 @@ def build_job_onboarding_statements(
     )
 
     # ── 2. SLA Policies ──────────────────────────────────────────────────────
-    # If NOT a proxy, create own SLA policies
-    if not payload.is_proxy:
-        for policy in payload.sla_policies:
-            statements.append(
-                {
-                    "sql": """
-                    INSERT INTO public.sla_policies(
-                        policy_id, entity_name, entity_type, application_name,
-                        day_of_week, schedule_frequency,
-                        expected_start_time, expected_sla_time, expected_time,
-                        timezone, days_addition_start_time, days_addition_sla,
-                        expected_duration_minutes, data_date_formula, created_at
-                    ) VALUES(
-                        gen_random_uuid(), :entity_name, 'JOB', '',
-                        :day_of_week, :schedule_frequency,
-                        :expected_start_time, :expected_sla_time, :expected_time,
-                        :timezone, :days_addition_start_time, :days_addition_sla,
-                        :expected_duration_minutes, :data_date_formula, now()
-                    )
-                """,
-                    "params": {
-                        "entity_name": payload.job_name,
-                        "day_of_week": policy.day_of_week,
-                        "schedule_frequency": policy.schedule_frequency,
-                        "expected_start_time": policy.expected_start_time,
-                        "expected_sla_time": policy.expected_sla_time,
-                        "expected_time": policy.expected_time,
-                        "timezone": policy.timezone,
-                        "days_addition_start_time": policy.days_addition_start_time,
-                        "days_addition_sla": policy.days_addition_sla,
-                        "expected_duration_minutes": policy.expected_duration_minutes,
-                        "data_date_formula": policy.data_date_formula,
-                    },
-                }
-            )
+    # Both standard and proxy jobs get their own SLA policies in prod
+    for policy in payload.sla_policies:
+        statements.append(
+            {
+                "sql": """
+                INSERT INTO public.sla_policies(
+                    policy_id, entity_name, entity_type, application_name,
+                    day_of_week, schedule_frequency,
+                    expected_start_time, expected_sla_time, expected_time,
+                    timezone, days_addition_start_time, days_addition_sla,
+                    expected_duration_minutes, data_date_formula, created_at
+                ) VALUES(
+                    gen_random_uuid(), :entity_name, 'JOB', '',
+                    :day_of_week, :schedule_frequency,
+                    :expected_start_time, :expected_sla_time, :expected_time,
+                    :timezone, :days_addition_start_time, :days_addition_sla,
+                    :expected_duration_minutes, :data_date_formula, now()
+                )
+            """,
+                "params": {
+                    "entity_name": payload.job_name,
+                    "day_of_week": policy.day_of_week,
+                    "schedule_frequency": policy.schedule_frequency,
+                    "expected_start_time": policy.expected_start_time,
+                    "expected_sla_time": policy.expected_sla_time,
+                    "expected_time": policy.expected_time,
+                    "timezone": policy.timezone,
+                    "days_addition_start_time": policy.days_addition_start_time,
+                    "days_addition_sla": policy.days_addition_sla,
+                    "expected_duration_minutes": policy.expected_duration_minutes,
+                    "data_date_formula": policy.data_date_formula,
+                },
+            }
+        )
 
     # ── 3. Proxy Inference Rules ─────────────────────────────────────────────
-    # If proxy, link to the trigger job(s). SLA policies are NOT created;
-    # the platform infers them from the trigger job at runtime.
+    # Link to the trigger job(s) for status inference.
     for rule in payload.proxy_rules:
         statements.append(
             {

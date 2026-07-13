@@ -5,6 +5,7 @@
  * Timezone options match the report policies editor.
  */
 
+import { useState } from "react";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type { SLAPolicy, ProxyRule, TriggerJob } from "../../types/jobOnboarding";
@@ -26,6 +27,7 @@ interface Props {
   proxyRules: ProxyRule[];
   onProxyRulesChange: (rules: ProxyRule[]) => void;
   triggerJobs: TriggerJob[];
+  onTriggerJobSelected?: (jobId: number) => void;
 }
 
 const CARD_STYLE: React.CSSProperties = {
@@ -68,7 +70,12 @@ export default function StepSlaProxy({
   proxyRules,
   onProxyRulesChange,
   triggerJobs,
+  onTriggerJobSelected,
 }: Props) {
+  // Store SLA per trigger job (keyed by job_id)
+  const [triggerSlaMap, setTriggerSlaMap] = useState<
+    Record<number, { loading: boolean; policies: any[]; jobName: string }>
+  >({});
   const addSlaPolicy = () => {
     onSlaPoliciesChange([
       ...slaPolicies,
@@ -115,8 +122,30 @@ export default function StepSlaProxy({
   const updateProxy = (idx: number, field: keyof ProxyRule, value: string | number) => {
     const updated = proxyRules.map((r, i) => (i === idx ? { ...r, [field]: value } : r));
     if (field === "trigger_job_id") {
-      const job = triggerJobs.find((j) => j.job_id === Number(value));
-      if (job) updated[idx] = { ...updated[idx], trigger_job_name: job.job_name };
+      const jobId = Number(value);
+      const job = triggerJobs.find((j) => j.job_id === jobId);
+      if (job) {
+        updated[idx] = { ...updated[idx], trigger_job_name: job.job_name };
+        // Fetch SLA for this trigger job
+        setTriggerSlaMap((prev) => ({ ...prev, [jobId]: { loading: true, policies: [], jobName: job.job_name } }));
+        if (onTriggerJobSelected) onTriggerJobSelected(jobId);
+        import("../../api").then(({ default: api }) => {
+          api
+            .get(`/admin/job-onboarding/trigger-jobs/${jobId}/sla`)
+            .then((res) =>
+              setTriggerSlaMap((prev) => ({
+                ...prev,
+                [jobId]: { loading: false, policies: res.data.sla_policies || [], jobName: job.job_name },
+              })),
+            )
+            .catch(() =>
+              setTriggerSlaMap((prev) => ({
+                ...prev,
+                [jobId]: { loading: false, policies: [], jobName: job.job_name },
+              })),
+            );
+        });
+      }
     }
     onProxyRulesChange(updated);
   };
@@ -130,14 +159,14 @@ export default function StepSlaProxy({
       {/* Toggle */}
       <div className="onboarding-mode-toggle">
         <button className={`onboarding-mode-btn${!isProxy ? " active" : ""}`} onClick={() => onToggleProxy(false)}>
-          Standard Job (own SLA)
+          Standard Job
         </button>
         <button className={`onboarding-mode-btn${isProxy ? " active" : ""}`} onClick={() => onToggleProxy(true)}>
-          Proxy Job (inherits SLA)
+          Proxy Job (+ inference rules)
         </button>
       </div>
 
-      {/* ── Standard: SLA Policy Cards ────────────────────────────────────── */}
+      {/* ── SLA Policy Cards (only for standard jobs) ── */}
       {!isProxy && (
         <>
           <div
@@ -315,7 +344,7 @@ export default function StepSlaProxy({
             }}
           >
             <p className="onboarding-hint" style={{ margin: 0 }}>
-              <strong>Proxy Inference Rules</strong> — link this proxy to a trigger job. SLA is inherited at runtime.
+              <strong>Proxy Inference Rules</strong> — link this proxy to a trigger job for status inference.
             </p>
             <button className="btn btn-sm" onClick={addProxyRule}>
               + Add Proxy Rule
@@ -323,48 +352,105 @@ export default function StepSlaProxy({
           </div>
 
           {proxyRules.map((rule, idx) => (
-            <div key={idx} style={CARD_STYLE} className="job-input-wrap">
-              <div style={CARD_HEADER}>
-                <span style={CARD_TITLE}>Rule {idx + 1}</span>
-                <button
-                  className="btn btn-sm btn-danger"
-                  onClick={() => removeProxy(idx)}
-                  title="Remove"
-                  style={{ padding: "4px 6px" }}
-                >
-                  <DeleteOutlineIcon sx={{ fontSize: 14 }} />
-                </button>
+            <div key={idx}>
+              <div style={CARD_STYLE} className="job-input-wrap">
+                <div style={CARD_HEADER}>
+                  <span style={CARD_TITLE}>Rule {idx + 1}</span>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => removeProxy(idx)}
+                    title="Remove"
+                    style={{ padding: "4px 6px" }}
+                  >
+                    <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10 }}>
+                  <div>
+                    <label style={LABEL}>
+                      Trigger Job <span style={{ color: "var(--danger)" }}>*</span>
+                    </label>
+                    <SearchableSelect
+                      options={triggerJobs.map((j) => ({ value: String(j.job_id), label: j.job_name }))}
+                      value={rule.trigger_job_id ? String(rule.trigger_job_id) : ""}
+                      onChange={(v) => updateProxy(idx, "trigger_job_id", Number(v))}
+                      placeholder="Type to search jobs..."
+                    />
+                  </div>
+                  <div>
+                    <label style={LABEL}>Trigger Status</label>
+                    <ValidatedInput
+                      value={rule.trigger_job_status}
+                      onChange={(v) => updateProxy(idx, "trigger_job_status", v)}
+                      placeholder="COMPLETED"
+                    />
+                  </div>
+                  <div>
+                    <label style={LABEL}>Proxy Status</label>
+                    <ValidatedInput
+                      value={rule.proxy_job_status}
+                      onChange={(v) => updateProxy(idx, "proxy_job_status", v)}
+                      placeholder="COMPLETED"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 10 }}>
-                <div>
-                  <label style={LABEL}>
-                    Trigger Job <span style={{ color: "var(--danger)" }}>*</span>
-                  </label>
-                  <SearchableSelect
-                    options={triggerJobs.map((j) => ({ value: String(j.job_id), label: j.job_name }))}
-                    value={rule.trigger_job_id ? String(rule.trigger_job_id) : ""}
-                    onChange={(v) => updateProxy(idx, "trigger_job_id", Number(v))}
-                    placeholder="Type to search jobs..."
-                  />
+              {/* Inline SLA for this trigger job */}
+              {rule.trigger_job_id > 0 && triggerSlaMap[rule.trigger_job_id] && (
+                <div
+                  style={{
+                    marginLeft: 16,
+                    marginBottom: 16,
+                    padding: "12px 16px",
+                    border: "1px dashed var(--border)",
+                    borderRadius: 0,
+                  }}
+                >
+                  {triggerSlaMap[rule.trigger_job_id].loading ? (
+                    <p className="onboarding-hint" style={{ margin: 0, textAlign: "center" }}>
+                      Loading SLA for "{triggerSlaMap[rule.trigger_job_id].jobName}"...
+                    </p>
+                  ) : triggerSlaMap[rule.trigger_job_id].policies.length > 0 ? (
+                    <>
+                      <p className="onboarding-hint" style={{ margin: "0 0 8px", fontSize: 11 }}>
+                        <strong>SLA of "{triggerSlaMap[rule.trigger_job_id].jobName}"</strong> — will be copied.
+                      </p>
+                      <div className="preview-table-wrap">
+                        <table className="data-table">
+                          <thead>
+                            <tr>
+                              <th>Day</th>
+                              <th>Start</th>
+                              <th>SLA</th>
+                              <th>TZ</th>
+                              <th>Duration</th>
+                              <th>Freq</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {triggerSlaMap[rule.trigger_job_id].policies.map((p: any, i: number) => (
+                              <tr key={i}>
+                                <td>{p.day_of_week}</td>
+                                <td>{p.expected_start_time || "—"}</td>
+                                <td>{p.expected_sla_time || "—"}</td>
+                                <td>{p.timezone}</td>
+                                <td>{p.expected_duration_minutes ?? "—"}</td>
+                                <td>{p.schedule_frequency}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="onboarding-hint" style={{ margin: 0, fontStyle: "italic" }}>
+                      No SLA found for this trigger job.
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <label style={LABEL}>Trigger Status</label>
-                  <ValidatedInput
-                    value={rule.trigger_job_status}
-                    onChange={(v) => updateProxy(idx, "trigger_job_status", v)}
-                    placeholder="COMPLETED"
-                  />
-                </div>
-                <div>
-                  <label style={LABEL}>Proxy Status</label>
-                  <ValidatedInput
-                    value={rule.proxy_job_status}
-                    onChange={(v) => updateProxy(idx, "proxy_job_status", v)}
-                    placeholder="COMPLETED"
-                  />
-                </div>
-              </div>
+              )}
             </div>
           ))}
 

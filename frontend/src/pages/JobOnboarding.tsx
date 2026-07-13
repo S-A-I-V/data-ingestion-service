@@ -99,7 +99,7 @@ export default function JobOnboarding() {
 
   /** Validate step 1: SLA or proxy config */
   const validateStep1 = (): boolean => {
-    if (form.isProxy) return form.proxyRules.length > 0 && form.proxyRules.every((r) => r.trigger_job_id > 0);
+    if (form.isProxy && form.proxyRules.length === 0) return false;
     return form.slaPolicies.length > 0;
   };
 
@@ -157,7 +157,7 @@ export default function JobOnboarding() {
         oncall_flag: true,
         job_description: form.jobDescription.trim() || "No description available.",
         is_proxy: form.isProxy,
-        sla_policies: form.isProxy ? [] : form.slaPolicies,
+        sla_policies: form.slaPolicies,
         proxy_rules: form.proxyRules,
         artifact_definitions: form.artifacts,
       };
@@ -273,6 +273,26 @@ export default function JobOnboarding() {
           proxyRules={form.proxyRules}
           onProxyRulesChange={(r) => updateField("proxyRules", r)}
           triggerJobs={triggerJobs}
+          onTriggerJobSelected={async (jobId) => {
+            try {
+              const res = await api.get(`/admin/job-onboarding/trigger-jobs/${jobId}/sla`);
+              const policies = (res.data.sla_policies || []).map((p: any) => ({
+                day_of_week: p.day_of_week || "Monday",
+                schedule_frequency: p.schedule_frequency || "daily",
+                expected_start_time: p.expected_start_time || "",
+                expected_sla_time: p.expected_sla_time || "",
+                expected_time: p.expected_time || "",
+                timezone: p.timezone || "EST",
+                days_addition_start_time: p.days_addition_start_time ?? 0,
+                days_addition_sla: p.days_addition_sla ?? 0,
+                expected_duration_minutes: p.expected_duration_minutes ?? null,
+                data_date_formula: p.data_date_formula ?? null,
+              }));
+              if (policies.length > 0) updateField("slaPolicies", policies);
+            } catch {
+              /* silently fail — user can add manually */
+            }
+          }}
         />
       )}
       {step === 2 && (

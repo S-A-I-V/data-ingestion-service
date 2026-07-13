@@ -1,8 +1,6 @@
 /**
- * SearchableSelect — A typeable/filterable dropdown.
- *
- * Shows an input field you can type into. Dropdown filters options as you type.
- * Click an option to select it. Uses job-input-wrap styling for consistency.
+ * SearchableSelect — Typeable/filterable dropdown.
+ * Click or focus to open, type to filter, click item to select.
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -33,10 +31,8 @@ export default function SearchableSelect({
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Display label for current value
   const selectedLabel = options.find((o) => o.value === value)?.label || "";
 
-  // Filter options by search text
   const filtered = search ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase())) : options;
 
   // Close on outside click
@@ -55,54 +51,54 @@ export default function SearchableSelect({
     onChange(optValue);
     setOpen(false);
     setSearch("");
+    inputRef.current?.blur();
   };
 
   return (
     <div ref={wrapRef} className="job-input-wrap" style={{ position: "relative" }}>
-      <div
-        style={{ display: "flex", alignItems: "center", cursor: "pointer" }}
-        onClick={() => {
-          setOpen(!open);
-          inputRef.current?.focus();
+      <input
+        ref={inputRef}
+        type="text"
+        className="job-input"
+        style={{ paddingRight: 28, cursor: "pointer" }}
+        value={open ? search : selectedLabel}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          if (!open) setOpen(true);
         }}
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          className="job-input"
-          style={{ paddingRight: 28 }}
-          value={open ? search : selectedLabel}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            if (!open) setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder={value ? selectedLabel : placeholder}
-        />
-        <ChevronDown
-          style={{
-            position: "absolute",
-            right: 8,
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: 14,
-            height: 14,
-            opacity: 0.5,
-          }}
-        />
-      </div>
+        onFocus={() => setOpen(true)}
+        onClick={() => setOpen(true)}
+        placeholder={placeholder}
+      />
+      <ChevronDown
+        style={{
+          position: "absolute",
+          right: 8,
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: 14,
+          height: 14,
+          opacity: 0.5,
+          pointerEvents: "none",
+        }}
+      />
 
       {open && (
         <div className="searchable-select-dropdown">
           {loading && <div className="searchable-select-empty">Loading...</div>}
           {!loading && filtered.length === 0 && search && <div className="searchable-select-empty">No matches</div>}
-          {!loading && !search && <div className="searchable-select-empty">Start typing to search...</div>}
+          {!loading && !search && options.length > 0 && (
+            <div className="searchable-select-empty">Start typing to filter...</div>
+          )}
           {!loading &&
             filtered.slice(0, 50).map((opt) => (
               <div
                 key={opt.value}
                 className={`searchable-select-item${opt.value === value ? " active" : ""}`}
-                onClick={() => handleSelect(opt.value)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(opt.value);
+                }}
               >
                 {opt.label}
               </div>
