@@ -13,7 +13,6 @@ import { useToast } from "../components/ui";
 import {
   jobOnboardingSchema,
   jobDefinitionSchema,
-  slaProxySchema,
   validateSlaProxyStep,
   type JobOnboardingValues,
 } from "../schemas/jobOnboarding";
@@ -138,13 +137,8 @@ export default function useJobOnboardingForm() {
         return (data.proxyRules as any[]).every((r) => r.trigger_job_id > 0);
       }
 
-      // For standard mode: validate SLA policy shapes
-      const schemaResult = slaProxySchema.safeParse({
-        isProxy: data.isProxy,
-        slaPolicies: data.slaPolicies,
-        proxyRules: data.proxyRules,
-      });
-      return schemaResult.success;
+      // For standard mode: check each policy has the required time fields
+      return (data.slaPolicies as any[]).every((p) => p.day_of_week && p.expected_sla_time && p.timezone);
     }
     // Step 2 (artifacts) and Step 3 (preview) don't block
     return true;

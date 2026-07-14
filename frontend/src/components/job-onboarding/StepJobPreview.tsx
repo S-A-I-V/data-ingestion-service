@@ -81,6 +81,9 @@ export default function StepJobPreview({ form }: Props) {
                   <th>Start</th>
                   <th>SLA</th>
                   <th>Timezone</th>
+                  <th>Duration (min)</th>
+                  <th>Days +Start</th>
+                  <th>Days +SLA</th>
                   <th>Frequency</th>
                 </tr>
               </thead>
@@ -91,6 +94,9 @@ export default function StepJobPreview({ form }: Props) {
                     <td>{p.expected_start_time || "—"}</td>
                     <td>{p.expected_sla_time || "—"}</td>
                     <td>{p.timezone}</td>
+                    <td>{p.expected_duration_minutes ?? "—"}</td>
+                    <td>{p.days_addition_start_time ?? 0}</td>
+                    <td>{p.days_addition_sla ?? 0}</td>
                     <td>{p.schedule_frequency}</td>
                   </tr>
                 ))}
