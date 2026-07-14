@@ -28,6 +28,8 @@ interface Props {
   onProxyRulesChange: (rules: ProxyRule[]) => void;
   triggerJobs: TriggerJob[];
   onTriggerJobSelected?: (jobId: number) => void;
+  /** When true, show the SLA policy cards even in proxy mode (used in edit flow) */
+  showSlaBelowProxy?: boolean;
 }
 
 const CARD_STYLE: React.CSSProperties = {
@@ -71,6 +73,7 @@ export default function StepSlaProxy({
   onProxyRulesChange,
   triggerJobs,
   onTriggerJobSelected,
+  showSlaBelowProxy = false,
 }: Props) {
   // Store SLA per trigger job (keyed by job_id)
   const [triggerSlaMap, setTriggerSlaMap] = useState<
@@ -457,6 +460,159 @@ export default function StepSlaProxy({
           {proxyRules.length === 0 && (
             <p className="onboarding-hint" style={{ fontStyle: "italic", textAlign: "center", padding: 32 }}>
               No rules yet. Click "+ Add Proxy Rule" to link to a trigger job.
+            </p>
+          )}
+        </>
+      )}
+
+      {/* Show SLA policies below proxy rules in edit mode */}
+      {isProxy && showSlaBelowProxy && (
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+              marginTop: 32,
+              borderTop: "1px dashed var(--border)",
+              paddingTop: 20,
+            }}
+          >
+            <p className="onboarding-hint" style={{ margin: 0 }}>
+              <strong>SLA Policies</strong> — delivery time expectations inherited or defined for this proxy job.
+            </p>
+            <button className="btn btn-sm" onClick={addSlaPolicy}>
+              + Add SLA Policy
+            </button>
+          </div>
+
+          {slaPolicies.map((policy, idx) => (
+            <div key={idx} style={CARD_STYLE} className="job-input-wrap">
+              <div style={CARD_HEADER}>
+                <span style={CARD_TITLE}>Policy {idx + 1}</span>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    className="btn btn-sm btn--ghost"
+                    onClick={() => duplicatePolicy(idx)}
+                    title="Duplicate"
+                    style={{ padding: "4px 6px" }}
+                  >
+                    <ContentCopyIcon sx={{ fontSize: 14 }} />
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => removeSla(idx)}
+                    title="Remove"
+                    style={{ padding: "4px 6px" }}
+                  >
+                    <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                  </button>
+                </div>
+              </div>
+
+              <div style={GRID_8}>
+                <div>
+                  <label style={LABEL}>Data Day</label>
+                  <Select value={policy.day_of_week} onValueChange={(v) => updateSla(idx, "day_of_week", v)}>
+                    <SelectTrigger className="h-8 text-xs w-full">
+                      <SelectValue placeholder="Day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS_OF_WEEK.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label style={LABEL}>Frequency</label>
+                  <Select
+                    value={policy.schedule_frequency}
+                    onValueChange={(v) => updateSla(idx, "schedule_frequency", v)}
+                  >
+                    <SelectTrigger className="h-8 text-xs w-full">
+                      <SelectValue placeholder="Freq" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FREQUENCIES.map((f) => (
+                        <SelectItem key={f} value={f}>
+                          {f}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label style={LABEL}>Timezone</label>
+                  <Select value={policy.timezone} onValueChange={(v) => updateSla(idx, "timezone", v)}>
+                    <SelectTrigger className="h-8 text-xs w-full">
+                      <SelectValue placeholder="TZ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIMEZONES.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label style={LABEL}>Duration (min)</label>
+                  <ValidatedInput
+                    type="number"
+                    value={String(policy.expected_duration_minutes ?? "")}
+                    onChange={(v) => updateSla(idx, "expected_duration_minutes", v ? Number(v) : null)}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label style={LABEL}>Start Time</label>
+                  <TimeInput
+                    value={policy.expected_start_time}
+                    onChange={(v) => updateSla(idx, "expected_start_time", v)}
+                    className="w-full h-8"
+                  />
+                </div>
+                <div>
+                  <label style={LABEL}>SLA Time</label>
+                  <TimeInput
+                    value={policy.expected_sla_time}
+                    onChange={(v) => {
+                      updateSla(idx, "expected_sla_time", v);
+                      updateSla(idx, "expected_time", v);
+                    }}
+                    className="w-full h-8"
+                  />
+                </div>
+                <div>
+                  <label style={LABEL}>Days +Start</label>
+                  <ValidatedInput
+                    type="number"
+                    value={String(policy.days_addition_start_time)}
+                    onChange={(v) => updateSla(idx, "days_addition_start_time", Number(v) || 0)}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label style={LABEL}>Days +SLA</label>
+                  <ValidatedInput
+                    type="number"
+                    value={String(policy.days_addition_sla)}
+                    onChange={(v) => updateSla(idx, "days_addition_sla", Number(v) || 0)}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {slaPolicies.length === 0 && (
+            <p className="onboarding-hint" style={{ fontStyle: "italic", textAlign: "center", padding: 32 }}>
+              No SLA policies. Click "+ Add SLA Policy" to define delivery times.
             </p>
           )}
         </>

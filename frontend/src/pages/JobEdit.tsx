@@ -267,6 +267,7 @@ export default function JobEdit() {
               proxyRules={form.proxyRules}
               onProxyRulesChange={(r) => updateField("proxyRules", r)}
               triggerJobs={triggerJobs}
+              showSlaBelowProxy
             />
           )}
 
