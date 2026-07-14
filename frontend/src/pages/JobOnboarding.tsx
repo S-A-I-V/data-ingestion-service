@@ -40,6 +40,7 @@ export default function JobOnboarding() {
     handleSubmit,
     reset,
     fetchTriggerSla,
+    stepAttempted,
   } = useJobOnboardingForm();
 
   // Success screen
@@ -115,6 +116,7 @@ export default function JobOnboarding() {
           errors={errors}
           onChange={(f, v) => updateField(f, v)}
           onValidate={setFieldError}
+          showAllErrors={stepAttempted}
         />
       )}
       {step === 1 && (

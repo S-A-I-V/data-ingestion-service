@@ -55,6 +55,8 @@ export default function useJobOnboardingForm() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [toast, setToast] = useToast();
+  /** Tracks whether user attempted to advance from the current step (shows all errors) */
+  const [stepAttempted, setStepAttempted] = useState(false);
 
   // React Hook Form with Zod resolver
   const {
@@ -141,6 +143,7 @@ export default function useJobOnboardingForm() {
   const showToastMsg = (msg: string) => setToast({ ok: false, msg });
 
   const handleNext = async () => {
+    setStepAttempted(true);
     const valid = await validateCurrentStep();
     if (!valid) {
       if (step === 0) showToastMsg("Please fix all validation errors before proceeding.");
@@ -154,6 +157,7 @@ export default function useJobOnboardingForm() {
       }
       return;
     }
+    setStepAttempted(false);
     setStep(step + 1);
   };
 
@@ -259,6 +263,8 @@ export default function useJobOnboardingForm() {
     reset,
     fetchTriggerSla,
     INITIAL_FORM: DEFAULT_VALUES as unknown as JobFormData,
+    /** True after user clicked "Next" and validation failed — forces all errors to show */
+    stepAttempted,
     // Expose for manual field-level validation in child components (onBlur)
     triggerValidation,
   };

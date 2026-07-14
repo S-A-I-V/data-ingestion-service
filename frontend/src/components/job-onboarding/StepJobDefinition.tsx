@@ -20,6 +20,8 @@ interface Props {
   errors: JobFormErrors;
   onChange: (field: keyof JobFormData, value: string) => void;
   onValidate: (field: keyof JobFormData, error: string | undefined) => void;
+  /** When true, show errors on all fields regardless of touch state (e.g. after "Next" click) */
+  showAllErrors?: boolean;
 }
 
 const SECTION_BOX: React.CSSProperties = {
@@ -36,7 +38,7 @@ const FIELD_LABEL: React.CSSProperties = {
   marginBottom: 6,
 };
 
-export default function StepJobDefinition({ form, errors, onChange, onValidate }: Props) {
+export default function StepJobDefinition({ form, errors, onChange, onValidate, showAllErrors = false }: Props) {
   const [touched, setTouched] = useState<Set<string>>(new Set());
 
   const blur = (field: keyof JobFormData) => {
@@ -72,7 +74,7 @@ export default function StepJobDefinition({ form, errors, onChange, onValidate }
     onValidate(field, error);
   };
 
-  const fieldError = (field: keyof JobFormData) => (touched.has(field) ? errors[field] : undefined);
+  const fieldError = (field: keyof JobFormData) => (showAllErrors || touched.has(field) ? errors[field] : undefined);
 
   return (
     <div className="onboarding-step-content">
