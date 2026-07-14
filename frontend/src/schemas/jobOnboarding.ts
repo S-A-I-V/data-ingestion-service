@@ -26,7 +26,10 @@ export const jobDefinitionSchema = z.object({
     .min(1, "Job name is required")
     .min(JOB_NAME_MIN_LENGTH, `Job name must be at least ${JOB_NAME_MIN_LENGTH} characters`)
     .max(255, "Job name cannot exceed 255 characters")
-    .regex(/^[a-zA-Z0-9_\-. ]+$/, "Job name can only contain letters, numbers, underscores, hyphens, dots, and spaces"),
+    .regex(
+      /^[a-zA-Z0-9_\-. +]+$/,
+      "Job name can only contain letters, numbers, underscores, hyphens, dots, spaces, and plus signs",
+    ),
   jobDescription: z.string().max(2000, "Description cannot exceed 2000 characters").default(""),
   ownerEmail: nielsenEmail,
   l2OwnerEmail: nielsenEmail,
