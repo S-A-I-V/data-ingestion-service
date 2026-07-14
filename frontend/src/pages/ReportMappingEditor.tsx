@@ -76,7 +76,8 @@ export default function ReportMappingEditor() {
       setLoading(true);
       try {
         const jobsRes = await api.get("/admin/report-mapping/jobs");
-        setJobs(jobsRes.data.jobs || []);
+        const fetchedJobs = jobsRes.data.jobs || [];
+        setJobs(fetchedJobs);
 
         if (loadId) {
           const res = await api.get(`/admin/report-mapping/saved/${loadId}`);
@@ -84,7 +85,7 @@ export default function ReportMappingEditor() {
           setMappingName(data.name);
           setReportName(data.report_name || "");
           setAppName(data.application_name || "");
-          loadGraphData(data.mapping_data);
+          loadGraphData(data.mapping_data, fetchedJobs);
           setMappingId(data.id);
         } else if (copyId) {
           const res = await api.get(`/admin/report-mapping/existing/${copyId}`);
@@ -92,7 +93,7 @@ export default function ReportMappingEditor() {
           setReportName(data.report_name || "");
           setAppName(data.application_name || "");
           setMappingName(`Copy of ${data.report_name}`);
-          loadGraphData(data.mapping_data);
+          loadGraphData(data.mapping_data, fetchedJobs);
         }
       } catch (e: any) {
         setError(e.response?.data?.detail || "Failed to load data");
@@ -103,8 +104,9 @@ export default function ReportMappingEditor() {
     init();
   }, []);
 
-  const loadGraphData = (data: { nodes: any[]; edges: any[] }) => {
-    const proxyJobIds = new Set(jobs.filter((j: any) => j.is_proxy).map((j: any) => j.job_id));
+  const loadGraphData = (data: { nodes: any[]; edges: any[] }, jobsList?: Job[]) => {
+    const source = jobsList || jobs;
+    const proxyJobIds = new Set(source.filter((j: any) => j.is_proxy).map((j: any) => j.job_id));
     const flowNodes: Node[] = (data.nodes || []).map((n: any) => ({
       id: n.id,
       type: "jobNode",

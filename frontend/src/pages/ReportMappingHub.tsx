@@ -278,9 +278,18 @@ export default function ReportMappingHub() {
                     <div className="rm-card-stats">
                       <span>{r.job_count} jobs</span>
                     </div>
-                    <button type="button" className="btn btn-sm" onClick={() => handleCopyExisting(r.report_id)}>
+                    <a
+                      href={`/admin/report-mapping/editor?copy=${r.report_id}`}
+                      className="btn btn-sm no-underline"
+                      onClick={(e) => {
+                        if (!e.ctrlKey && !e.metaKey) {
+                          e.preventDefault();
+                          handleCopyExisting(r.report_id);
+                        }
+                      }}
+                    >
                       <ContentCopyIcon sx={{ fontSize: 14 }} /> Copy & Edit
-                    </button>
+                    </a>
                   </div>
                 ))
             )}
