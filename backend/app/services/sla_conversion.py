@@ -16,6 +16,8 @@ Algorithm:
   8. Fill missing weekdays from template; weekends only if include_weekends=True
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -23,9 +25,9 @@ WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
 
 def one_hour_before(time_str: str | None) -> str:
-    """Subtract 1 hour from a time string (HH:MM:SS). Returns '09:00:00' if input is None."""
+    """Subtract 1 hour from a time string (HH:MM:SS). Never returns a hardcoded fallback."""
     if not time_str:
-        return "09:00:00"
+        return ""
     parts = str(time_str).split(":")
     hour = int(parts[0])
     minute = parts[1] if len(parts) > 1 else "00"
@@ -79,7 +81,7 @@ def convert_report_sla_to_job_sla(
                 "expected_sla_time": sla_time,
                 "expected_time": sla_time,
                 "timezone": tz,
-                "expected_start_time": one_hour_before(sla_time),
+                "expected_start_time": one_hour_before(sla_time) or one_hour_before("10:00:00"),
                 "days_addition_sla": abs_offset,
                 "days_addition_start_time": abs_offset,
                 "expected_duration_minutes": 60,
