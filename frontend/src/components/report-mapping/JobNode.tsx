@@ -15,10 +15,16 @@ import Tooltip from "@mui/material/Tooltip";
 // We use window.__REPORT_MAPPING_JOBS__ as a simple shared store
 declare global {
   interface Window {
-    __REPORT_MAPPING_JOBS__?: Array<{ job_id: number; job_name: string; category: string | null }>;
+    __REPORT_MAPPING_JOBS__?: Array<{ job_id: number; job_name: string; category: string | null; is_proxy?: boolean }>;
     __REPORT_MAPPING_NODES__?: Array<{ id: string; data: any }>;
     __REPORT_MAPPING_EDGES__?: Array<{ source: string; target: string }>;
-    __REPORT_MAPPING_UPDATE_NODE__?: (nodeId: string, jobId: number, jobName: string, category: string) => void;
+    __REPORT_MAPPING_UPDATE_NODE__?: (
+      nodeId: string,
+      jobId: number,
+      jobName: string,
+      category: string,
+      isProxy?: boolean,
+    ) => void;
     __REPORT_MAPPING_DELETE_NODE__?: (nodeId: string) => void;
     __REPORT_MAPPING_DISCONNECT_RIGHT__?: (nodeId: string) => void;
     __REPORT_MAPPING_BYPASS_DELETE__?: (nodeId: string) => void;
@@ -65,8 +71,8 @@ function JobNode({ id, data }: NodeProps) {
     (j) => j.job_name.toLowerCase().includes(search.toLowerCase()) || String(j.job_id).includes(search),
   );
 
-  const handleSelect = (job: { job_id: number; job_name: string; category: string | null }) => {
-    updateNode?.(id, job.job_id, job.job_name, job.category || "");
+  const handleSelect = (job: { job_id: number; job_name: string; category: string | null; is_proxy?: boolean }) => {
+    updateNode?.(id, job.job_id, job.job_name, job.category || "", job.is_proxy);
     setOpen(false);
     setSearch("");
   };
@@ -110,7 +116,29 @@ function JobNode({ id, data }: NodeProps) {
         )}
       </div>
 
-      {(data as any).job_id && <div className="job-node-id">ID: {(data as any).job_id}</div>}
+      {(data as any).job_id && (
+        <div className="job-node-id">
+          <span>ID: {(data as any).job_id}</span>
+          {(data as any).is_proxy && <span className="job-node-proxy-chip">PROXY</span>}
+          {!(data as any).is_proxy && (data as any).job_id < 0 && (
+            <button
+              className="job-node-proxy-toggle"
+              onClick={(e) => {
+                e.stopPropagation();
+                updateNode?.(id, (data as any).job_id, (data as any).job_name, (data as any).category || "", true);
+              }}
+              title="Mark as proxy"
+            >
+              + proxy
+            </button>
+          )}
+        </div>
+      )}
+      {!(data as any).job_id && (data as any).is_proxy && (
+        <div className="job-node-id">
+          <span className="job-node-proxy-chip">PROXY</span>
+        </div>
+      )}
 
       {/* Action panel */}
       <div className="job-node-actions">
@@ -165,7 +193,10 @@ function JobNode({ id, data }: NodeProps) {
             {filtered.slice(0, 20).map((j) => (
               <button key={j.job_id} className="job-node-option" onClick={() => handleSelect(j)}>
                 <span className="job-node-option-name">{j.job_name}</span>
-                <span className="job-node-option-id">#{j.job_id}</span>
+                <span className="job-node-option-id">
+                  #{j.job_id}
+                  {j.is_proxy && <span className="job-node-proxy-badge">P</span>}
+                </span>
               </button>
             ))}
             {filtered.length === 0 && (

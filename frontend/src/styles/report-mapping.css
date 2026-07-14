@@ -729,6 +729,56 @@
   font-family: "Fira Code", monospace;
   color: var(--text-secondary);
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.job-node-proxy-chip {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(139, 92, 246, 0.12);
+  color: #7c3aed;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  white-space: nowrap;
+}
+
+.job-node-proxy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.15);
+  color: #7c3aed;
+  margin-left: 4px;
+}
+
+.job-node-proxy-toggle {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 3px;
+  padding: 0 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.job-node-proxy-toggle:hover {
+  color: #7c3aed;
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.06);
 }
 
 .job-node-category {

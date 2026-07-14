@@ -81,17 +81,23 @@ def list_jobs(
     user: User = Depends(require_permission("admin:report_mapping")),
     db: Session = Depends(get_db),
 ):
-    """List all job definitions from NFC Prod."""
+    """List all job definitions from NFC Prod, with proxy flag."""
     conn = find_nfc_connection(user.id, db)
     connector = get_connector(conn)
 
     try:
         results = connector.execute_query(
             """
-            SELECT job_id, job_name
-            FROM public.job_definitions
-            WHERE is_deleted = false OR is_deleted IS NULL
-            ORDER BY job_name
+            SELECT jd.job_id, jd.job_name,
+                   CASE WHEN proxy.proxy_job_id IS NOT NULL THEN true ELSE false END AS is_proxy
+            FROM public.job_definitions jd
+            LEFT JOIN (
+                SELECT DISTINCT proxy_job_id
+                FROM public.job_proxy_inference_rules
+                WHERE is_enabled = true
+            ) proxy ON proxy.proxy_job_id = jd.job_id
+            WHERE jd.is_deleted = false OR jd.is_deleted IS NULL
+            ORDER BY jd.job_name
             """,
             {},
         )

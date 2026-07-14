@@ -129,11 +129,13 @@ export default function ReportMappingLiveEdit() {
         initDoneRef.current = true; // Mark init as done — no re-fire
         setJobs(jobsRes.data.jobs || []);
         const data = mappingRes.data.mapping_data;
+        const jobsList = jobsRes.data.jobs || [];
+        const proxyJobIds = new Set(jobsList.filter((j: any) => j.is_proxy).map((j: any) => j.job_id));
         const flowNodes: Node[] = (data.nodes || []).map((n: any) => ({
           id: n.id,
           type: "jobNode",
           position: n.position || { x: 0, y: 0 },
-          data: { job_id: n.job_id, job_name: n.job_name || "" },
+          data: { job_id: n.job_id, job_name: n.job_name || "", is_proxy: proxyJobIds.has(n.job_id) },
         }));
         const flowEdges: Edge[] = (data.edges || []).map((e: any) => ({
           id: e.id || `e-${e.source}-${e.target}`,

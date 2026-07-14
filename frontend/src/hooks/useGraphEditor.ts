@@ -138,14 +138,28 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
   }, [nodes, edges, commitChange]);
 
   // Update a node's job assignment
-  const updateNodeJob = useCallback((nodeId: string, jobId: number, jobName: string, category?: string) => {
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.id === nodeId ? { ...n, data: { ...n.data, job_id: jobId, job_name: jobName, category: category || "" } } : n,
-      ),
-    );
-    setDirty(true);
-  }, []);
+  const updateNodeJob = useCallback(
+    (nodeId: string, jobId: number, jobName: string, category?: string, isProxy?: boolean) => {
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === nodeId
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  job_id: jobId,
+                  job_name: jobName,
+                  category: category || "",
+                  is_proxy: isProxy ?? n.data.is_proxy ?? false,
+                },
+              }
+            : n,
+        ),
+      );
+      setDirty(true);
+    },
+    [],
+  );
 
   // Delete a node and its connected edges
   const deleteNode = useCallback(

@@ -104,6 +104,7 @@ export default function ReportMappingEditor() {
   }, []);
 
   const loadGraphData = (data: { nodes: any[]; edges: any[] }) => {
+    const proxyJobIds = new Set(jobs.filter((j: any) => j.is_proxy).map((j: any) => j.job_id));
     const flowNodes: Node[] = (data.nodes || []).map((n: any) => ({
       id: n.id,
       type: "jobNode",
@@ -112,6 +113,7 @@ export default function ReportMappingEditor() {
         job_id: n.job_id,
         job_name: n.job_name || "",
         category: n.category || "",
+        is_proxy: proxyJobIds.has(n.job_id),
       },
     }));
     const flowEdges: Edge[] = (data.edges || []).map((e: any) => ({
