@@ -41,6 +41,7 @@ from app.services.job_onboarding import (
 from app.services.onboarding.connection import find_nfc_connection
 from app.services.query_metrics import track_transaction
 from app.services.rbac import require_permission
+from app.services.sla_conversion import convert_report_sla_to_job_sla
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +214,100 @@ def get_trigger_job_sla_endpoint(
         "job_id": job_id,
         "job_name": job[0]["job_name"],
         "sla_policies": sla_policies,
+    }
+
+
+@router.get("/report-sla-options")
+@limiter.limit("30/minute")
+def list_report_sla_options_endpoint(
+    request: Request,
+    user: User = Depends(require_permission("admin:job_onboarding")),
+    db: Session = Depends(get_db),
+):
+    """List distinct report_name + application_name from report_sla_policies for dropdown."""
+    conn = find_nfc_connection(user.id, db)
+    connector = get_connector(conn)
+
+    try:
+        results = connector.execute_query(
+            """
+            SELECT DISTINCT report_name, application_name, report_id
+            FROM public.report_sla_policies
+            ORDER BY report_name, application_name
+            """,
+            {},
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch report SLA options: {e}")
+        mark_connection_failed(conn, db)
+        raise HTTPException(status_code=500, detail="Failed to fetch report SLA options") from e
+
+    mark_connection_active(conn, db)
+    reports = [dict(r) for r in results] if results else []
+    return {"reports": reports}
+
+
+@router.get("/report-sla/{report_id}/convert")
+@limiter.limit("30/minute")
+def convert_report_sla_to_job_endpoint(
+    report_id: int,
+    request: Request,
+    include_weekends: bool = False,
+    user: User = Depends(require_permission("admin:job_onboarding")),
+    db: Session = Depends(get_db),
+):
+    """
+    Fetch a report's SLA policies and convert them into job SLA format.
+
+    Conversion logic:
+    - expected_sla_time, expected_time, timezone → copied from report
+    - schedule_frequency → copied from report (daily or weekly)
+    - expected_start_time → 1 hour before SLA time
+    - expected_duration_minutes → 60 (default, editable by user)
+    - days_addition_sla = abs(data_date_formula) per policy
+    - days_addition_start_time = same as days_addition_sla
+    - data_date_formula → null (job doesn't need it)
+    - day_of_week → if report is 'daily' with 7 distinct days, generate Mon-Sun;
+                     if report is 'weekly' with specific days, use those days
+    """
+    conn = find_nfc_connection(user.id, db)
+    connector = get_connector(conn)
+
+    try:
+        results = connector.execute_query(
+            """
+            SELECT day_of_week, schedule_frequency, expected_start_time,
+                   expected_sla_time, expected_time, timezone,
+                   days_addition_start_time, days_addition_sla,
+                   data_date_formula, report_name, application_name
+            FROM public.report_sla_policies
+            WHERE report_id = :rid
+            ORDER BY day_of_week
+            """,
+            {"rid": report_id},
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch report SLA for conversion: {e}")
+        mark_connection_failed(conn, db)
+        raise HTTPException(status_code=500, detail="Failed to fetch report SLA") from e
+
+    mark_connection_active(conn, db)
+
+    if not results:
+        raise HTTPException(status_code=404, detail="No SLA policies found for this report")
+
+    policies = [dict(r) for r in results]
+    report_name = policies[0].get("report_name", "")
+    application_name = policies[0].get("application_name", "")
+
+    # Use the SLA conversion service
+    job_policies = convert_report_sla_to_job_sla(policies, include_weekends=include_weekends)
+
+    return {
+        "report_name": report_name,
+        "application_name": application_name,
+        "schedule_frequency": "daily",
+        "job_sla_policies": job_policies,
     }
 
 

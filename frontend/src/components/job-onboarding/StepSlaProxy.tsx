@@ -8,6 +8,8 @@
 import { useState } from "react";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import Tooltip from "@mui/material/Tooltip";
 import type { SLAPolicy, ProxyRule, TriggerJob } from "../../types/jobOnboarding";
 import { DAYS_OF_WEEK, DEFAULT_SCHEDULE_FREQUENCY } from "../../constants/jobOnboarding";
 import { TIMEZONES } from "../../constants/reportPolicies";
@@ -18,6 +20,44 @@ import SearchableSelect from "./SearchableSelect";
 
 /** Schedule frequency values from prod */
 const FREQUENCIES = ["daily", "weekly", "manual"] as const;
+
+/** Day names in order for offset calculations */
+const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+/**
+ * Generates a human-readable explanation of what a job SLA policy means.
+ */
+function explainPolicy(p: SLAPolicy): string {
+  const day = p.day_of_week || "—";
+  const sla = p.expected_sla_time || "—";
+  const start = p.expected_start_time || "—";
+  const tz = p.timezone || "EST";
+  const addSla = p.days_addition_sla || 0;
+  const addStart = p.days_addition_start_time || 0;
+  const dur = p.expected_duration_minutes;
+  const freq = p.schedule_frequency || "daily";
+
+  // Compute the delivery day (data_date + days_addition_sla)
+  const dataIdx = DAY_NAMES.indexOf(day);
+  const slaDay = dataIdx >= 0 ? DAY_NAMES[(dataIdx + addSla) % 7] : "?";
+  const startDay = dataIdx >= 0 ? DAY_NAMES[(dataIdx + addStart) % 7] : "?";
+
+  let text = `For ${day} data (${freq}):`;
+  if (addStart > 0) {
+    text += `\n• Job expected to start on ${startDay} (+${addStart}d) at ${start} ${tz}`;
+  } else {
+    text += `\n• Job expected to start on ${day} at ${start} ${tz}`;
+  }
+  if (addSla > 0) {
+    text += `\n• Must finish by ${slaDay} (+${addSla}d) at ${sla} ${tz}`;
+  } else {
+    text += `\n• Must finish by ${day} at ${sla} ${tz}`;
+  }
+  if (dur) {
+    text += `\n• Expected runtime: ~${dur} min`;
+  }
+  return text;
+}
 
 interface Props {
   isProxy: boolean;
@@ -30,6 +70,8 @@ interface Props {
   onTriggerJobSelected?: (jobId: number) => void;
   /** When true, show the SLA policy cards even in proxy mode (used in edit flow) */
   showSlaBelowProxy?: boolean;
+  /** Callback to copy SLA from a report — parent handles the API call */
+  onCopyFromReport?: () => void;
 }
 
 const CARD_STYLE: React.CSSProperties = {
@@ -74,6 +116,7 @@ export default function StepSlaProxy({
   triggerJobs,
   onTriggerJobSelected,
   showSlaBelowProxy = false,
+  onCopyFromReport,
 }: Props) {
   // Store SLA per trigger job (keyed by job_id)
   const [triggerSlaMap, setTriggerSlaMap] = useState<
@@ -184,9 +227,16 @@ export default function StepSlaProxy({
             <p className="onboarding-hint" style={{ margin: 0 }}>
               <strong>SLA Policies</strong> — define expected delivery times per day of week.
             </p>
-            <button className="btn btn-sm" onClick={addSlaPolicy}>
-              + Add SLA Policy
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              {onCopyFromReport && (
+                <button className="btn btn-sm btn--ghost" onClick={onCopyFromReport}>
+                  Copy from Report SLA
+                </button>
+              )}
+              <button className="btn btn-sm" onClick={addSlaPolicy}>
+                + Add SLA Policy
+              </button>
+            </div>
           </div>
 
           {slaPolicies.map((policy, idx) => (
@@ -194,7 +244,18 @@ export default function StepSlaProxy({
               {/* Card header */}
               <div style={CARD_HEADER}>
                 <span style={CARD_TITLE}>Policy {idx + 1}</span>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <Tooltip
+                    title={
+                      <span style={{ whiteSpace: "pre-line", fontSize: 11, lineHeight: 1.6 }}>
+                        {explainPolicy(policy)}
+                      </span>
+                    }
+                    arrow
+                    placement="top"
+                  >
+                    <InfoOutlinedIcon sx={{ fontSize: 16, color: "var(--text-muted)" }} />
+                  </Tooltip>
                   <button
                     className="btn btn-sm btn--ghost"
                     onClick={() => duplicatePolicy(idx)}

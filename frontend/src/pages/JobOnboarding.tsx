@@ -3,6 +3,7 @@
  * Thin UI shell — all logic lives in useJobOnboardingForm hook.
  */
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -15,6 +16,7 @@ import StepJobDefinition from "../components/job-onboarding/StepJobDefinition";
 import StepSlaProxy from "../components/job-onboarding/StepSlaProxy";
 import StepArtifacts from "../components/job-onboarding/StepArtifacts";
 import StepJobPreview from "../components/job-onboarding/StepJobPreview";
+import ReportSlaPicker from "../components/job-onboarding/ReportSlaPicker";
 import { JOB_ONBOARDING_STEPS, JOB_PREVIEW_STEP_INDEX } from "../constants/jobOnboarding";
 import useJobOnboardingForm from "../hooks/useJobOnboardingForm";
 
@@ -42,6 +44,8 @@ export default function JobOnboarding() {
     fetchTriggerSla,
     stepAttempted,
   } = useJobOnboardingForm();
+
+  const [showReportPicker, setShowReportPicker] = useState(false);
 
   // Success screen
   if (success) {
@@ -132,6 +136,7 @@ export default function JobOnboarding() {
           onProxyRulesChange={(r) => updateField("proxyRules", r)}
           triggerJobs={triggerJobs}
           onTriggerJobSelected={fetchTriggerSla}
+          onCopyFromReport={() => setShowReportPicker(true)}
         />
       )}
       {step === 2 && (
@@ -196,6 +201,13 @@ export default function JobOnboarding() {
           onCancel={() => setShowConfirm(false)}
         />
       )}
+
+      {/* Report SLA Picker Modal */}
+      <ReportSlaPicker
+        open={showReportPicker}
+        onClose={() => setShowReportPicker(false)}
+        onPoliciesLoaded={(policies) => updateField("slaPolicies", policies)}
+      />
     </div>
   );
 }

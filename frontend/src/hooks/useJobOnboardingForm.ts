@@ -125,16 +125,26 @@ export default function useJobOnboardingForm() {
     }
     if (step === 1) {
       const data = getValues();
-      // First validate the individual SLA/proxy field shapes
+      // Cross-field rule: proxy needs rules, standard needs SLA policies
+      const crossFieldError = validateSlaProxyStep({
+        isProxy: data.isProxy,
+        slaPolicies: data.slaPolicies as any,
+        proxyRules: data.proxyRules as any,
+      });
+      if (crossFieldError) return false;
+
+      // For proxy mode: just check that each rule has a trigger_job_id > 0
+      if (data.isProxy) {
+        return (data.proxyRules as any[]).every((r) => r.trigger_job_id > 0);
+      }
+
+      // For standard mode: validate SLA policy shapes
       const schemaResult = slaProxySchema.safeParse({
         isProxy: data.isProxy,
         slaPolicies: data.slaPolicies,
         proxyRules: data.proxyRules,
       });
-      if (!schemaResult.success) return false;
-      // Then check the cross-field rule (non-empty arrays)
-      const crossFieldError = validateSlaProxyStep(schemaResult.data);
-      return crossFieldError === null;
+      return schemaResult.success;
     }
     // Step 2 (artifacts) and Step 3 (preview) don't block
     return true;
