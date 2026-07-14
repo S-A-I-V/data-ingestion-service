@@ -18,6 +18,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import HexagonIcon from "../components/report-health/shared/Sev1Icon";
 import { format } from "date-fns";
 
 interface SavedMapping {
@@ -26,6 +27,7 @@ interface SavedMapping {
   report_name: string;
   application_name: string;
   node_count: number;
+  assigned_count: number;
   edge_count: number;
   created_at: string | null;
   updated_at: string | null;
@@ -52,7 +54,8 @@ const SAVED_COLUMNS = [
   { key: "name", label: "Name" },
   { key: "report_name", label: "Report" },
   { key: "application_name", label: "Application" },
-  { key: "node_count", label: "Jobs" },
+  { key: "node_count", label: "Total Nodes" },
+  { key: "assigned_count", label: "Assigned" },
   { key: "edge_count", label: "Edges" },
   { key: "created_at", label: "Created" },
   { key: "updated_at", label: "Updated" },
@@ -298,45 +301,64 @@ export default function ReportMappingHub() {
                   </thead>
                   <tbody>
                     {tab === "saved" &&
-                      (paginated as SavedMapping[]).map((m) => (
-                        <tr key={m.id}>
-                          <td>
-                            <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{m.name}</span>
-                          </td>
-                          <td>{m.report_name || "—"}</td>
-                          <td>
-                            {m.application_name ? <span className="rm-card-chip">{m.application_name}</span> : "—"}
-                          </td>
-                          <td>{m.node_count}</td>
-                          <td>{m.edge_count}</td>
-                          <td className="text-muted">{formatDate(m.created_at)}</td>
-                          <td className="text-muted">{formatDate(m.updated_at)}</td>
-                          <td>
-                            <div className="table-actions">
-                              <a
-                                href={`/admin/report-mapping/editor?load=${m.id}`}
-                                className="btn btn-sm btn-primary no-underline"
-                                onClick={(e) => {
-                                  if (!e.ctrlKey && !e.metaKey) {
-                                    e.preventDefault();
-                                    navigate(`/admin/report-mapping/editor?load=${m.id}`);
-                                  }
-                                }}
-                              >
-                                Open
-                              </a>
-                              <button
-                                type="button"
-                                className="btn btn-sm btn-danger"
-                                onClick={() => handleDelete(m.id)}
-                                title="Delete"
-                              >
-                                <DeleteIcon sx={{ fontSize: 14 }} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                      (paginated as SavedMapping[]).map((m) => {
+                        const hasOrphans = m.assigned_count < m.node_count;
+                        return (
+                          <tr key={m.id} className={hasOrphans ? "rm-row-broken" : ""}>
+                            <td>
+                              <span style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                                {hasOrphans && <HexagonIcon size={14} />}
+                                {m.name}
+                              </span>
+                            </td>
+                            <td>{m.report_name || "—"}</td>
+                            <td>
+                              {m.application_name ? <span className="rm-card-chip">{m.application_name}</span> : "—"}
+                            </td>
+                            <td>{m.node_count}</td>
+                            <td>
+                              <span className={hasOrphans ? "rm-orphan-count" : ""}>
+                                {m.assigned_count}
+                                {hasOrphans && (
+                                  <span
+                                    className="rm-orphan-badge"
+                                    title={`${m.node_count - m.assigned_count} unassigned node(s)`}
+                                  >
+                                    {m.node_count - m.assigned_count} orphan
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td>{m.edge_count}</td>
+                            <td className="text-muted">{formatDate(m.created_at)}</td>
+                            <td className="text-muted">{formatDate(m.updated_at)}</td>
+                            <td>
+                              <div className="table-actions">
+                                <a
+                                  href={`/admin/report-mapping/editor?load=${m.id}`}
+                                  className="btn btn-sm btn-primary no-underline"
+                                  onClick={(e) => {
+                                    if (!e.ctrlKey && !e.metaKey) {
+                                      e.preventDefault();
+                                      navigate(`/admin/report-mapping/editor?load=${m.id}`);
+                                    }
+                                  }}
+                                >
+                                  Open
+                                </a>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() => handleDelete(m.id)}
+                                  title="Delete"
+                                >
+                                  <DeleteIcon sx={{ fontSize: 14 }} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     {tab === "existing" &&
                       (paginated as ExistingReport[]).map((r) => (
                         <tr key={r.report_id}>

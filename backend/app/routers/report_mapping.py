@@ -249,6 +249,7 @@ def list_saved_mappings(
                 "report_name": m.report_name,
                 "application_name": m.application_name,
                 "node_count": len(m.mapping_data.get("nodes", [])),
+                "assigned_count": sum(1 for n in m.mapping_data.get("nodes", []) if n.get("job_id")),
                 "edge_count": len(m.mapping_data.get("edges", [])),
                 "created_at": m.created_at.isoformat() if m.created_at else None,
                 "updated_at": m.updated_at.isoformat() if m.updated_at else None,

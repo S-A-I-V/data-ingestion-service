@@ -192,6 +192,38 @@
   justify-content: center;
 }
 
+/* Broken/orphan row — red text for all cells */
+.rm-row-broken td {
+  color: var(--danger) !important;
+}
+
+.rm-row-broken td span {
+  color: inherit;
+}
+
+.rm-row-broken .rm-card-chip {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.rm-orphan-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rm-orphan-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  white-space: nowrap;
+}
+
 .text-muted {
   color: var(--text-muted);
   font-size: 12px;
