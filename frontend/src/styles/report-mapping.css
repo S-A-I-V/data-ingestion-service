@@ -178,6 +178,25 @@
   color: var(--text-muted);
 }
 
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.table-actions .btn {
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .rm-card {
   display: flex;
   flex-direction: column;
