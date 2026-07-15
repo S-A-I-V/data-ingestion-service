@@ -63,7 +63,7 @@ class ProxyRuleInput(BaseModel):
     @field_validator("trigger_job_status", "proxy_job_status")
     @classmethod
     def validate_status(cls, v: str) -> str:
-        v = v.strip().upper()
+        v = v.strip().lower()
         if not v:
             raise ValueError("Status cannot be empty")
         return v
