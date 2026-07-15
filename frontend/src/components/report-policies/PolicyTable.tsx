@@ -72,7 +72,7 @@ export default function PolicyTable({ policies, editMode, onPolicyChange }: Prop
         defaultValue={value ?? ""}
         onChange={updNum(policyId, field)}
         className="beid-org-inline-input"
-        style={{ width: 50 }}
+        style={{ width: "100%" }}
       />
     );
   };

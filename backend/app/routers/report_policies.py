@@ -218,7 +218,7 @@ def apply_changes(
             set_clauses = ", ".join(f"{k} = :{k}" for k in updates)
             sql = f"UPDATE report_definitions SET {set_clauses}, updated_at = now() WHERE report_id = :report_id"  # noqa: S608
             params = {**updates, "report_id": body.report_id}
-            statements.append((sql, params))
+            statements.append({"sql": sql, "params": params})
 
     # Build policy updates
     for pc in body.policy_changes:
@@ -227,7 +227,7 @@ def apply_changes(
             set_clauses = ", ".join(f"{k} = :{k}" for k in updates)
             sql = f"UPDATE report_sla_policies SET {set_clauses} WHERE policy_id = :policy_id"  # noqa: S608
             params = {**updates, "policy_id": pc.policy_id}
-            statements.append((sql, params))
+            statements.append({"sql": sql, "params": params})
 
     if not statements:
         return {"executed": 0, "total_statements": 0, "message": "No changes to apply"}
