@@ -5,7 +5,7 @@ import type { Step } from "../components/onboarding/StepProgress";
 
 // ── Graph Layout Constants ───────────────────────────────────────────────────
 /** Width of each job node in the DAG graph (pixels) */
-export const JOB_NODE_WIDTH_PX = 220;
+export const JOB_NODE_WIDTH_PX = 320;
 
 /** Height of each job node in the DAG graph (pixels) */
 export const JOB_NODE_HEIGHT_PX = 160;

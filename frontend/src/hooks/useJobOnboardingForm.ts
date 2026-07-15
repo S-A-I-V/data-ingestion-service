@@ -137,8 +137,8 @@ export default function useJobOnboardingForm() {
         return (data.proxyRules as any[]).every((r) => r.trigger_job_id > 0);
       }
 
-      // For standard mode: check each policy has the required time fields
-      return (data.slaPolicies as any[]).every((p) => p.day_of_week && p.expected_sla_time && p.timezone);
+      // For standard mode: check each policy has the minimum required fields
+      return (data.slaPolicies as any[]).every((p) => p.day_of_week && p.timezone);
     }
     // Step 2 (artifacts) and Step 3 (preview) don't block
     return true;
@@ -153,11 +153,7 @@ export default function useJobOnboardingForm() {
       if (step === 0) showToastMsg("Please fix all validation errors before proceeding.");
       else if (step === 1) {
         const data = getValues();
-        showToastMsg(
-          data.isProxy
-            ? "Add at least one proxy rule with a trigger job."
-            : "Add at least one SLA policy with valid times.",
-        );
+        showToastMsg(data.isProxy ? "Add at least one proxy rule with a trigger job." : "Add at least one SLA policy.");
       }
       return;
     }

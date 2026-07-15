@@ -366,8 +366,9 @@ export default function StepSlaProxy({
                   <TimeInput
                     value={policy.expected_sla_time}
                     onChange={(v) => {
-                      updateSla(idx, "expected_sla_time", v);
-                      updateSla(idx, "expected_time", v);
+                      onSlaPoliciesChange(
+                        slaPolicies.map((p, i) => (i === idx ? { ...p, expected_sla_time: v, expected_time: v } : p)),
+                      );
                     }}
                     className="w-full h-8"
                   />
@@ -675,8 +676,9 @@ export default function StepSlaProxy({
                   <TimeInput
                     value={policy.expected_sla_time}
                     onChange={(v) => {
-                      updateSla(idx, "expected_sla_time", v);
-                      updateSla(idx, "expected_time", v);
+                      onSlaPoliciesChange(
+                        slaPolicies.map((p, i) => (i === idx ? { ...p, expected_sla_time: v, expected_time: v } : p)),
+                      );
                     }}
                     className="w-full h-8"
                   />

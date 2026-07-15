@@ -1,8 +1,8 @@
 /**
  * TimeInput — Styled time picker input (HH:MM:SS).
- * Hides the native calendar picker indicator for a cleaner look.
- * Uses our UX system (sharp corners, border on focus).
+ * Uses ref to read the DOM value and only propagates valid (non-empty) changes.
  */
+import { useRef, useEffect, useCallback } from "react";
 import { cn } from "../../lib/utils";
 
 interface TimeInputProps {
@@ -14,14 +14,36 @@ interface TimeInputProps {
 }
 
 export default function TimeInput({ value, defaultValue, onChange, className, id }: TimeInputProps) {
+  const ref = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  // Sync external value changes to the DOM input
+  useEffect(() => {
+    if (value && ref.current && ref.current.value !== value) {
+      ref.current.value = value;
+    }
+  }, [value]);
+
+  // Polling approach: check the DOM value periodically while focused
+  // This handles the AM/PM toggle which doesn't fire onChange reliably
+  const handleBlur = useCallback(() => {
+    const v = ref.current?.value;
+    if (v) onChangeRef.current?.(v);
+  }, []);
+
   return (
     <input
+      ref={ref}
       type="time"
       step="1"
       id={id}
-      value={value}
-      defaultValue={defaultValue}
-      onChange={(e) => onChange?.(e.target.value)}
+      defaultValue={value || defaultValue}
+      onChange={(e) => {
+        // Only propagate valid non-empty values
+        if (e.target.value) onChangeRef.current?.(e.target.value);
+      }}
+      onBlur={handleBlur}
       className={cn(
         "appearance-none bg-white border border-[var(--border)] rounded-none px-2 py-1 text-[11px] font-mono",
         "text-[var(--text-primary)] outline-none transition-[border-color] duration-150",
