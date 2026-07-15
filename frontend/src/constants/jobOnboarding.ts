@@ -36,6 +36,12 @@ export const COMPLETION_TRIGGERS = ["ALL_PRESENT"] as const;
 /** Common job status values */
 export const JOB_STATUSES = ["COMPLETED", "RUNNING", "FAILED", "NOT_STARTED"] as const;
 
+/** Trigger job status options for proxy inference rules (from job_proxy_inference_rules) */
+export const PROXY_TRIGGER_STATUSES = ["success", "in_progress"] as const;
+
+/** Proxy job status options for proxy inference rules (from job_proxy_inference_rules) */
+export const PROXY_JOB_STATUSES = ["success"] as const;
+
 /* ─── Validation ───────────────────────────────────────────────────────────── */
 
 /** Minimum length for job name */

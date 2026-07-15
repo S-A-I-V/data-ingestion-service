@@ -11,7 +11,12 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Tooltip from "@mui/material/Tooltip";
 import type { SLAPolicy, ProxyRule, TriggerJob } from "../../types/jobOnboarding";
-import { DAYS_OF_WEEK, DEFAULT_SCHEDULE_FREQUENCY } from "../../constants/jobOnboarding";
+import {
+  DAYS_OF_WEEK,
+  DEFAULT_SCHEDULE_FREQUENCY,
+  PROXY_TRIGGER_STATUSES,
+  PROXY_JOB_STATUSES,
+} from "../../constants/jobOnboarding";
 import { TIMEZONES } from "../../constants/reportPolicies";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import TimeInput from "../ui/TimeInput";
@@ -158,8 +163,8 @@ export default function StepSlaProxy({
       {
         trigger_job_id: 0,
         trigger_job_name: "",
-        trigger_job_status: "COMPLETED",
-        proxy_job_status: "COMPLETED",
+        trigger_job_status: "success",
+        proxy_job_status: "success",
         proxy_completion_percentage: 100,
       },
     ]);
@@ -444,19 +449,39 @@ export default function StepSlaProxy({
                   </div>
                   <div>
                     <label style={LABEL}>Trigger Status</label>
-                    <ValidatedInput
+                    <Select
                       value={rule.trigger_job_status}
-                      onChange={(v) => updateProxy(idx, "trigger_job_status", v)}
-                      placeholder="COMPLETED"
-                    />
+                      onValueChange={(v) => updateProxy(idx, "trigger_job_status", v)}
+                    >
+                      <SelectTrigger className="h-8 text-xs w-full">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROXY_TRIGGER_STATUSES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label style={LABEL}>Proxy Status</label>
-                    <ValidatedInput
+                    <Select
                       value={rule.proxy_job_status}
-                      onChange={(v) => updateProxy(idx, "proxy_job_status", v)}
-                      placeholder="COMPLETED"
-                    />
+                      onValueChange={(v) => updateProxy(idx, "proxy_job_status", v)}
+                    >
+                      <SelectTrigger className="h-8 text-xs w-full">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROXY_JOB_STATUSES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -466,6 +491,7 @@ export default function StepSlaProxy({
                 <div
                   style={{
                     marginLeft: 16,
+                    marginRight: 16,
                     marginBottom: 16,
                     padding: "12px 16px",
                     border: "1px dashed var(--border)",
@@ -490,6 +516,8 @@ export default function StepSlaProxy({
                               <th>SLA</th>
                               <th>TZ</th>
                               <th>Duration</th>
+                              <th>Days +Start</th>
+                              <th>Days +SLA</th>
                               <th>Freq</th>
                             </tr>
                           </thead>
@@ -501,6 +529,8 @@ export default function StepSlaProxy({
                                 <td>{p.expected_sla_time || "—"}</td>
                                 <td>{p.timezone}</td>
                                 <td>{p.expected_duration_minutes ?? "—"}</td>
+                                <td>{p.days_addition_start_time ?? 0}</td>
+                                <td>{p.days_addition_sla ?? 0}</td>
                                 <td>{p.schedule_frequency}</td>
                               </tr>
                             ))}

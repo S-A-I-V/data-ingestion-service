@@ -135,6 +135,43 @@ export default function StepJobPreview({ form }: Props) {
         </div>
       )}
 
+      {/* Inherited SLA for proxy jobs */}
+      {form.isProxy && form.slaPolicies.length > 0 && (
+        <div className="preview-section-compact">
+          <span className="preview-section-label">Inherited SLA Policies (from trigger job)</span>
+          <div className="preview-table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>Start</th>
+                  <th>SLA</th>
+                  <th>Timezone</th>
+                  <th>Duration (min)</th>
+                  <th>Days +Start</th>
+                  <th>Days +SLA</th>
+                  <th>Frequency</th>
+                </tr>
+              </thead>
+              <tbody>
+                {form.slaPolicies.map((p, i) => (
+                  <tr key={i}>
+                    <td>{p.day_of_week}</td>
+                    <td>{p.expected_start_time || "—"}</td>
+                    <td>{p.expected_sla_time || "—"}</td>
+                    <td>{p.timezone}</td>
+                    <td>{p.expected_duration_minutes ?? "—"}</td>
+                    <td>{p.days_addition_start_time ?? 0}</td>
+                    <td>{p.days_addition_sla ?? 0}</td>
+                    <td>{p.schedule_frequency}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Artifacts detail */}
       {form.artifacts.length > 0 && (
         <div className="preview-section-compact">

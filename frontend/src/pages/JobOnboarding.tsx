@@ -56,16 +56,18 @@ export default function JobOnboarding() {
             <Highlight>Job Onboarded</Highlight>
           </span>
         </div>
-        <div className="onboarding-success">
-          <CheckCircleIcon sx={{ fontSize: 48, color: "var(--success)" }} />
-          <h2 className="onboarding-success-title">{success}</h2>
-          <div className="onboarding-success-actions">
-            <button className="btn btn-sm" onClick={() => navigate("/admin/job-onboarding")}>
-              ← Back to Hub
-            </button>
-            <button className="btn btn-sm" onClick={reset}>
-              Onboard Another
-            </button>
+        <div className="job-input-wrap" style={{ padding: 48 }}>
+          <div className="onboarding-success">
+            <CheckCircleIcon sx={{ fontSize: 48, color: "var(--success)" }} />
+            <h2 className="onboarding-success-title">{success}</h2>
+            <div className="onboarding-success-actions">
+              <button className="btn btn-sm" onClick={() => navigate("/admin/job-onboarding")}>
+                ← Back to Hub
+              </button>
+              <button className="btn btn-sm" onClick={reset}>
+                Onboard Another
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -195,7 +197,6 @@ export default function JobOnboarding() {
           confirmLabel="Confirm & Execute"
           loading={loading}
           onConfirm={() => {
-            setShowConfirm(false);
             handleSubmit();
           }}
           onCancel={() => setShowConfirm(false)}
