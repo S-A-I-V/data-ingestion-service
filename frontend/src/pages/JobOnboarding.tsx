@@ -137,7 +137,6 @@ export default function JobOnboarding() {
           proxyRules={form.proxyRules}
           onProxyRulesChange={(r) => updateField("proxyRules", r)}
           triggerJobs={triggerJobs}
-          onTriggerJobSelected={fetchTriggerSla}
           onCopyFromReport={() => setShowReportPicker(true)}
         />
       )}

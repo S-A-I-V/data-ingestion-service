@@ -177,18 +177,20 @@ export default function StepSlaProxy({
       const job = triggerJobs.find((j) => j.job_id === jobId);
       if (job) {
         updated[idx] = { ...updated[idx], trigger_job_name: job.job_name };
-        // Fetch SLA for this trigger job
+        // Fetch SLA for this trigger job (displayed inline)
         setTriggerSlaMap((prev) => ({ ...prev, [jobId]: { loading: true, policies: [], jobName: job.job_name } }));
-        if (onTriggerJobSelected) onTriggerJobSelected(jobId);
         import("../../api").then(({ default: api }) => {
           api
             .get(`/admin/job-onboarding/trigger-jobs/${jobId}/sla`)
-            .then((res) =>
+            .then((res) => {
+              const policies = res.data.sla_policies || [];
               setTriggerSlaMap((prev) => ({
                 ...prev,
-                [jobId]: { loading: false, policies: res.data.sla_policies || [], jobName: job.job_name },
-              })),
-            )
+                [jobId]: { loading: false, policies, jobName: job.job_name },
+              }));
+              // Also update parent form so preview step shows inherited SLA
+              if (policies.length > 0) onSlaPoliciesChange(policies);
+            })
             .catch(() =>
               setTriggerSlaMap((prev) => ({
                 ...prev,
