@@ -30,7 +30,7 @@ export default function OnboardingSuccess({
 }: OnboardingSuccessProps) {
   return (
     <div className="onboarding-success">
-      <CheckCircleOutlineIcon sx={{ fontSize: SUCCESS_ICON_SIZE_PX, color: "var(--success)" }} />
+      <CheckCircleOutlineIcon sx={{ fontSize: SUCCESS_ICON_SIZE_PX, color: "var(--text-primary)" }} />
       <h2 className="onboarding-success-title">{title}</h2>
       <div className="onboarding-success-stats">
         <div className="onboarding-success-stat">
