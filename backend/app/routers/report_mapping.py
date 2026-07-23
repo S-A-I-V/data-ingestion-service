@@ -533,6 +533,7 @@ def apply_mapping_changes(
 
         from app.models.audit import AuditLog
         from app.services.audit_chain import seal_and_persist
+        from app.services.metrics import refresh_metrics_view
 
         audit = AuditLog(
             user_id=user.id,
@@ -547,6 +548,7 @@ def apply_mapping_changes(
             error_message=str(e)[:500],
         )
         seal_and_persist(audit, db)
+        refresh_metrics_view(db)
         raise HTTPException(status_code=500, detail=f"Apply failed: {str(e)[:200]}") from e
 
     mark_connection_active(conn, db)
@@ -554,6 +556,7 @@ def apply_mapping_changes(
     # Audit log
     from app.models.audit import AuditLog
     from app.services.audit_chain import seal_and_persist
+    from app.services.metrics import refresh_metrics_view
 
     audit = AuditLog(
         user_id=user.id,
@@ -575,6 +578,7 @@ def apply_mapping_changes(
         cpu_time_s=metrics.cpu_time_s,
     )
     seal_and_persist(audit, db)
+    refresh_metrics_view(db)
 
     return {
         "success": True,

@@ -38,6 +38,7 @@ from app.services.job_onboarding import (
     fetch_job_sla_policies,
     fetch_next_job_id,
 )
+from app.services.metrics import refresh_metrics_view
 from app.services.onboarding.connection import find_nfc_connection
 from app.services.query_metrics import track_transaction
 from app.services.rbac import require_permission
@@ -383,6 +384,7 @@ def execute_job_onboarding_endpoint(
             error_message=str(e)[:500],
         )
         seal_and_persist(audit, db)
+        refresh_metrics_view(db)
         raise HTTPException(
             status_code=500,
             detail=f"Job onboarding failed: {str(e)[:200]}",
@@ -426,6 +428,7 @@ def execute_job_onboarding_endpoint(
         cpu_time_s=metrics.cpu_time_s,
     )
     seal_and_persist(audit, db)
+    refresh_metrics_view(db)
 
     return {
         "success": True,
@@ -518,6 +521,7 @@ def update_job_endpoint(
             error_message=str(e)[:500],
         )
         seal_and_persist(audit, db)
+        refresh_metrics_view(db)
         raise HTTPException(
             status_code=500,
             detail=f"Job edit failed: {str(e)[:200]}",
@@ -546,6 +550,7 @@ def update_job_endpoint(
         cpu_time_s=metrics.cpu_time_s,
     )
     seal_and_persist(audit, db)
+    refresh_metrics_view(db)
 
     return {
         "success": True,

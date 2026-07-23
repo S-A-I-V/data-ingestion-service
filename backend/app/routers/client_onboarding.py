@@ -329,6 +329,7 @@ def update_client_endpoint(
 
         # Audit the failure
         from app.services.audit_chain import seal_and_persist
+        from app.services.metrics import refresh_metrics_view
 
         audit = AuditLog(
             user_id=user.id,
@@ -343,6 +344,7 @@ def update_client_endpoint(
             error_message=str(e)[:500],
         )
         seal_and_persist(audit, db)
+        refresh_metrics_view(db)
         raise HTTPException(
             status_code=500,
             detail=f"Client edit failed: {str(e)[:200]}",
@@ -375,6 +377,7 @@ def update_client_endpoint(
 
     # Record in audit log
     from app.services.audit_chain import seal_and_persist
+    from app.services.metrics import refresh_metrics_view
 
     audit = AuditLog(
         user_id=user.id,
@@ -393,6 +396,7 @@ def update_client_endpoint(
         cpu_time_s=metrics.cpu_time_s,
     )
     seal_and_persist(audit, db)
+    refresh_metrics_view(db)
 
     return {
         "success": True,

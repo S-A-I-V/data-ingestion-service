@@ -111,7 +111,7 @@ def get_audit_metrics(
 @limiter.limit("30/minute")
 def get_audit_logs(
     request: Request,
-    limit: int = Query(50, ge=1, le=500, description="Max items to return"),
+    limit: int = Query(200, ge=1, le=500, description="Max items to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     status: str = Query(None, description="Filter by status: success|failed"),
     user: User = Depends(get_current_user),
@@ -119,13 +119,23 @@ def get_audit_logs(
 ):
     """
     Audit log list with optional status filter and pagination.
-    Returns a flat array for backward compatibility.
+    Returns items plus total count for frontend pagination.
+
+    NOTE: Currently returns all records up to `limit` in a single response (no cursor/page).
+    The frontend does client-side filtering/sorting on the full array.
+    When audit_logs exceeds ~1000 rows per user, migrate to server-side pagination:
+      1. Return { "items": [...], "total": N, "offset": M } wrapper instead of flat array
+      2. Update useAuditPolling.ts to pass page/offset params
+      3. Move search/sort logic to SQL (indexed columns already exist)
     """
     query = db.query(AuditLog).filter(AuditLog.user_id == user.id)
 
     # Optional status filter
     if status and status in ("success", "failed"):
         query = query.filter(AuditLog.status == status)
+
+    # NOTE: total count not yet used in response — add when migrating to server-side pagination
+    # total = query.count()
 
     logs = query.order_by(AuditLog.executed_at.desc()).offset(offset).limit(limit).all()
 
