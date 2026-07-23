@@ -170,16 +170,18 @@ export default function StepReportMapping({
             {[...grouped.entries()].map(([app, reps]) => (
               <div key={app} className="onboarding-report-group">
                 <div className="onboarding-report-group-label">{app}</div>
-                {reps.map((r) => (
-                  <div
-                    key={r.report_id}
-                    className={`onboarding-report-item${selectedReportIds.includes(r.report_id) ? " active" : ""}`}
-                    onClick={() => toggleReport(r.report_id)}
-                  >
-                    <span className="onboarding-report-name">{r.report_name}</span>
-                    <span className="onboarding-report-id">#{r.report_id}</span>
-                  </div>
-                ))}
+                <div className="onboarding-report-group-items">
+                  {reps.map((r) => (
+                    <div
+                      key={r.report_id}
+                      className={`onboarding-report-item${selectedReportIds.includes(r.report_id) ? " active" : ""}`}
+                      onClick={() => toggleReport(r.report_id)}
+                    >
+                      <span className="onboarding-report-name">{r.report_name}</span>
+                      <span className="onboarding-report-id">#{r.report_id}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
             {filtered.length === 0 && <div className="onboarding-report-empty">No reports match your filter.</div>}
