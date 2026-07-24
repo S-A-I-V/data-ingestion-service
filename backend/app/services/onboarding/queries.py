@@ -145,7 +145,7 @@ def fetch_report_map(
 
     placeholders = ", ".join([f":rid{i}" for i in range(len(report_ids))])
     params = {f"rid{i}": rid for i, rid in enumerate(report_ids)}
-    query = f"SELECT report_id, report_name, application_name FROM public.report_definitions WHERE report_id IN ({placeholders})"  # noqa: S608, E501
+    query = f"SELECT report_id, report_name, application_name FROM public.report_definitions WHERE report_id IN ({placeholders})"  # noqa: S608, E501 — safe: placeholders are :ridN named params, not user input
     results = connector.execute_query(query, params)
     return {r["report_id"]: r for r in results} if results else {}
 

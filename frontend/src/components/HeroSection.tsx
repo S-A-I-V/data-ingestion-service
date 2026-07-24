@@ -7,7 +7,7 @@ interface Props {
 export default function HeroSection({ isAuthenticated }: Props) {
   return (
     <>
-      {/* Stats ticker bar — like Langfuse top banner */}
+      {/* Stats ticker bar */}
       <div className="home-stats-ticker">
         <span className="home-stats-ticker-item">
           Used by <strong>50+</strong> internal teams

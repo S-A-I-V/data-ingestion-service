@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 
 /**
- * AccordionItem — Langfuse-style FAQ accordion with expand/collapse animation.
+ * AccordionItem — FAQ accordion with expand/collapse animation.
  */
 interface Props {
   title: string;

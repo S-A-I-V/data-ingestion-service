@@ -1,7 +1,7 @@
 /**
- * Company/DB logo section — Langfuse style.
+ * Company/DB logo section — wordmark style.
  * Shows database names as text wordmarks in two rows,
- * with some having "Read story" links (like Langfuse shows company logos).
+ * with some having "Read story" links.
  * Uses grayscale text styling, no icon cards.
  */
 
@@ -25,11 +25,11 @@ const ROW_2 = [
 
 function LogoRow({ items }: { items: typeof ROW_1 }) {
   return (
-    <div className="langfuse-logo-row">
+    <div className="db-logo-row">
       {items.map((item) => (
-        <div key={item.name} className="langfuse-logo-item">
-          <span className="langfuse-logo-name">{item.name}</span>
-          {item.hasStory && <span className="langfuse-logo-story">Read story</span>}
+        <div key={item.name} className="db-logo-item">
+          <span className="db-logo-name">{item.name}</span>
+          {item.hasStory && <span className="db-logo-story">Read story</span>}
         </div>
       ))}
     </div>
@@ -38,7 +38,7 @@ function LogoRow({ items }: { items: typeof ROW_1 }) {
 
 export default function DbLogoSection() {
   return (
-    <div className="langfuse-logos-section">
+    <div className="db-logos-section">
       <LogoRow items={ROW_1} />
       <LogoRow items={ROW_2} />
     </div>

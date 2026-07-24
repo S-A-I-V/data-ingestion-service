@@ -1,9 +1,9 @@
 import { ReactNode } from "react";
 
 /**
- * BracketBox — Langfuse corner bracket decorative container.
+ * BracketBox — corner bracket decorative container.
  * Renders 4 L-shaped crop marks at the corners of any section.
- * Reusable across the entire app for that Langfuse engineering aesthetic.
+ * Reusable across the entire app for a clean engineering aesthetic.
  */
 interface Props {
   children: ReactNode;

@@ -89,25 +89,31 @@ def seed():
         db.commit()
         print("  ✓ User role has user:* permissions")
 
-        # ── Assign admin role to saideep.verma01@gmail.com ──
+        # ── Assign admin role to the configured admin email ──
+        import os
+
         from app.models.user import User
 
-        admin_user = db.query(User).filter(User.email == "saideep.verma01@gmail.com").first()
-        if admin_user:
-            exists = db.execute(
-                user_roles.select().where(
-                    user_roles.c.user_id == admin_user.id,
-                    user_roles.c.role_id == admin_role.id,
-                )
-            ).first()
-            if not exists:
-                db.execute(user_roles.insert().values(user_id=admin_user.id, role_id=admin_role.id))
-                db.commit()
-                print(f"  ✓ Admin role assigned to {admin_user.email}")
-            else:
-                print(f"  – {admin_user.email} already has admin role")
+        admin_email = os.environ.get("INITIAL_ADMIN_EMAIL", "")
+        if not admin_email:
+            print("  ⚠ INITIAL_ADMIN_EMAIL not set — skip admin role assignment (set it in .env)")
         else:
-            print("  ⚠ User saideep.verma01@gmail.com not found — assign admin role manually later")
+            admin_user = db.query(User).filter(User.email == admin_email).first()
+            if admin_user:
+                exists = db.execute(
+                    user_roles.select().where(
+                        user_roles.c.user_id == admin_user.id,
+                        user_roles.c.role_id == admin_role.id,
+                    )
+                ).first()
+                if not exists:
+                    db.execute(user_roles.insert().values(user_id=admin_user.id, role_id=admin_role.id))
+                    db.commit()
+                    print(f"  ✓ Admin role assigned to {admin_user.email}")
+                else:
+                    print(f"  – {admin_user.email} already has admin role")
+            else:
+                print(f"  ⚠ User {admin_email} not found — register first, then re-run")
 
     finally:
         db.close()

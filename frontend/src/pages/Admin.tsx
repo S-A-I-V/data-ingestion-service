@@ -10,7 +10,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import WorkIcon from "@mui/icons-material/Work";
-import LangfuseSidebar from "../components/LangfuseSidebar";
+import InfoSidebar from "../components/InfoSidebar";
 import Highlight from "../components/ui/Highlight";
 
 interface Props {
@@ -79,7 +79,7 @@ export default function Admin({ permissions }: Props) {
     <div className="lf-layout">
       {/* LEFT SIDEBAR */}
       <aside className="lf-sidebar-left">
-        <LangfuseSidebar />
+        <InfoSidebar />
       </aside>
 
       {/* CENTER CONTENT */}

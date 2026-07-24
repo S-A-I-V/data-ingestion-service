@@ -1,4 +1,4 @@
-/* ===== BUTTONS — Langfuse corner bracket style ===== */
+/* ===== BUTTONS — corner bracket style ===== */
 .btn {
   position: relative;
   border-radius: 2px;
@@ -183,7 +183,7 @@
   border-color: var(--border-hover);
 }
 
-/* ===== PANELS — Langfuse clean card style ===== */
+/* ===== PANELS — clean card style ===== */
 .panel {
   position: relative;
   background: #ffffff;
@@ -258,7 +258,7 @@
   padding: 20px;
 }
 
-/* ===== MODAL — Langfuse style ===== */
+/* ===== MODAL — overlay style ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;

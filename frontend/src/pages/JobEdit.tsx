@@ -1,7 +1,7 @@
 /**
  * JobEdit — Edit existing job with left sidebar step progress.
  *
- * Layout: LangfuseSidebar | Vertical Steps | Main Content
+ * Layout: InfoSidebar | Vertical Steps | Main Content
  *
  * Steps:
  *   0. Select Job (search)

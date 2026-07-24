@@ -1,4 +1,4 @@
-/* ===== FEATURES SECTION — Langfuse "All the tools" style ===== */
+/* ===== FEATURES SECTION — "All the tools" style ===== */
 
 .features-section {
   position: relative;
@@ -18,7 +18,7 @@
   margin-bottom: 40px;
   line-height: 1.2;
 }
-/* ===== BENTO GRID — Langfuse clean card grid ===== */
+/* ===== BENTO GRID — clean card grid ===== */
 
 .bento-grid {
   display: grid;

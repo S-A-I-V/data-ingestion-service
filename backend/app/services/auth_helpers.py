@@ -5,7 +5,7 @@ Extracted from auth router for separation of concerns and testability.
 
 import hashlib
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
@@ -51,7 +51,7 @@ def validate_password(password: str) -> None:
 
 def create_token(user_id: str, email: str) -> str:
     """Create a JWT with sub, email, iat, and exp claims."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     return jwt.encode(
         {"sub": user_id, "email": email, "iat": now, "exp": now + timedelta(hours=TOKEN_EXPIRY_HOURS)},
         settings.SECRET_KEY,
@@ -61,8 +61,8 @@ def create_token(user_id: str, email: str) -> str:
 
 def check_lockout(user: User) -> None:
     """Raise 429 if account is locked."""
-    if user.locked_until and user.locked_until > datetime.utcnow():
-        remaining = int((user.locked_until - datetime.utcnow()).total_seconds() / 60) + 1
+    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        remaining = int((user.locked_until - datetime.now(timezone.utc)).total_seconds() / 60) + 1
         raise HTTPException(429, f"Account locked. Try again in {remaining} minutes.")
 
 
@@ -70,7 +70,7 @@ def record_failed_login(user: User, db: Session) -> None:
     """Increment failed attempts and lock if threshold reached."""
     user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
     if user.failed_login_attempts >= LOCKOUT_THRESHOLD:
-        user.locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+        user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_MINUTES)
     db.commit()
 
 
@@ -78,5 +78,5 @@ def reset_failed_login(user: User, db: Session) -> None:
     """Clear failed attempts on successful login."""
     user.failed_login_attempts = 0
     user.locked_until = None
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()

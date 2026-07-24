@@ -1,4 +1,4 @@
-/* ===== BASE RESET & LANGFUSE THEME ===== */
+/* ===== BASE RESET & APP THEME ===== */
 
 * {
   margin: 0;
@@ -126,7 +126,7 @@ button[role="combobox"]:hover {
   --transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
     opacity 0.15s ease, transform 0.15s ease;
   --font: "Fira Code", "JetBrains Mono", "Courier New", monospace;
-  /* Langfuse yellow highlight */
+  /* Yellow highlight accent */
   --highlight-yellow: #fde047;
   /* Sidebar widths — single source of truth */
   --sidebar-left-width: 260px;
@@ -176,7 +176,7 @@ button[role="combobox"]:hover {
 }
 
 /* ===== REUSABLE CORNER BRACKET UTILITIES =====
-   Apply these classes to any element for the Langfuse corner bracket effect.
+   Apply these classes to any element for the corner bracket effect.
 
    .lf-corners-hover  → corner brackets appear on hover (inset: 0, flush)
    .lf-corners-always → corner brackets always visible (inset: 0, flush)
@@ -325,7 +325,7 @@ a:hover {
   text-decoration-color: var(--text-primary);
 }
 
-/* ===== LANGFUSE GLOBAL INTERACTION STATES ===== */
+/* ===== GLOBAL INTERACTION STATES ===== */
 /* All interactive elements get consistent hover/active/focus patterns */
 
 button,
@@ -351,7 +351,7 @@ a.home-sidebar-guide-link,
     transform 0.1s ease;
 }
 
-/* Global active (pressed) state — Langfuse uses a subtle scale-down */
+/* Global active (pressed) state — subtle scale-down */
 button:active:not(:disabled),
 [role="button"]:active,
 .btn:active,
@@ -363,7 +363,7 @@ button:active:not(:disabled),
   transform: scale(0.98);
 }
 
-/* Focus-visible ring for keyboard nav — Langfuse uses a thin dark ring */
+/* Focus-visible ring for keyboard nav — thin dark ring */
 button:focus-visible,
 [role="button"]:focus-visible,
 a:focus-visible,

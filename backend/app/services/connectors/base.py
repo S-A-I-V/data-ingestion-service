@@ -135,7 +135,7 @@ class SQLAlchemyConnector(BaseConnector):
 
         placeholders = ", ".join([f":{c}" for c in columns])
         cols = ", ".join([self._quote(c) for c in columns])
-        sql = f"INSERT INTO {self._quote(table)} ({cols}) VALUES ({placeholders})"  # noqa: S608
+        sql = f"INSERT INTO {self._quote(table)} ({cols}) VALUES ({placeholders})"  # noqa: S608 — safe: table/cols are validated identifiers, values are bound params
         with self._engine().begin() as c:
             for row in rows:
                 c.execute(text(sql), dict(zip(columns, row)))
@@ -157,7 +157,7 @@ class SQLAlchemyConnector(BaseConnector):
 
         placeholders = ", ".join([f":{c}" for c in columns])
         cols = ", ".join([self._quote(c) for c in columns])
-        sql = f"INSERT INTO {self._quote(table)} ({cols}) VALUES ({placeholders})"  # noqa: S608
+        sql = f"INSERT INTO {self._quote(table)} ({cols}) VALUES ({placeholders})"  # noqa: S608 — safe: table/cols are validated identifiers, values are bound params
 
         total_inserted = 0
         with self._engine().begin() as c:
@@ -241,7 +241,7 @@ class SQLAlchemyConnector(BaseConnector):
         # Fetch existing keys
         existing_keys: set[tuple] = set()
         with self._engine().connect() as c:
-            result = c.execute(text(f"SELECT {key_cols_quoted} FROM {self._quote(table)}"))  # noqa: S608
+            result = c.execute(text(f"SELECT {key_cols_quoted} FROM {self._quote(table)}"))  # noqa: S608 — safe: columns validated by validate_identifier(), table is quoted
             for r in result:
                 existing_keys.add(tuple(str(v) for v in r))
 

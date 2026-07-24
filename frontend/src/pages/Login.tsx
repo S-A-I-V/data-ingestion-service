@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import LangfuseSidebar from "../components/LangfuseSidebar";
+import InfoSidebar from "../components/InfoSidebar";
 import CornerBox from "../components/ui/CornerBox";
 import api from "../api";
 
@@ -50,7 +50,7 @@ export default function Login({ onLogin }: Props) {
       <div className="lf-layout">
         {/* LEFT SIDEBAR */}
         <aside className="lf-sidebar-left">
-          <LangfuseSidebar />
+          <InfoSidebar />
         </aside>
 
         {/* CENTER — login form */}

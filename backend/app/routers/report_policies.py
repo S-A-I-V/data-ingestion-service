@@ -182,7 +182,7 @@ def preview_changes(
         updates = body.report_changes.model_dump(exclude_none=True)
         if updates:
             set_clauses = ", ".join(f"{k} = :{k}" for k in updates)
-            sql = f"UPDATE report_definitions SET {set_clauses}, updated_at = now() WHERE report_id = :report_id"  # noqa: S608
+            sql = f"UPDATE report_definitions SET {set_clauses}, updated_at = now() WHERE report_id = :report_id"  # noqa: S608 — safe: keys come from Pydantic model fields, values are bound params
             params = {**updates, "report_id": body.report_id}
             statements.append({"sql": sql, "params": params})
 
@@ -191,7 +191,7 @@ def preview_changes(
         updates = pc.model_dump(exclude_none=True, exclude={"policy_id"})
         if updates:
             set_clauses = ", ".join(f"{k} = :{k}" for k in updates)
-            sql = f"UPDATE report_sla_policies SET {set_clauses} WHERE policy_id = :policy_id"  # noqa: S608
+            sql = f"UPDATE report_sla_policies SET {set_clauses} WHERE policy_id = :policy_id"  # noqa: S608 — safe: keys come from Pydantic model fields, values are bound params
             params = {**updates, "policy_id": pc.policy_id}
             statements.append({"sql": sql, "params": params})
 
@@ -216,7 +216,7 @@ def apply_changes(
         updates = body.report_changes.model_dump(exclude_none=True)
         if updates:
             set_clauses = ", ".join(f"{k} = :{k}" for k in updates)
-            sql = f"UPDATE report_definitions SET {set_clauses}, updated_at = now() WHERE report_id = :report_id"  # noqa: S608
+            sql = f"UPDATE report_definitions SET {set_clauses}, updated_at = now() WHERE report_id = :report_id"  # noqa: S608 — safe: keys come from Pydantic model fields, values are bound params
             params = {**updates, "report_id": body.report_id}
             statements.append({"sql": sql, "params": params})
 
@@ -225,7 +225,7 @@ def apply_changes(
         updates = pc.model_dump(exclude_none=True, exclude={"policy_id"})
         if updates:
             set_clauses = ", ".join(f"{k} = :{k}" for k in updates)
-            sql = f"UPDATE report_sla_policies SET {set_clauses} WHERE policy_id = :policy_id"  # noqa: S608
+            sql = f"UPDATE report_sla_policies SET {set_clauses} WHERE policy_id = :policy_id"  # noqa: S608 — safe: keys come from Pydantic model fields, values are bound params
             params = {**updates, "policy_id": pc.policy_id}
             statements.append({"sql": sql, "params": params})
 

@@ -126,7 +126,7 @@ class SybaseConnector(BaseConnector):
             cur = c.cursor()
             placeholders = ", ".join(["?" for _ in columns])
             col_names = ", ".join(f"[{col}]" for col in columns)
-            sql = f"INSERT INTO [{table}] ({col_names}) VALUES ({placeholders})"  # noqa: S608
+            sql = f"INSERT INTO [{table}] ({col_names}) VALUES ({placeholders})"  # noqa: S608 — safe: table/cols are validated identifiers, values are parameterized
             for row in rows:
                 cur.execute(sql, row)
             c.commit()

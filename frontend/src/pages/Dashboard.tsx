@@ -8,7 +8,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { LayoutGrid, List } from "lucide-react";
 import { Toast, useToast, Spinner, Panel } from "../components/ui";
-import LangfuseSidebar from "../components/LangfuseSidebar";
+import InfoSidebar from "../components/InfoSidebar";
 import Highlight from "../components/ui/Highlight";
 import type { Connection } from "../types";
 import type { ConnStatus } from "../components/ConnectionStatusBadge";
@@ -136,7 +136,7 @@ export default function Dashboard() {
       <div className="lf-layout">
         {/* LEFT SIDEBAR */}
         <aside className="lf-sidebar-left">
-          <LangfuseSidebar />
+          <InfoSidebar />
         </aside>
 
         {/* CENTER CONTENT */}

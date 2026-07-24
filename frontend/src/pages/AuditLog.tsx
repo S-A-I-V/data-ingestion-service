@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import useAuditPolling from "../hooks/useAuditPolling";
 import AuditAnalyticsPanel from "../components/audit/AuditAnalyticsPanel";
 import AuditDetailModal from "../components/audit/AuditDetailModal";
-import LangfuseSidebar from "../components/LangfuseSidebar";
+import InfoSidebar from "../components/InfoSidebar";
 import HistoryIcon from "@mui/icons-material/History";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";

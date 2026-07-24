@@ -361,7 +361,7 @@ def build_job_edit_statements(
         set_clause = ", ".join(update_fields)
         statements.append(
             {
-                "sql": f"UPDATE public.job_definitions SET {set_clause} WHERE job_id = :jid",  # noqa: S608
+                "sql": f"UPDATE public.job_definitions SET {set_clause} WHERE job_id = :jid",  # noqa: S608 — safe: keys from validated payload fields, values are bound params
                 "params": update_params,
             }
         )

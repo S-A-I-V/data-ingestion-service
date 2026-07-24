@@ -259,7 +259,7 @@ def _build_job_response(
     # previous_job_ids and next_job_ids are stored as TEXT (comma-separated IDs)
     # The frontend expects previous_jobs_list / next_jobs_list as names — we
     # store what's available (IDs) and let the frontend resolve if needed.
-    # TODO: join against job_definitions to resolve IDs → names in a future pass.
+    # Future enhancement: join against job_definitions to resolve IDs → names.
     previous_jobs_list = mapping_row.get("previous_job_ids") or ""
     next_jobs_list = mapping_row.get("next_job_ids") or ""
 

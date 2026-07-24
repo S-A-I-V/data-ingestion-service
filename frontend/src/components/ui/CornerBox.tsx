@@ -3,7 +3,7 @@ import type React from "react";
 import { cn } from "../../lib/utils";
 
 /**
- * CornerBox — Langfuse's signature decorative container.
+ * CornerBox — signature decorative container.
  * Uses SVG mask to render small rounded L-shaped corner marks at all 4 corners.
  * Supports optional diagonal stripe background and hover state.
  */

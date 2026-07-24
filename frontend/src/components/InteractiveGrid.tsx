@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Langfuse-style dot grid background pattern.
- * Subtle dots on the warm cream background — exactly like langfuse.com.
+ * InteractiveGrid — dot grid background pattern.
+ * Subtle dots on the warm cream background.
  * The dots are small, evenly spaced, and very low opacity.
  */
 

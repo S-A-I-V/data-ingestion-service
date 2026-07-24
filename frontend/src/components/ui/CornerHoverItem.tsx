@@ -2,10 +2,10 @@ import { ReactNode } from "react";
 import { cn } from "../../lib/utils";
 
 /**
- * CornerHoverItem — Langfuse's signature hover effect.
+ * CornerHoverItem — signature hover effect.
  * Shows corner bracket marks on hover with diagonal stripe background.
  * Use this for list items, sidebar links, nav items, table rows — anywhere
- * you want the Langfuse on-hover corner reveal effect.
+ * you want the on-hover corner reveal effect.
  */
 
 const CORNER_MASK = [

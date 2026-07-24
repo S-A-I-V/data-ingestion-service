@@ -93,7 +93,7 @@ export default function StepJobDefinition({ form, errors, onChange, onValidate, 
             value={form.jobName}
             onChange={(v) => onChange("jobName", v)}
             onBlur={() => blur("jobName")}
-            placeholder="e.g. nielsen_raw_data_ingestion"
+            placeholder="e.g. raw_data_ingestion"
             error={fieldError("jobName")}
           />
         </div>
@@ -127,7 +127,7 @@ export default function StepJobDefinition({ form, errors, onChange, onValidate, 
               value={form.ownerEmail}
               onChange={(v) => onChange("ownerEmail", v)}
               onBlur={() => blur("ownerEmail")}
-              placeholder="owner@nielsen.com"
+              placeholder="owner@company.com"
               error={fieldError("ownerEmail")}
             />
           </div>
@@ -140,7 +140,7 @@ export default function StepJobDefinition({ form, errors, onChange, onValidate, 
               value={form.l2OwnerEmail}
               onChange={(v) => onChange("l2OwnerEmail", v)}
               onBlur={() => blur("l2OwnerEmail")}
-              placeholder="l2@nielsen.com"
+              placeholder="l2@company.com"
               error={fieldError("l2OwnerEmail")}
             />
           </div>
@@ -153,7 +153,7 @@ export default function StepJobDefinition({ form, errors, onChange, onValidate, 
               value={form.l3OwnerEmail}
               onChange={(v) => onChange("l3OwnerEmail", v)}
               onBlur={() => blur("l3OwnerEmail")}
-              placeholder="l3@nielsen.com"
+              placeholder="l3@company.com"
               error={fieldError("l3OwnerEmail")}
             />
           </div>
@@ -166,7 +166,7 @@ export default function StepJobDefinition({ form, errors, onChange, onValidate, 
               value={form.oncallContact}
               onChange={(v) => onChange("oncallContact", v)}
               onBlur={() => blur("oncallContact")}
-              placeholder="oncall@nielsen.com"
+              placeholder="oncall@company.com"
               error={fieldError("oncallContact")}
             />
           </div>
@@ -179,7 +179,7 @@ export default function StepJobDefinition({ form, errors, onChange, onValidate, 
               value={form.supportTeamDl}
               onChange={(v) => onChange("supportTeamDl", v)}
               onBlur={() => blur("supportTeamDl")}
-              placeholder="support-dl@nielsen.com"
+              placeholder="support-dl@company.com"
               error={fieldError("supportTeamDl")}
             />
           </div>

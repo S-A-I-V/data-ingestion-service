@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 /**
- * Decorative corner marks — exact Langfuse SVG mask pattern.
+ * Decorative corner marks — SVG mask pattern for bracketed card effect.
  */
 const DecorativeCorners = () => {
   const cornerMask = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 0V1H3C1.89543 1 1 1.89543 1 3V8H0V0H8Z' fill='black'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M8 8V7H3C1.89543 7 1 6.10457 1 5V0H0V8H8Z' fill='black'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 8V7H5C6.10457 7 7 6.10457 7 5V0H8V8H0Z' fill='black'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'%3E%3Cpath d='M0 0V1H5C6.10457 1 7 1.89543 7 3V8H8V0H0Z' fill='black'/%3E%3C/svg%3E")`;
@@ -104,7 +104,7 @@ const LEGAL_LINKS = [
   { name: "Privacy", href: "/privacy" },
 ];
 
-export default function LangfuseFooter() {
+export default function AppFooter() {
   return (
     <footer className="mx-auto mt-16 w-full pb-8 bg-[#F6F6F3]">
       {/* Social Section */}

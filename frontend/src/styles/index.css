@@ -1,9 +1,9 @@
 /* Tailwind v4 */
 @import "tailwindcss";
 
-/* ── Langfuse-inspired Design Tokens ──────────────────────────────────
+/* ── Design Tokens ──────────────────────────────────────────────────
    Warm cream background, dark text, clean Inter typography.
-   Replicates the Langfuse aesthetic exactly.
+   Custom aesthetic for the NFC Data Hub.
 ──────────────────────────────────────────────────────────────────── */
 @theme {
   --color-background: #faf9f7;

@@ -13,13 +13,13 @@ Authentication router — hardened with:
 import logging
 import re
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import bcrypt
+import jwt
 from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-import jwt
 from jwt.exceptions import PyJWTError
 from pydantic import BaseModel, EmailStr
 from slowapi import Limiter
@@ -106,7 +106,7 @@ def _validate_password(password: str) -> None:
 
 def _create_token(user_id: str, email: str) -> str:
     """Create a JWT with sub, email, iat, and exp claims."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "sub": user_id,
         "email": email,
@@ -118,8 +118,8 @@ def _create_token(user_id: str, email: str) -> str:
 
 def _check_lockout(user: User) -> None:
     """Raise 429 if account is locked."""
-    if user.locked_until and user.locked_until > datetime.utcnow():
-        remaining = int((user.locked_until - datetime.utcnow()).total_seconds() / 60) + 1
+    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        remaining = int((user.locked_until - datetime.now(timezone.utc)).total_seconds() / 60) + 1
         raise HTTPException(429, f"Account locked. Try again in {remaining} minutes.")
 
 
@@ -127,7 +127,7 @@ def _record_failed_login(user: User, db: Session) -> None:
     """Increment failed attempts and lock if threshold reached."""
     user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
     if user.failed_login_attempts >= LOCKOUT_THRESHOLD:
-        user.locked_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+        user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_MINUTES)
         logger.warning(f"Account locked for user_id={user.id} after {LOCKOUT_THRESHOLD} failed attempts")
     db.commit()
 
@@ -136,7 +136,7 @@ def _reset_failed_login(user: User, db: Session) -> None:
     """Clear failed attempts on successful login."""
     user.failed_login_attempts = 0
     user.locked_until = None
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
 
@@ -202,7 +202,7 @@ async def register(request: Request, body: RegisterRequest, db: Session = Depend
         password_hash=_hash_password(body.password),
         email_verified=False,
         email_verify_token=verify_token,
-        email_verify_expires=datetime.utcnow() + timedelta(hours=VERIFY_TOKEN_HOURS),
+        email_verify_expires=datetime.now(timezone.utc) + timedelta(hours=VERIFY_TOKEN_HOURS),
     )
     db.add(user)
     db.commit()
@@ -247,7 +247,7 @@ async def verify_email(request: Request, token: str, db: Session = Depends(get_d
     user = db.query(User).filter(User.email_verify_token == token).first()
     if not user:
         raise HTTPException(400, "Invalid verification token")
-    if user.email_verify_expires and user.email_verify_expires < datetime.utcnow():
+    if user.email_verify_expires and user.email_verify_expires < datetime.now(timezone.utc):
         raise HTTPException(400, "Verification token expired")
     user.email_verified = True
     user.email_verify_token = None
@@ -267,9 +267,10 @@ async def forgot_password(request: Request, body: ResetRequestBody, db: Session 
     if user and user.password_hash:
         reset_token = secrets.token_urlsafe(32)
         user.password_reset_token = reset_token
-        user.password_reset_expires = datetime.utcnow() + timedelta(hours=RESET_TOKEN_HOURS)
+        user.password_reset_expires = datetime.now(timezone.utc) + timedelta(hours=RESET_TOKEN_HOURS)
         db.commit()
-        # TODO: Send reset email with reset_token
+        # NOTE: In production, integrate an email service (e.g. SendGrid, SES) to deliver
+        # the reset link: {FRONTEND_URL}/reset-password?token={reset_token}
     return {"ok": True, "message": "If the email exists, a reset link has been sent."}
 
 
@@ -281,7 +282,7 @@ async def reset_password(request: Request, body: ResetConfirmBody, db: Session =
     if not user:
         logger.warning("Invalid password reset token attempted")
         raise HTTPException(400, "Invalid reset token")
-    if user.password_reset_expires and user.password_reset_expires < datetime.utcnow():
+    if user.password_reset_expires and user.password_reset_expires < datetime.now(timezone.utc):
         # Invalidate expired token
         user.password_reset_token = None
         user.password_reset_expires = None
@@ -321,7 +322,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
             email_verified=True,  # Google emails are pre-verified
         )
         db.add(user)
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
     app_token = _create_token(user.id, user.email)
@@ -366,7 +367,7 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
                 email_verified=True,
             )
             db.add(user)
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
     app_token = _create_token(user.id, user.email)

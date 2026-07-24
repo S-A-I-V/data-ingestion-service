@@ -36,7 +36,7 @@ class ClickHouseConnector(BaseConnector):
     def list_tables(self) -> list[str]:
         client = self._client()
         db = self._safe_db()
-        result = client.command(f"SHOW TABLES FROM `{db}`")  # noqa: S608
+        result = client.command(f"SHOW TABLES FROM `{db}`")  # noqa: S608 — safe: db name comes from validated connection config
         client.close()
         return result.split("\n") if result else []
 
@@ -70,7 +70,7 @@ class ClickHouseConnector(BaseConnector):
         for k in key_columns:
             validate_identifier(k, "key column")
         key_cols_str = ", ".join(key_columns)
-        result = client.query(f"SELECT {key_cols_str} FROM `{db}`.`{tbl}`")  # noqa: S608
+        result = client.query(f"SELECT {key_cols_str} FROM `{db}`.`{tbl}`")  # noqa: S608 — safe: columns validated by validate_identifier(), db/table from config
         existing_keys = {tuple(str(v) for v in r) for r in result.result_rows}
         new_rows = [row for row in rows if tuple(str(row[i]) for i in key_indices) not in existing_keys]
         skipped = len(rows) - len(new_rows)

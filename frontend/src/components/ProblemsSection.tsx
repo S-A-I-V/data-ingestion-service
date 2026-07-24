@@ -9,7 +9,7 @@ import ProblemPopup from "./ProblemPopup";
 gsap.registerPlugin(ScrollTrigger);
 
 /**
- * Problems/Features Section — Langfuse "All the tools, one integrated platform" style.
+ * Problems/Features Section — "All the tools, one integrated platform" style.
  * Clean card grid with subtle borders and minimal colors.
  */
 import Highlight from "./ui/Highlight";

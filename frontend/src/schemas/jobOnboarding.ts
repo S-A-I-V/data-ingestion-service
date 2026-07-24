@@ -10,7 +10,7 @@ import { JOB_NAME_MIN_LENGTH } from "../constants/jobOnboarding";
 
 /* ─── Shared field schemas ─────────────────────────────────────────────────── */
 
-const nielsenEmail = z
+const workEmail = z
   .string()
   .trim()
   .min(1, "Required")
@@ -31,11 +31,11 @@ export const jobDefinitionSchema = z.object({
       "Job name can only contain letters, numbers, underscores, hyphens, dots, spaces, and plus signs",
     ),
   jobDescription: z.string().max(2000, "Description cannot exceed 2000 characters").default(""),
-  ownerEmail: nielsenEmail,
-  l2OwnerEmail: nielsenEmail,
-  l3OwnerEmail: nielsenEmail,
-  oncallContact: nielsenEmail,
-  supportTeamDl: nielsenEmail,
+  ownerEmail: workEmail,
+  l2OwnerEmail: workEmail,
+  l3OwnerEmail: workEmail,
+  oncallContact: workEmail,
+  supportTeamDl: workEmail,
   oncallProjectName: z.string().max(255, "Project name cannot exceed 255 characters").default(""),
 });
 

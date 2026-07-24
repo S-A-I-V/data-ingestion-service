@@ -1,7 +1,7 @@
 import { cn } from "../../lib/utils";
 
 /**
- * Chip — Langfuse-style small tag/pill with optional icon.
+ * Chip — small tag/pill with optional icon.
  * Used for integration badges, language tags, etc.
  */
 interface Props {

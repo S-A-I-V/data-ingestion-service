@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { cn } from "../../lib/utils";
 
 /**
- * Highlight — Langfuse's yellow highlight text effect.
+ * Highlight — yellow highlight text effect.
  * Renders a yellow background bar behind text using mix-blend-multiply.
  */
 interface Props {

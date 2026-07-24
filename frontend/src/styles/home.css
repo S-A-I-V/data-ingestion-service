@@ -1,4 +1,4 @@
-/* ===== HOME PAGE — Langfuse 3-Column Layout ===== */
+/* ===== HOME PAGE — 3-Column Layout ===== */
 
 .home-page {
   position: relative;
@@ -22,7 +22,7 @@
   z-index: 0;
 }
 
-/* ===== LANGFUSE 3-COL LAYOUT — sidebars full height, edge-to-edge ===== */
+/* ===== 3-COL LAYOUT — sidebars full height, edge-to-edge ===== */
 .lf-layout {
   position: relative;
   z-index: 5;
@@ -217,7 +217,7 @@
   position: relative;
 }
 
-/* ===== LANGFUSE CORNER BRACKETS — decorative crop marks ===== */
+/* ===== CORNER BRACKETS — decorative crop marks ===== */
 /* Reusable class: add .lf-corners to any container */
 .lf-corners {
   position: relative;
@@ -353,7 +353,7 @@
   display: none;
 }
 
-/* Title — Langfuse uses a large serif-like display font */
+/* Title — large serif-like display font */
 .home-title {
   font-family: var(--font);
   font-size: clamp(40px, 5.5vw, 64px);
@@ -385,7 +385,7 @@
   -webkit-text-stroke: 0;
 }
 
-/* Yellow highlight — Langfuse signature */
+/* Yellow highlight — signature accent */
 .home-title-accent {
   font-family: var(--font);
   font-size: inherit;
@@ -493,8 +493,8 @@
 }
 
 /* === RIGHT SIDEBAR — removed, content moved to nav dropdowns === */
-/* ===== LOGO SECTION — Langfuse text wordmark style ===== */
-.langfuse-logos-section {
+/* ===== LOGO SECTION — text wordmark style ===== */
+.db-logos-section {
   padding: 36px 0 12px;
   display: flex;
   flex-direction: column;
@@ -502,7 +502,7 @@
   width: 100%;
 }
 
-.langfuse-logo-row {
+.db-logo-row {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -510,14 +510,14 @@
   flex-wrap: wrap;
 }
 
-.langfuse-logo-item {
+.db-logo-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
 }
 
-.langfuse-logo-name {
+.db-logo-name {
   font-family: var(--font);
   font-size: 14px;
   font-weight: 600;
@@ -527,7 +527,7 @@
   white-space: nowrap;
 }
 
-.langfuse-logo-story {
+.db-logo-story {
   font-size: 10px;
   color: #2563eb;
   text-decoration: underline;
@@ -819,7 +819,7 @@
   overflow-y: visible;
 }
 
-/* ===== CTA BANNER — matches Langfuse "Start improving" section ===== */
+/* ===== CTA BANNER — "Start improving" section ===== */
 .cta-banner {
   position: relative;
   z-index: 5;

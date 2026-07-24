@@ -6,8 +6,8 @@ import CornerBox from "../components/ui/CornerBox";
 import Highlight from "../components/ui/Highlight";
 import Chip from "../components/ui/Chip";
 import AccordionItem from "../components/ui/AccordionItem";
-import LangfuseFooter from "../components/LangfuseFooter";
-import LangfuseSidebar from "../components/LangfuseSidebar";
+import AppFooter from "../components/AppFooter";
+import InfoSidebar from "../components/InfoSidebar";
 import FeaturesSection from "../components/FeaturesSection";
 import ProblemsSection from "../components/ProblemsSection";
 
@@ -80,7 +80,7 @@ export default function Home({ isAuthenticated }: Props) {
       <div className="lf-layout">
         {/* LEFT SIDEBAR */}
         <aside className="lf-sidebar-left">
-          <LangfuseSidebar />
+          <InfoSidebar />
         </aside>
 
         {/* CENTER CONTENT */}
@@ -280,7 +280,7 @@ export default function Home({ isAuthenticated }: Props) {
           </section>
 
           {/* Footer */}
-          <LangfuseFooter />
+          <AppFooter />
         </main>
 
         {/* RIGHT SIDEBAR */}

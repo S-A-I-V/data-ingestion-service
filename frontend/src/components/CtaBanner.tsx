@@ -5,7 +5,7 @@ interface Props {
 }
 
 /**
- * CTA Banner — Langfuse style "Start improving" section.
+ * CTA Banner — "Start improving" call-to-action section.
  * Dark background, clean typography, prominent CTAs.
  */
 export default function CtaBanner({ isAuthenticated }: Props) {

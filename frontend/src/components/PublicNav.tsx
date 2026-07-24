@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 
 /**
- * Public navigation — Langfuse UX template.
+ * Public navigation — minimal template.
  * Grid: Logo (left) | empty center spacer | Sign In (right).
  * Center column is intentionally empty — same 3-column grid alignment
  * as the rest of the page layout.

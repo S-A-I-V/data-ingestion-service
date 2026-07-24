@@ -1,8 +1,8 @@
 import { cn } from "../lib/utils";
 
 /**
- * Langfuse Left Sidebar — exact replica with corner hover effects.
- * Fixed position, shows Community Stats, Changelog, Self Hosting Guides.
+ * Info Sidebar — displays community stats, changelog, and hosting guides.
+ * Fixed position with corner hover effects.
  */
 
 const COMMUNITY_STATS = [
@@ -114,7 +114,7 @@ function SectionHeader({
   );
 }
 
-export default function LangfuseSidebar() {
+export default function InfoSidebar() {
   return (
     <nav
       className="flex h-full w-full flex-col overflow-y-auto overflow-x-hidden"
