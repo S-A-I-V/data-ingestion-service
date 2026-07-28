@@ -5,12 +5,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import CloseIcon from "@mui/icons-material/Close";
-import {
-  RUN_MODE_OPTIONS,
-  DEFAULT_RUN_MODE,
-  DEFAULT_MIN_SUCCESS_COUNT,
-  type RunRequirementMode,
-} from "../../constants/reportMapping";
+import { RUN_MODE_OPTIONS, DEFAULT_RUN_MODE, type RunRequirementMode } from "../../constants/reportMapping";
 
 export interface JobSettings {
   run_requirement_mode: RunRequirementMode;
@@ -36,17 +31,21 @@ export default function JobSettingsModal({
   onClose,
 }: JobSettingsModalProps) {
   const [runMode, setRunMode] = useState<RunRequirementMode>(initialSettings.run_requirement_mode || DEFAULT_RUN_MODE);
-  const [minSuccessCount, setMinSuccessCount] = useState<number>(
-    initialSettings.min_success_count ?? DEFAULT_MIN_SUCCESS_COUNT,
-  );
-  const [offsetsInput, setOffsetsInput] = useState<string>(initialSettings.required_offsets_json?.join(", ") || "");
+  const [minSuccessCount, setMinSuccessCount] = useState<number>(initialSettings.min_success_count ?? 0);
+  const [offsetsInput, setOffsetsInput] = useState<string>(() => {
+    const offsets = initialSettings.required_offsets_json;
+    const parsed = Array.isArray(offsets) ? offsets : [];
+    return parsed.length > 0 ? parsed.join(", ") : "";
+  });
   const [offsetsError, setOffsetsError] = useState<string | null>(null);
 
   // Reset form when modal opens with new node
   useEffect(() => {
     setRunMode(initialSettings.run_requirement_mode || DEFAULT_RUN_MODE);
-    setMinSuccessCount(initialSettings.min_success_count ?? DEFAULT_MIN_SUCCESS_COUNT);
-    setOffsetsInput(initialSettings.required_offsets_json?.join(", ") || "");
+    setMinSuccessCount(initialSettings.min_success_count ?? 0);
+    const offsets = initialSettings.required_offsets_json;
+    const parsed = Array.isArray(offsets) ? offsets : typeof offsets === "string" ? JSON.parse(offsets || "[]") : [];
+    setOffsetsInput(parsed.length > 0 ? parsed.join(", ") : "");
     setOffsetsError(null);
   }, [nodeId, initialSettings]);
 
@@ -89,14 +88,14 @@ export default function JobSettingsModal({
     onSave(nodeId, {
       run_requirement_mode: runMode,
       required_offsets_json: offsets,
-      min_success_count: runMode === "PER_DATA_DATE" ? null : minSuccessCount > 0 ? minSuccessCount : null,
+      min_success_count: minSuccessCount > 0 ? minSuccessCount : null,
     });
     onClose();
   };
 
   const handleReset = () => {
     setRunMode(DEFAULT_RUN_MODE);
-    setMinSuccessCount(DEFAULT_MIN_SUCCESS_COUNT);
+    setMinSuccessCount(0);
     setOffsetsInput("");
     setOffsetsError(null);
   };
@@ -166,23 +165,23 @@ export default function JobSettingsModal({
             </div>
           )}
 
-          {/* Min Success Count (only relevant for ONCE_PER_WINDOW / SPECIFIC_OFFSETS) */}
-          {runMode !== "PER_DATA_DATE" && (
-            <div className="job-settings-section">
-              <label className="job-settings-label">
-                Minimum Success Count
-                <span className="job-settings-hint">How many successful runs are required</span>
-              </label>
-              <input
-                type="number"
-                className="job-settings-input job-settings-input--narrow"
-                value={minSuccessCount}
-                onChange={(e) => setMinSuccessCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                min={0}
-                max={100}
-              />
-            </div>
-          )}
+          {/* Min Success Count */}
+          <div className="job-settings-section">
+            <label className="job-settings-label">
+              Minimum Success Count
+              <span className="job-settings-hint">
+                How many successful runs are required (leave 0 for default/null)
+              </span>
+            </label>
+            <input
+              type="number"
+              className="job-settings-input job-settings-input--narrow"
+              value={minSuccessCount}
+              onChange={(e) => setMinSuccessCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
+              min={0}
+              max={100}
+            />
+          </div>
         </div>
 
         {/* Footer */}
