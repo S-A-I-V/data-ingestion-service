@@ -139,8 +139,8 @@ function JobNode({ id, data }: NodeProps) {
         <div className="job-node-id">
           <span>ID: {(data as any).job_id}</span>
           {(data as any).is_proxy && <span className="job-node-proxy-chip">PROXY</span>}
-          {runModeLabel && <span className="job-node-mode-chip">{runModeLabel}</span>}
-          {minSuccessCount != null && minSuccessCount !== 1 && (
+          {openSettings && runModeLabel && <span className="job-node-mode-chip">{runModeLabel}</span>}
+          {openSettings && minSuccessCount != null && minSuccessCount !== 1 && (
             <span className="job-node-mode-chip">min:{minSuccessCount}</span>
           )}
           {!(data as any).is_proxy && (data as any).job_id < 0 && (
@@ -165,7 +165,7 @@ function JobNode({ id, data }: NodeProps) {
 
       {/* Action panel */}
       <div className="job-node-actions">
-        {(data as any).job_id && (
+        {openSettings && (data as any).job_id && (
           <Tooltip title="Run settings" arrow placement="top">
             <button
               className={`job-node-action-btn job-node-action-btn--settings${hasCustomSettings ? " job-node-action-btn--active" : ""}`}
