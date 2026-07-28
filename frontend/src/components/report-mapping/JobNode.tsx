@@ -9,7 +9,16 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SettingsIcon from "@mui/icons-material/Settings";
 import Tooltip from "@mui/material/Tooltip";
+import type { RunRequirementMode } from "../../constants/reportMapping";
+
+/** Run requirement settings for a job node */
+export interface JobRunSettings {
+  run_requirement_mode: RunRequirementMode;
+  required_offsets_json: number[] | null;
+  min_success_count: number | null;
+}
 
 // Jobs are passed via a global context (set by parent)
 // We use window.__REPORT_MAPPING_JOBS__ as a simple shared store
@@ -28,6 +37,7 @@ declare global {
     __REPORT_MAPPING_DELETE_NODE__?: (nodeId: string) => void;
     __REPORT_MAPPING_DISCONNECT_RIGHT__?: (nodeId: string) => void;
     __REPORT_MAPPING_BYPASS_DELETE__?: (nodeId: string) => void;
+    __REPORT_MAPPING_OPEN_SETTINGS__?: (nodeId: string) => void;
   }
 }
 
@@ -43,6 +53,12 @@ function JobNode({ id, data }: NodeProps) {
   const deleteNode = window.__REPORT_MAPPING_DELETE_NODE__;
   const disconnectRight = window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
   const bypassDelete = window.__REPORT_MAPPING_BYPASS_DELETE__;
+  const openSettings = window.__REPORT_MAPPING_OPEN_SETTINGS__;
+
+  // Extract run requirement fields from node data
+  const runMode = (data as any).run_requirement_mode || "PER_DATA_DATE";
+  const minSuccessCount = (data as any).min_success_count;
+  const hasCustomSettings = runMode !== "PER_DATA_DATE" || (minSuccessCount != null && minSuccessCount !== 1);
 
   // Compute prev/next job names from edges
   const prevJobNames = allEdges
@@ -76,6 +92,9 @@ function JobNode({ id, data }: NodeProps) {
     setOpen(false);
     setSearch("");
   };
+
+  // Short label for run mode
+  const runModeLabel = runMode === "ONCE_PER_WINDOW" ? "1×/win" : runMode === "SPECIFIC_OFFSETS" ? "offsets" : null;
 
   return (
     <div className="job-node">
@@ -120,6 +139,10 @@ function JobNode({ id, data }: NodeProps) {
         <div className="job-node-id">
           <span>ID: {(data as any).job_id}</span>
           {(data as any).is_proxy && <span className="job-node-proxy-chip">PROXY</span>}
+          {runModeLabel && <span className="job-node-mode-chip">{runModeLabel}</span>}
+          {minSuccessCount != null && minSuccessCount !== 1 && (
+            <span className="job-node-mode-chip">min:{minSuccessCount}</span>
+          )}
           {!(data as any).is_proxy && (data as any).job_id < 0 && (
             <button
               className="job-node-proxy-toggle"
@@ -142,6 +165,19 @@ function JobNode({ id, data }: NodeProps) {
 
       {/* Action panel */}
       <div className="job-node-actions">
+        {(data as any).job_id && (
+          <Tooltip title="Run settings" arrow placement="top">
+            <button
+              className={`job-node-action-btn job-node-action-btn--settings${hasCustomSettings ? " job-node-action-btn--active" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                openSettings?.(id);
+              }}
+            >
+              <SettingsIcon sx={{ fontSize: 18 }} />
+            </button>
+          </Tooltip>
+        )}
         <button
           className="job-node-action-btn job-node-action-btn--cut"
           onClick={(e) => {

@@ -162,7 +162,8 @@ def get_existing_mapping(
             """
             SELECT job_id, job_name, sequence_id, is_final_step,
                    job_category, report_name, application_name,
-                   previous_job_ids, next_job_ids
+                   previous_job_ids, next_job_ids,
+                   run_requirement_mode, required_offsets_json, min_success_count
             FROM public.report_job_mapping
             WHERE report_id = :rid
             ORDER BY sequence_id, job_name
@@ -197,6 +198,10 @@ def get_existing_mapping(
                 "category": row.get("job_category", ""),
                 "is_final_step": row.get("is_final_step", False),
                 "position": {"x": col * 280, "y": row_num * 150},
+                # Run requirement fields for editing
+                "run_requirement_mode": row.get("run_requirement_mode") or "PER_DATA_DATE",
+                "required_offsets_json": row.get("required_offsets_json"),
+                "min_success_count": row.get("min_success_count"),
             }
         )
 
@@ -450,7 +455,7 @@ class ApplyMappingRequest(BaseModel):
     report_name: str
     application_name: str
     report_id: int
-    nodes: list[dict]  # [{job_id, job_name}]
+    nodes: list[dict]  # [{job_id, job_name, run_requirement_mode?, required_offsets_json?, min_success_count?}]
     edges: list[dict]  # [{source_node_id, target_node_id}]
 
     @field_validator("report_name", "application_name")
@@ -466,9 +471,18 @@ class ApplyMappingRequest(BaseModel):
     def validate_nodes(cls, v: list[dict]) -> list[dict]:
         if not v:
             raise ValueError("At least one node is required")
+        valid_modes = {"PER_DATA_DATE", "ONCE_PER_WINDOW", "SPECIFIC_OFFSETS"}
         for n in v:
             if not n.get("job_id"):
                 raise ValueError("All nodes must have a job_id assigned")
+            # Validate run_requirement_mode if provided
+            mode = n.get("run_requirement_mode")
+            if mode and mode not in valid_modes:
+                raise ValueError(f"Invalid run_requirement_mode: {mode}. Must be one of {valid_modes}")
+            # Validate min_success_count if provided
+            min_count = n.get("min_success_count")
+            if min_count is not None and (not isinstance(min_count, int) or min_count < 0):
+                raise ValueError("min_success_count must be a non-negative integer")
         return v
 
 
@@ -600,7 +614,10 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
     3. Compare: what to DELETE, INSERT, UPDATE
 
     For job_id changes: updates previous_job_ids/next_job_ids across all rows.
+    Also tracks run_requirement_mode, required_offsets_json, min_success_count changes.
     """
+    import json
+
     # Fetch current state
     current_rows = connector.execute_query(
         """
@@ -637,10 +654,12 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
                         pass
 
     # Build new state from nodes + edges
-    # Map node_id -> job_id
+    # Map node_id -> job_id and node_id -> full node data
     node_to_job = {}
+    node_by_job_id = {}
     for n in payload.nodes:
         node_to_job[n["id"]] = n["job_id"]
+        node_by_job_id[n["job_id"]] = n
 
     new_job_ids = {n["job_id"] for n in payload.nodes}
 
@@ -657,6 +676,17 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
 
     statements: list[dict] = []
 
+    # Helper to normalize offsets JSON for comparison
+    def normalize_offsets(val):
+        if val is None:
+            return None
+        if isinstance(val, str):
+            try:
+                return json.loads(val) if val else None
+            except (json.JSONDecodeError, TypeError):
+                return None
+        return val
+
     # 1. DELETE removed nodes
     removed = current_job_ids - new_job_ids
     for job_id in removed:
@@ -670,22 +700,36 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
     # 2. INSERT new nodes
     added = new_job_ids - current_job_ids
     for job_id in added:
-        node = next((n for n in payload.nodes if n["job_id"] == job_id), None)
+        node = node_by_job_id.get(job_id)
         if not node:
             continue
         prev_ids = ",".join(str(p) for p in sorted(prev_map.get(job_id, [])))
         next_ids = ",".join(str(n) for n in sorted(next_map.get(job_id, [])))
+
+        # Get run requirement fields with defaults
+        run_mode = node.get("run_requirement_mode") or "PER_DATA_DATE"
+        offsets_json = node.get("required_offsets_json")
+        min_count = node.get("min_success_count")
+
+        # Serialize offsets to JSON string if it's a dict/list
+        offsets_str = None
+        if offsets_json is not None:
+            if isinstance(offsets_json, (dict, list)):
+                offsets_str = json.dumps(offsets_json)
+            elif isinstance(offsets_json, str):
+                offsets_str = offsets_json if offsets_json else None
+
         statements.append(
             {
                 "sql": """
                 INSERT INTO public.report_job_mapping(
                     report_name, application_name, report_id, job_id, job_name,
                     previous_job_ids, next_job_ids, sequence_id, is_final_step,
-                    job_category, run_requirement_mode
+                    job_category, run_requirement_mode, required_offsets_json, min_success_count
                 ) VALUES(
                     :rname, :aname, :rid, :jid, :jname,
                     :prev, :next, 0, false,
-                    '', 'PER_DATA_DATE'
+                    '', :run_mode, :offsets_json::jsonb, :min_count
                 )
             """,
                 "params": {
@@ -696,13 +740,20 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
                     "jname": node.get("job_name", ""),
                     "prev": prev_ids,
                     "next": next_ids,
+                    "run_mode": run_mode,
+                    "offsets_json": offsets_str,
+                    "min_count": min_count,
                 },
             }
         )
 
-    # 3. UPDATE existing nodes where prev/next changed
+    # 3. UPDATE existing nodes where prev/next or run requirement fields changed
     for job_id in current_job_ids & new_job_ids:
         current_row = current_by_job_id[job_id]
+        node = node_by_job_id.get(job_id)
+        if not node:
+            continue
+
         new_prev = ",".join(str(p) for p in sorted(prev_map.get(job_id, [])))
         new_next = ",".join(str(n) for n in sorted(next_map.get(job_id, [])))
 
@@ -710,22 +761,51 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
         old_prev_canonical = ",".join(str(p) for p in sorted(db_prev_map.get(job_id, [])))
         old_next_canonical = ",".join(str(n) for n in sorted(db_next_map.get(job_id, [])))
 
-        if old_prev_canonical != new_prev or old_next_canonical != new_next:
-            node = next((n for n in payload.nodes if n["job_id"] == job_id), None)
-            new_name = node.get("job_name", "") if node else current_row.get("job_name", "")
+        # Check run requirement field changes
+        old_run_mode = current_row.get("run_requirement_mode") or "PER_DATA_DATE"
+        new_run_mode = node.get("run_requirement_mode") or "PER_DATA_DATE"
+
+        old_offsets = normalize_offsets(current_row.get("required_offsets_json"))
+        new_offsets = normalize_offsets(node.get("required_offsets_json"))
+
+        old_min_count = current_row.get("min_success_count")
+        new_min_count = node.get("min_success_count")
+
+        # Detect any changes
+        edges_changed = old_prev_canonical != new_prev or old_next_canonical != new_next
+        run_mode_changed = old_run_mode != new_run_mode
+        offsets_changed = old_offsets != new_offsets
+        min_count_changed = old_min_count != new_min_count
+
+        if edges_changed or run_mode_changed or offsets_changed or min_count_changed:
+            new_name = node.get("job_name", "") or current_row.get("job_name", "")
+
+            # Serialize offsets to JSON string if needed
+            offsets_str = None
+            if new_offsets is not None:
+                if isinstance(new_offsets, (dict, list)):
+                    offsets_str = json.dumps(new_offsets)
+                elif isinstance(new_offsets, str):
+                    offsets_str = new_offsets if new_offsets else None
 
             statements.append(
                 {
                     "sql": """
                     UPDATE public.report_job_mapping
                     SET previous_job_ids = :prev, next_job_ids = :next,
-                        job_name = :jname
+                        job_name = :jname,
+                        run_requirement_mode = :run_mode,
+                        required_offsets_json = :offsets_json::jsonb,
+                        min_success_count = :min_count
                     WHERE report_id = :rid AND job_id = :jid
                 """,
                     "params": {
                         "prev": new_prev,
                         "next": new_next,
                         "jname": new_name,
+                        "run_mode": new_run_mode,
+                        "offsets_json": offsets_str,
+                        "min_count": new_min_count,
                         "rid": payload.report_id,
                         "jid": job_id,
                     },

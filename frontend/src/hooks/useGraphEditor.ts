@@ -25,6 +25,8 @@ import {
   NEW_NODE_RANDOM_Y_RANGE,
   NEW_NODE_Y_OFFSET,
   EDGE_STROKE_COLOR,
+  DEFAULT_RUN_MODE,
+  type RunRequirementMode,
 } from "../constants/reportMapping";
 import JobNode from "../components/report-mapping/JobNode";
 
@@ -36,9 +38,17 @@ interface Job {
 
 interface UseGraphEditorOptions {
   jobs: Job[];
+  onOpenSettings?: (nodeId: string) => void;
 }
 
-export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
+/** Settings that can be edited in the JobSettingsModal */
+export interface JobNodeSettings {
+  run_requirement_mode: RunRequirementMode;
+  required_offsets_json: number[] | null;
+  min_success_count: number | null;
+}
+
+export function useGraphEditor({ jobs, onOpenSettings }: UseGraphEditorOptions) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [dirty, setDirty] = useState(false);
@@ -129,7 +139,13 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
       },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
-      data: { job_id: null, job_name: "" },
+      data: {
+        job_id: null,
+        job_name: "",
+        run_requirement_mode: DEFAULT_RUN_MODE,
+        required_offsets_json: null,
+        min_success_count: null,
+      },
     };
     const newNodes = [...nodes, newNode];
     setNodes(newNodes);
@@ -159,6 +175,30 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
       setDirty(true);
     },
     [],
+  );
+
+  // Update a node's run requirement settings
+  const updateNodeSettings = useCallback(
+    (nodeId: string, settings: JobNodeSettings) => {
+      setNodes((prev) => {
+        const updated = prev.map((n) =>
+          n.id === nodeId
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  run_requirement_mode: settings.run_requirement_mode,
+                  required_offsets_json: settings.required_offsets_json,
+                  min_success_count: settings.min_success_count,
+                },
+              }
+            : n,
+        );
+        commitChange(updated, edges);
+        return updated;
+      });
+    },
+    [edges, commitChange],
   );
 
   // Delete a node and its connected edges
@@ -221,6 +261,7 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
     window.__REPORT_MAPPING_DELETE_NODE__ = deleteNode;
     window.__REPORT_MAPPING_DISCONNECT_RIGHT__ = disconnectRight;
     window.__REPORT_MAPPING_BYPASS_DELETE__ = bypassDelete;
+    window.__REPORT_MAPPING_OPEN_SETTINGS__ = onOpenSettings;
     return () => {
       delete window.__REPORT_MAPPING_JOBS__;
       delete window.__REPORT_MAPPING_NODES__;
@@ -229,8 +270,9 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
       delete window.__REPORT_MAPPING_DELETE_NODE__;
       delete window.__REPORT_MAPPING_DISCONNECT_RIGHT__;
       delete window.__REPORT_MAPPING_BYPASS_DELETE__;
+      delete window.__REPORT_MAPPING_OPEN_SETTINGS__;
     };
-  }, [jobs, nodes, edges, updateNodeJob, deleteNode, disconnectRight, bypassDelete]);
+  }, [jobs, nodes, edges, updateNodeJob, deleteNode, disconnectRight, bypassDelete, onOpenSettings]);
 
   // Re-layout nodes using Dagre algorithm (uses graph.state for latest edges)
   const handleRelayout = useCallback(() => {
@@ -257,6 +299,7 @@ export function useGraphEditor({ jobs }: UseGraphEditorOptions) {
     lastAddedNodeId,
     clearLastAddedNodeId: () => setLastAddedNodeId(null),
     updateNodeJob,
+    updateNodeSettings,
     handleRelayout,
   };
 }

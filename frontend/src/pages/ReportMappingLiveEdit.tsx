@@ -17,12 +17,13 @@ import type { Node, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import api from "../api";
 import { Spinner } from "../components/ui";
-import { useGraphEditor } from "../hooks/useGraphEditor";
+import { useGraphEditor, type JobNodeSettings } from "../hooks/useGraphEditor";
 import { applyDagreLayout } from "../utils/dagreLayout";
 import GraphCanvas from "../components/report-mapping/GraphCanvas";
 import LiveEditSuccess from "../components/report-mapping/LiveEditSuccess";
 import ReportSelector from "../components/report-mapping/ReportSelector";
 import PreviewPanel from "../components/report-mapping/PreviewPanel";
+import JobSettingsModal from "../components/report-mapping/JobSettingsModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
@@ -38,6 +39,7 @@ import {
   BUTTON_SPINNER_SIZE_PX,
   PREVIEW_BUTTON_MIN_WIDTH_PX,
   TOAST_DISPLAY_DURATION_MS,
+  DEFAULT_RUN_MODE,
 } from "../constants/reportMapping";
 
 interface Job {
@@ -76,7 +78,10 @@ export default function ReportMappingLiveEdit() {
   const [toast, setToast] = useState("");
   const initialStateRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
 
-  // Graph editor hook
+  // Settings modal state
+  const [settingsNodeId, setSettingsNodeId] = useState<string | null>(null);
+
+  // Graph editor hook with settings callback
   const {
     nodes,
     setNodes,
@@ -91,7 +96,14 @@ export default function ReportMappingLiveEdit() {
     lastAddedNodeId,
     clearLastAddedNodeId,
     handleRelayout,
-  } = useGraphEditor({ jobs });
+    updateNodeSettings,
+  } = useGraphEditor({
+    jobs,
+    onOpenSettings: (nodeId) => setSettingsNodeId(nodeId),
+  });
+
+  // Get the node for the settings modal
+  const settingsNode = settingsNodeId ? nodes.find((n) => n.id === settingsNodeId) : null;
 
   // Load report list when no report selected
   useEffect(() => {
@@ -135,7 +147,15 @@ export default function ReportMappingLiveEdit() {
           id: n.id,
           type: "jobNode",
           position: n.position || { x: 0, y: 0 },
-          data: { job_id: n.job_id, job_name: n.job_name || "", is_proxy: proxyJobIds.has(n.job_id) },
+          data: {
+            job_id: n.job_id,
+            job_name: n.job_name || "",
+            is_proxy: proxyJobIds.has(n.job_id),
+            // Run requirement fields from DB
+            run_requirement_mode: n.run_requirement_mode || DEFAULT_RUN_MODE,
+            required_offsets_json: n.required_offsets_json,
+            min_success_count: n.min_success_count,
+          },
         }));
         const flowEdges: Edge[] = (data.edges || []).map((e: any) => ({
           id: e.id || `e-${e.source}-${e.target}`,
@@ -187,7 +207,14 @@ export default function ReportMappingLiveEdit() {
         report_name: reportName,
         application_name: appName,
         report_id: reportId,
-        nodes: nodes.map((n) => ({ id: n.id, job_id: n.data.job_id, job_name: n.data.job_name })),
+        nodes: nodes.map((n) => ({
+          id: n.id,
+          job_id: n.data.job_id,
+          job_name: n.data.job_name,
+          run_requirement_mode: n.data.run_requirement_mode || DEFAULT_RUN_MODE,
+          required_offsets_json: n.data.required_offsets_json,
+          min_success_count: n.data.min_success_count,
+        })),
         edges: edges.map((e) => ({ source: e.source, target: e.target })),
       });
       if (res.data.total === 0) {
@@ -211,7 +238,14 @@ export default function ReportMappingLiveEdit() {
         report_name: reportName,
         application_name: appName,
         report_id: reportId,
-        nodes: nodes.map((n) => ({ id: n.id, job_id: n.data.job_id, job_name: n.data.job_name })),
+        nodes: nodes.map((n) => ({
+          id: n.id,
+          job_id: n.data.job_id,
+          job_name: n.data.job_name,
+          run_requirement_mode: n.data.run_requirement_mode || DEFAULT_RUN_MODE,
+          required_offsets_json: n.data.required_offsets_json,
+          min_success_count: n.data.min_success_count,
+        })),
         edges: edges.map((e) => ({ source: e.source, target: e.target })),
       });
       setResult(res.data);
@@ -395,6 +429,22 @@ export default function ReportMappingLiveEdit() {
               <span>{nodes.filter((n) => n.data.job_id).length} assigned</span>
             </div>
           </>
+        )}
+
+        {/* Job Settings Modal */}
+        {settingsNode && (
+          <JobSettingsModal
+            nodeId={settingsNode.id}
+            jobName={settingsNode.data.job_name || "Unnamed Job"}
+            jobId={settingsNode.data.job_id}
+            initialSettings={{
+              run_requirement_mode: settingsNode.data.run_requirement_mode || DEFAULT_RUN_MODE,
+              required_offsets_json: settingsNode.data.required_offsets_json,
+              min_success_count: settingsNode.data.min_success_count,
+            }}
+            onSave={updateNodeSettings}
+            onClose={() => setSettingsNodeId(null)}
+          />
         )}
       </main>
     </div>

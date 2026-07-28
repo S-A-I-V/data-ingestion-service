@@ -89,3 +89,32 @@ export const PREVIEW_BUTTON_MIN_WIDTH_PX = 150;
 
 /** Size for the circular progress spinner in buttons */
 export const BUTTON_SPINNER_SIZE_PX = 14;
+
+// ── Run Requirement Mode Options ─────────────────────────────────────────────
+/** Valid run_requirement_mode values for report_job_mapping */
+export type RunRequirementMode = "PER_DATA_DATE" | "ONCE_PER_WINDOW" | "SPECIFIC_OFFSETS";
+
+/** Labels for run requirement mode options in the UI */
+export const RUN_MODE_OPTIONS: { value: RunRequirementMode; label: string; description: string }[] = [
+  {
+    value: "PER_DATA_DATE",
+    label: "Per Data Date",
+    description: "Job must run for each data date in the delivery window",
+  },
+  {
+    value: "ONCE_PER_WINDOW",
+    label: "Once Per Window",
+    description: "Job only needs to succeed once for the entire delivery window",
+  },
+  {
+    value: "SPECIFIC_OFFSETS",
+    label: "Specific Offsets",
+    description: "Job must run for specific offset dates (defined in offsets JSON)",
+  },
+];
+
+/** Default run requirement mode for new jobs */
+export const DEFAULT_RUN_MODE: RunRequirementMode = "PER_DATA_DATE";
+
+/** Default min_success_count for new jobs */
+export const DEFAULT_MIN_SUCCESS_COUNT = 1;
