@@ -729,7 +729,7 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
                 ) VALUES(
                     :rname, :aname, :rid, :jid, :jname,
                     :prev, :next, 0, false,
-                    '', :run_mode, :offsets_json::jsonb, :min_count
+                    '', :run_mode, CAST(:offsets_json AS jsonb), :min_count
                 )
             """,
                 "params": {
@@ -795,7 +795,7 @@ def _compute_mapping_diff(connector, payload: ApplyMappingRequest) -> list[dict]
                     SET previous_job_ids = :prev, next_job_ids = :next,
                         job_name = :jname,
                         run_requirement_mode = :run_mode,
-                        required_offsets_json = :offsets_json::jsonb,
+                        required_offsets_json = CAST(:offsets_json AS jsonb),
                         min_success_count = :min_count
                     WHERE report_id = :rid AND job_id = :jid
                 """,
