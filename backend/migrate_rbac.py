@@ -41,13 +41,32 @@ def seed():
 
         # ── Create Permissions ──
         permissions_data = [
+            # Admin-level permissions (full access)
             ("admin:associate_lookup", "Access the Associate Lookup tool"),
             ("admin:manage_users", "Manage user roles and permissions"),
-            ("admin:manage_connections", "Manage all users' connections"),
             ("admin:view_all_audit", "View audit logs for all users"),
-            ("user:connections", "Manage own connections"),
-            ("user:ingestion", "Run data ingestions"),
-            ("user:audit", "View own audit logs"),
+            # Connection management
+            ("admin:connections", "Create, edit, delete database connections"),
+            ("admin:connections:view", "View database connections list"),
+            ("admin:connections:test", "Test database connections"),
+            # Data transfer / ingestion
+            ("admin:data_transfer", "Execute CSV data ingestion and transfers"),
+            ("admin:data_transfer:preview", "Preview CSV uploads before ingestion"),
+            # Audit access
+            ("admin:audit", "View and export all audit logs"),
+            ("admin:audit:export", "Export audit logs to CSV"),
+            # Report & Job management (NFC Prod tools)
+            ("admin:report_mapping", "Manage report-to-job mappings"),
+            ("admin:report_policies", "Manage report definitions and SLA policies"),
+            ("admin:report_health", "View report health dashboard"),
+            ("admin:client_onboarding", "Onboard clients, groups, and business entities"),
+            ("admin:job_onboarding", "Onboard and manage job definitions"),
+            # AI analysis
+            ("admin:ai_analysis", "Use AI-powered query analysis"),
+            # Legacy user-level (kept for backward compatibility)
+            ("user:connections", "Manage own connections (deprecated)"),
+            ("user:ingestion", "Run data ingestions (deprecated)"),
+            ("user:audit", "View own audit logs (deprecated)"),
         ]
         for code, desc in permissions_data:
             existing = db.query(Permission).filter(Permission.code == code).first()

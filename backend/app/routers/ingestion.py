@@ -26,10 +26,11 @@ from app.database import get_db
 from app.models.audit import AuditLog
 from app.models.connection import DBConnection
 from app.models.user import User
-from app.routers.auth import get_current_user, limiter
+from app.routers.auth import limiter
 from app.services.audit_chain import seal_and_persist
 from app.services.db_connector import get_connector
 from app.services.metrics import refresh_metrics_view
+from app.services.rbac import require_permission
 from app.services.validators import (
     validate_csv_upload,
     validate_identifier,
@@ -114,7 +115,7 @@ def _parse_csv_streaming(content: bytes, csv_cols: list[str], chunk_size: int) -
 async def preview_csv(
     request: Request,
     file: UploadFile = File(...),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("admin:data_transfer:preview")),
 ):
     """Return rows + headers and file-level stats from uploaded CSV."""
     _validate_content_type(file)
@@ -175,7 +176,7 @@ async def execute_ingestion(
     table_name: str = Form(...),
     column_mapping: str = Form(...),
     operation: str = Form("INSERT"),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("admin:data_transfer")),
     db: Session = Depends(get_db),
 ):
     """Execute CSV data ingestion with bulk operations and full metrics capture."""

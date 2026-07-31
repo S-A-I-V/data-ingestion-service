@@ -16,7 +16,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.audit import AuditLog
 from app.models.user import User
-from app.routers.auth import get_current_user, limiter
+from app.routers.auth import limiter
+from app.services.rbac import require_permission
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ router = APIRouter(prefix="/api/audit", tags=["audit"])
 @limiter.limit("30/minute")
 def get_audit_metrics(
     request: Request,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("admin:audit")),
     db: Session = Depends(get_db),
 ):
     """
@@ -114,7 +115,7 @@ def get_audit_logs(
     limit: int = Query(200, ge=1, le=500, description="Max items to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     status: str = Query(None, description="Filter by status: success|failed"),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("admin:audit")),
     db: Session = Depends(get_db),
 ):
     """
@@ -166,7 +167,7 @@ def get_audit_logs(
 def verify_audit_integrity(
     request: Request,
     limit: int = Query(1000, ge=100, le=10000, description="Max records to verify"),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("admin:audit")),
     db: Session = Depends(get_db),
 ):
     """

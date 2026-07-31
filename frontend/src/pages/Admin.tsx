@@ -10,6 +10,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import WorkIcon from "@mui/icons-material/Work";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import InfoSidebar from "../components/InfoSidebar";
 import Highlight from "../components/ui/Highlight";
 
@@ -18,6 +19,14 @@ interface Props {
 }
 
 const ADMIN_TOOLS = [
+  {
+    permission: "admin:manage_users",
+    title: "User Management",
+    description:
+      "Manage user roles and permissions. Assign or revoke roles, view effective permissions, and monitor cache stats.",
+    icon: ManageAccountsIcon,
+    to: "/admin/user-management",
+  },
   {
     permission: "admin:associate_lookup",
     title: "Associate Lookup",

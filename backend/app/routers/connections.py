@@ -9,8 +9,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.connection import DBConnection
 from app.models.user import User
-from app.routers.auth import get_current_user, limiter
+from app.routers.auth import limiter
 from app.services.db_connector import get_connector
+from app.services.rbac import require_permission
 from app.services.validators import (
     sanitize_string,
     validate_db_type,
@@ -107,7 +108,10 @@ class ConnectionOut(BaseModel):
 @router.post("/", response_model=ConnectionOut)
 @limiter.limit("30/minute")
 def create_connection(
-    body: ConnectionCreate, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    body: ConnectionCreate,
+    request: Request,
+    user: User = Depends(require_permission("admin:connections")),
+    db: Session = Depends(get_db),
 ):
     if not body.host.strip():
         raise HTTPException(status_code=400, detail="Host is required")
@@ -121,7 +125,10 @@ def create_connection(
 
 
 @router.get("/")
-def list_connections(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_connections(
+    user: User = Depends(require_permission("admin:connections:view")),
+    db: Session = Depends(get_db),
+):
     conns = db.query(DBConnection).filter(DBConnection.created_by == user.id).all()
     return [ConnectionOut.model_validate(c) for c in conns]
 
@@ -129,7 +136,10 @@ def list_connections(user: User = Depends(get_current_user), db: Session = Depen
 @router.delete("/{conn_id}")
 @limiter.limit("20/minute")
 def delete_connection(
-    conn_id: int, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    conn_id: int,
+    request: Request,
+    user: User = Depends(require_permission("admin:connections")),
+    db: Session = Depends(get_db),
 ):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
@@ -145,7 +155,7 @@ def update_connection(
     conn_id: int,
     body: ConnectionCreate,
     request: Request,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("admin:connections")),
     db: Session = Depends(get_db),
 ):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
@@ -180,7 +190,10 @@ def update_connection(
 @router.post("/{conn_id}/test")
 @limiter.limit("10/minute")
 def test_connection(
-    conn_id: int, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    conn_id: int,
+    request: Request,
+    user: User = Depends(require_permission("admin:connections:test")),
+    db: Session = Depends(get_db),
 ):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
@@ -202,7 +215,12 @@ def test_connection(
 
 @router.get("/{conn_id}/tables")
 @limiter.limit("30/minute")
-def list_tables(conn_id: int, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_tables(
+    conn_id: int,
+    request: Request,
+    user: User = Depends(require_permission("admin:connections:view")),
+    db: Session = Depends(get_db),
+):
     conn = db.query(DBConnection).filter(DBConnection.id == conn_id, DBConnection.created_by == user.id).first()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
@@ -222,7 +240,7 @@ def list_columns(
     conn_id: int,
     table_name: str,
     request: Request,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_permission("admin:connections:view")),
     db: Session = Depends(get_db),
 ):
     try:

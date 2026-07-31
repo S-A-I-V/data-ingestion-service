@@ -17,11 +17,17 @@ import ColumnMapper from "../components/ingest/ColumnMapper";
 import StepProgress from "../components/onboarding/StepProgress";
 import WizardNavigation from "../components/onboarding/WizardNavigation";
 import Highlight from "../components/ui/Highlight";
+import AccessDenied from "../components/AccessDenied";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { Spinner } from "../components/ui";
 import { STATUS_AUTO_DISMISS_MS, INGESTION_OPERATIONS, AI_SAMPLE_ROW_COUNT } from "../constants/ingest";
-import type { Connection, ColInfo } from "../types";
+import { PERM_ADMIN_CONNECTIONS_VIEW, PERM_ADMIN_DATA_TRANSFER } from "../constants/permissions";
+import type { Connection, ColInfo, User } from "../types";
+
+interface Props {
+  user: User;
+}
 
 const INGEST_STEPS = [
   { label: "Configure", description: "Upload & map columns" },
@@ -30,7 +36,7 @@ const INGEST_STEPS = [
   { label: "Results", description: "View stats" },
 ];
 
-export default function Ingest() {
+export default function Ingest({ user }: Props) {
   const [currentStep, setCurrentStep] = useState(0);
 
   // Connection & target state
@@ -211,6 +217,21 @@ export default function Ingest() {
 
   const mappedCount = Object.values(mapping).filter((v) => v).length;
   const canAdvanceToPreview = file && mappedCount > 0 && csvPreview.length > 0;
+
+  // Permission check — require view connections or data transfer permissions
+  const userPerms = user.permissions || [];
+  const canAccessIngest = userPerms.some((p) => [PERM_ADMIN_CONNECTIONS_VIEW, PERM_ADMIN_DATA_TRANSFER].includes(p));
+
+  if (!canAccessIngest) {
+    return (
+      <div
+        className="container"
+        style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "400px" }}
+      >
+        <AccessDenied feature="Data Transfer" />
+      </div>
+    );
+  }
 
   // Build table rows for the Execute step
   const executionPlanRows = useMemo(() => {

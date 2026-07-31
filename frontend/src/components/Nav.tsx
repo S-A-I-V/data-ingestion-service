@@ -3,10 +3,24 @@ import { Link, useLocation } from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
+import {
+  PERM_ADMIN_CONNECTIONS,
+  PERM_ADMIN_CONNECTIONS_VIEW,
+  PERM_ADMIN_DATA_TRANSFER,
+  PERM_ADMIN_DATA_TRANSFER_PREVIEW,
+  PERM_ADMIN_AUDIT,
+} from "../constants/permissions";
 
 interface Props {
   user: { name: string; picture: string; email: string; permissions?: string[] };
 }
+
+/** Permission requirements for each nav tab */
+const TAB_PERMISSIONS: Record<string, string[]> = {
+  "/connections": [PERM_ADMIN_CONNECTIONS, PERM_ADMIN_CONNECTIONS_VIEW],
+  "/ingest": [PERM_ADMIN_DATA_TRANSFER, PERM_ADMIN_DATA_TRANSFER_PREVIEW],
+  "/audit": [PERM_ADMIN_AUDIT],
+};
 
 const NAV_TABS = [
   { label: "Home", to: "/home" },
@@ -22,6 +36,7 @@ const ADMIN_PERMISSIONS = [
   "admin:report_mapping",
   "admin:email_discrepancy_audit",
   "admin:report_health",
+  "admin:manage_users",
 ];
 
 function getDisplayName(name: string, email: string): string {
@@ -38,9 +53,24 @@ export default function Nav({ user }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Use permissions from user prop (already fetched in App.tsx)
   const userPerms = user.permissions || [];
   const hasAnyAdmin = ADMIN_PERMISSIONS.some((p) => userPerms.includes(p));
-  const visibleTabs = hasAnyAdmin ? [...NAV_TABS, { label: "Admin", to: "/admin" }] : [...NAV_TABS];
+
+  // Filter tabs based on user permissions
+  const visibleTabs = NAV_TABS.filter((tab) => {
+    const requiredPerms = TAB_PERMISSIONS[tab.to];
+    // If no permissions required (e.g., Home), always show
+    if (!requiredPerms) return true;
+    // Show if user has any of the required permissions
+    return requiredPerms.some((p) => userPerms.includes(p));
+  });
+
+  // Add Admin tab if user has any admin permissions
+  if (hasAnyAdmin) {
+    visibleTabs.push({ label: "Admin", to: "/admin" });
+  }
+
   const isOnAdminPage = loc.pathname.startsWith("/admin");
 
   const logout = () => {

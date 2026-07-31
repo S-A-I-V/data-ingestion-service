@@ -21,11 +21,27 @@ import Admin from "./pages/Admin";
 import EmailDiscrepancyAudit from "./pages/EmailDiscrepancyAudit";
 import ReportHealthDashboard from "./pages/ReportHealthDashboard";
 import ReportPolicies from "./pages/ReportPolicies";
+import UserManagement from "./pages/UserManagement";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
 import PublicNav from "./components/PublicNav";
+import ProtectedRoute from "./components/ProtectedRoute";
 import CookieConsent from "./components/CookieConsent";
+import {
+  PERM_ADMIN_CONNECTIONS,
+  PERM_ADMIN_CONNECTIONS_VIEW,
+  PERM_ADMIN_DATA_TRANSFER,
+  PERM_ADMIN_DATA_TRANSFER_PREVIEW,
+  PERM_ADMIN_AUDIT,
+  PERM_ADMIN_ASSOCIATE_LOOKUP,
+  PERM_ADMIN_CLIENT_ONBOARDING,
+  PERM_ADMIN_JOB_ONBOARDING,
+  PERM_ADMIN_REPORT_MAPPING,
+  PERM_ADMIN_REPORT_POLICIES,
+  PERM_ADMIN_REPORT_HEALTH,
+  PERM_ADMIN_MANAGE_USERS,
+} from "./constants/permissions";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -92,51 +108,179 @@ export default function App() {
       <Nav user={user} />
       <Routes location={location}>
         <Route path="/home" element={<Home isAuthenticated={true} />} />
-        <Route path="/connections" element={<Dashboard />} />
-        <Route path="/ingest" element={<Ingest />} />
-        <Route path="/audit" element={<AuditLog />} />
-        {user.permissions?.some((p: string) => p.startsWith("admin:")) && (
-          <Route path="/admin" element={<Admin permissions={user.permissions || []} />} />
-        )}
-        {user.permissions?.includes("admin:associate_lookup") && (
-          <Route path="/admin/associate-lookup" element={<AssociateLookup />} />
-        )}
-        {user.permissions?.includes("admin:email_discrepancy_audit") && (
-          <Route path="/admin/email-discrepancy" element={<EmailDiscrepancyAudit />} />
-        )}
-        {user.permissions?.includes("admin:report_health") && (
-          <Route path="/admin/report-health" element={<ReportHealthDashboard />} />
-        )}
-        {user.permissions?.includes("admin:client_onboarding") && (
-          <Route path="/admin/client-onboarding" element={<ClientOnboardingHub />} />
-        )}
-        {user.permissions?.includes("admin:client_onboarding") && (
-          <Route path="/admin/client-onboarding/new" element={<ClientOnboarding />} />
-        )}
-        {user.permissions?.includes("admin:client_onboarding") && (
-          <Route path="/admin/client-onboarding/edit" element={<ClientEdit />} />
-        )}
-        {user.permissions?.includes("admin:job_onboarding") && (
-          <Route path="/admin/job-onboarding" element={<JobOnboardingHub />} />
-        )}
-        {user.permissions?.includes("admin:job_onboarding") && (
-          <Route path="/admin/job-onboarding/new" element={<JobOnboarding />} />
-        )}
-        {user.permissions?.includes("admin:job_onboarding") && (
-          <Route path="/admin/job-onboarding/edit" element={<JobEdit />} />
-        )}
-        {user.permissions?.includes("admin:report_mapping") && (
-          <Route path="/admin/report-mapping" element={<ReportMappingHub />} />
-        )}
-        {user.permissions?.includes("admin:report_mapping") && (
-          <Route path="/admin/report-mapping/editor" element={<ReportMappingEditor />} />
-        )}
-        {user.permissions?.includes("admin:report_mapping") && (
-          <Route path="/admin/report-mapping/live-edit" element={<ReportMappingLiveEdit />} />
-        )}
-        {user.permissions?.includes("admin:report_policies") && (
-          <Route path="/admin/report-policies" element={<ReportPolicies />} />
-        )}
+
+        {/* Protected routes with permission checks */}
+        <Route
+          path="/connections"
+          element={
+            <ProtectedRoute
+              user={user}
+              permissions={[PERM_ADMIN_CONNECTIONS, PERM_ADMIN_CONNECTIONS_VIEW]}
+              feature="Connections"
+            >
+              <Dashboard user={user} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ingest"
+          element={
+            <ProtectedRoute
+              user={user}
+              permissions={[PERM_ADMIN_DATA_TRANSFER, PERM_ADMIN_DATA_TRANSFER_PREVIEW]}
+              feature="Data Transfer"
+            >
+              <Ingest user={user} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/audit"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_AUDIT]} feature="Audit Log">
+              <AuditLog user={user} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin routes — all protected with specific permissions */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute
+              user={user}
+              permissions={[
+                PERM_ADMIN_ASSOCIATE_LOOKUP,
+                PERM_ADMIN_CLIENT_ONBOARDING,
+                PERM_ADMIN_JOB_ONBOARDING,
+                PERM_ADMIN_REPORT_MAPPING,
+                PERM_ADMIN_REPORT_POLICIES,
+                PERM_ADMIN_REPORT_HEALTH,
+                PERM_ADMIN_MANAGE_USERS,
+              ]}
+              feature="Admin Panel"
+            >
+              <Admin permissions={user.permissions || []} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/associate-lookup"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_ASSOCIATE_LOOKUP]} feature="Associate Lookup">
+              <AssociateLookup />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/email-discrepancy"
+          element={
+            <ProtectedRoute
+              user={user}
+              permissions={["admin:email_discrepancy_audit"]}
+              feature="Email Discrepancy Audit"
+            >
+              <EmailDiscrepancyAudit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/report-health"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_HEALTH]} feature="Report Health Dashboard">
+              <ReportHealthDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/client-onboarding"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_CLIENT_ONBOARDING]} feature="Client Onboarding">
+              <ClientOnboardingHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/client-onboarding/new"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_CLIENT_ONBOARDING]} feature="Client Onboarding">
+              <ClientOnboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/client-onboarding/edit"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_CLIENT_ONBOARDING]} feature="Client Onboarding">
+              <ClientEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/job-onboarding"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_ONBOARDING]} feature="Job Onboarding">
+              <JobOnboardingHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/job-onboarding/new"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_ONBOARDING]} feature="Job Onboarding">
+              <JobOnboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/job-onboarding/edit"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_ONBOARDING]} feature="Job Onboarding">
+              <JobEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/report-mapping"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_MAPPING]} feature="Report Mapping">
+              <ReportMappingHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/report-mapping/editor"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_MAPPING]} feature="Report Mapping">
+              <ReportMappingEditor />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/report-mapping/live-edit"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_MAPPING]} feature="Report Mapping">
+              <ReportMappingLiveEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/report-policies"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_POLICIES]} feature="Report Policies">
+              <ReportPolicies />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/user-management"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_MANAGE_USERS]} feature="User Management">
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/" element={<Navigate to="/connections" />} />

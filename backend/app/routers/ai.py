@@ -5,7 +5,8 @@ from pydantic import BaseModel, field_validator
 
 from app.config import settings
 from app.models.user import User
-from app.routers.auth import get_current_user, limiter
+from app.routers.auth import limiter
+from app.services.rbac import require_permission
 from app.services.validators import validate_identifier, validate_operation
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -48,7 +49,9 @@ class AnalyzeRequest(BaseModel):
 
 @router.post("/analyze")
 @limiter.limit("20/minute")
-async def analyze_query(request: Request, body: AnalyzeRequest, user: User = Depends(get_current_user)):
+async def analyze_query(
+    request: Request, body: AnalyzeRequest, user: User = Depends(require_permission("admin:ai_analysis"))
+):
     """AI-powered query analysis: optimization, risk, cost estimation."""
     if not settings.OPENAI_API_KEY:
         return _stub_analysis(body)

@@ -10,15 +10,19 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { Spinner, Panel, PanelHeader, ToggleGroup, ToggleGroupItem, DownloadButton } from "../components/ui";
 import Highlight from "../components/ui/Highlight";
+import AccessDenied from "../components/AccessDenied";
 import ColumnOrderStrip from "../components/associate-lookup/ColumnOrderStrip";
 import ColumnPicker from "../components/associate-lookup/ColumnPicker";
 import { getColumnLabel, isDefaultColumn } from "../utils/columnHelpers";
 import { validateEmail, validatePositiveInt } from "../utils/validation";
+import { PERM_ADMIN_ASSOCIATE_LOOKUP } from "../constants/permissions";
+import { usePermissions } from "../hooks/usePermissions";
 
 /** Maximum columns shown by default if no defaults match */
 const DEFAULT_COLUMN_FALLBACK_COUNT = 8;
 
 export default function AssociateLookup() {
+  const { hasPermission, loading: permLoading } = usePermissions();
   const [searchType, setSearchType] = useState<"beid" | "dmzid">("beid");
   const [beid, setBeid] = useState("");
   const [dmzid, setDmzid] = useState("");
@@ -145,6 +149,23 @@ export default function AssociateLookup() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Permission check
+  if (permLoading) {
+    return (
+      <div className="container audit-container">
+        <Spinner size="lg" label="Loading..." />
+      </div>
+    );
+  }
+
+  if (!hasPermission(PERM_ADMIN_ASSOCIATE_LOOKUP)) {
+    return (
+      <div className="container audit-container">
+        <AccessDenied feature="Associate Lookup" />
+      </div>
+    );
+  }
 
   return (
     <div className="container audit-container">
