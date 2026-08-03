@@ -34,6 +34,8 @@ import type {
   TrendInsights,
   DayOfWeekStats,
   SlaTimelinePoint,
+  DayOfWeekSlaBars,
+  WeeklySlaBars,
   HeatmapCell,
   DurationBucket,
   Sev1Incident,
@@ -89,8 +91,9 @@ export default function JobSlaAnalyzer() {
   const [slaTimeline, setSlaTimeline] = useState<SlaTimelinePoint[]>([]);
   const [trendInsights, setTrendInsights] = useState<TrendInsights | null>(null);
   const [dayOfWeekStats, setDayOfWeekStats] = useState<DayOfWeekStats[] | null>(null);
+  const [dayOfWeekSlaBars, setDayOfWeekSlaBars] = useState<DayOfWeekSlaBars[]>([]);
+  const [weeklySlaBars, setWeeklySlaBars] = useState<WeeklySlaBars[]>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
-
   // ── Heatmap tab data ───────────────────────────────────────────────────────
   const [heatmapCells, setHeatmapCells] = useState<HeatmapCell[]>([]);
   const [durationBuckets, setDurationBuckets] = useState<DurationBucket[]>([]);
@@ -180,6 +183,8 @@ export default function JobSlaAnalyzer() {
         setSlaTimeline(res.data.sla_timeline || []);
         setTrendInsights(res.data.insights || null);
         setDayOfWeekStats(res.data.day_of_week_stats || null);
+        setDayOfWeekSlaBars(res.data.day_of_week_sla_bars || []);
+        setWeeklySlaBars(res.data.weekly_sla_bars || []);
       } catch (err: unknown) {
         if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
           return;
@@ -327,6 +332,8 @@ export default function JobSlaAnalyzer() {
     setSlaTimeline([]);
     setTrendInsights(null);
     setDayOfWeekStats(null);
+    setDayOfWeekSlaBars([]);
+    setWeeklySlaBars([]);
     setHeatmapCells([]);
     setDurationBuckets([]);
     setHistory([]);
@@ -451,6 +458,8 @@ export default function JobSlaAnalyzer() {
                         slaTimeline={slaTimeline}
                         insights={trendInsights}
                         dayOfWeekStats={dayOfWeekStats}
+                        dayOfWeekSlaBars={dayOfWeekSlaBars}
+                        weeklySlaBars={weeklySlaBars}
                         loading={trendsLoading}
                       />
                     )}

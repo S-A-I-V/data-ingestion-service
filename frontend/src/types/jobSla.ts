@@ -317,6 +317,40 @@ export interface TrendResponse {
   sla_timeline: SlaTimelinePoint[] | null;
   insights: TrendInsights | null;
   day_of_week_stats: DayOfWeekStats[] | null;
+  day_of_week_sla_bars: DayOfWeekSlaBars[] | null;
+  weekly_sla_bars: WeeklySlaBars[] | null;
+}
+
+/** Per-day-of-week SLA expected vs actual bar data */
+export interface DayOfWeekSlaBars {
+  day_of_week: number;
+  total_runs: number;
+  occurrence_count: number | null;
+  most_recent_date: string | null;
+  breach_count: number;
+  on_time_count: number;
+  failed_count: number;
+  expected_start_minutes: number | null; // avg expected start time (mins from midnight)
+  actual_start_minutes: number | null; // avg actual start time (mins from midnight)
+  expected_sla_minutes: number | null; // avg expected SLA end time (mins from midnight)
+  actual_end_minutes: number | null; // avg actual end time (mins from midnight)
+  avg_delay_minutes: number | null;
+  on_time_percentage: number | null;
+}
+
+/** Per-week SLA expected vs actual bar data */
+export interface WeeklySlaBars {
+  week_start: string; // ISO date string
+  total_runs: number;
+  breach_count: number;
+  on_time_count: number;
+  failed_count: number;
+  expected_start_minutes: number | null;
+  actual_start_minutes: number | null;
+  expected_sla_minutes: number | null;
+  actual_end_minutes: number | null;
+  avg_delay_minutes: number | null;
+  on_time_percentage: number | null;
 }
 
 export interface DurationDistributionResponse {

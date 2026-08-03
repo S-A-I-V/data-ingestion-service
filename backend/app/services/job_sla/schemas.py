@@ -376,6 +376,40 @@ class HeatmapResponse(BaseModel):
     cells: list[HeatmapCell]
 
 
+class DayOfWeekSlaBars(BaseModel):
+    """Per-day-of-week SLA expected vs actual bar data."""
+
+    day_of_week: int = Field(description="0=Sunday … 6=Saturday (PostgreSQL DOW)")
+    total_runs: int
+    occurrence_count: Optional[int] = None
+    most_recent_date: Optional[date] = None
+    breach_count: int
+    on_time_count: int
+    failed_count: int
+    expected_start_minutes: Optional[float] = None  # avg expected start time (mins from midnight)
+    actual_start_minutes: Optional[float] = None  # avg actual start time (mins from midnight)
+    expected_sla_minutes: Optional[float] = None  # avg expected SLA end time (mins from midnight)
+    actual_end_minutes: Optional[float] = None  # avg actual end time (mins from midnight)
+    avg_delay_minutes: Optional[float] = None
+    on_time_percentage: Optional[float] = None
+
+
+class WeeklySlaBars(BaseModel):
+    """Per-week SLA expected vs actual bar data."""
+
+    week_start: date
+    total_runs: int
+    breach_count: int
+    on_time_count: int
+    failed_count: int
+    expected_start_minutes: Optional[float] = None
+    actual_start_minutes: Optional[float] = None
+    expected_sla_minutes: Optional[float] = None
+    actual_end_minutes: Optional[float] = None
+    avg_delay_minutes: Optional[float] = None
+    on_time_percentage: Optional[float] = None
+
+
 class TrendResponse(BaseModel):
     """Response for trend endpoint."""
 
@@ -384,6 +418,9 @@ class TrendResponse(BaseModel):
     sla_timeline: Optional[list[SlaTimelinePoint]] = None
     insights: Optional[TrendInsights] = None
     day_of_week_stats: Optional[list[DayOfWeekStats]] = None
+    # New: chart-ready bar data
+    day_of_week_sla_bars: Optional[list[DayOfWeekSlaBars]] = None
+    weekly_sla_bars: Optional[list[WeeklySlaBars]] = None
 
 
 class DurationDistributionResponse(BaseModel):

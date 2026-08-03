@@ -15,6 +15,7 @@ from app.services.job_sla.queries import (
     ARTIFACT_LIVE_STATE_BY_JOB,
     DAILY_SLA_TIMELINE,
     DAY_OF_WEEK_DELAY_STATS,
+    DAY_OF_WEEK_SLA_BARS,
     DURATION_DISTRIBUTION,
     HEATMAP_DAY_HOUR,
     INCIDENT_OVERRIDES_BY_JOB,
@@ -29,6 +30,7 @@ from app.services.job_sla.queries import (
     SLA_COMPLIANCE_SUMMARY,
     SLA_POLICIES_BY_JOB,
     TREND_INSIGHTS,
+    WEEKLY_SLA_BARS,
     WEEKLY_TREND,
 )
 
@@ -360,6 +362,24 @@ class JobSlaService:
             return [dict(row) for row in rows]
         except Exception as exc:
             logger.error("Day of week stats query failed for job_id=%s: %s", job_id, exc)
+            return []
+
+    def get_day_of_week_sla_bars(self, job_id: int) -> list[dict]:
+        """Get per-day-of-week expected vs actual SLA bar data for the chart."""
+        try:
+            rows = self.connector.execute_query(DAY_OF_WEEK_SLA_BARS, {"job_id": job_id})
+            return [dict(row) for row in rows]
+        except Exception as exc:
+            logger.error("Day-of-week SLA bars query failed for job_id=%s: %s", job_id, exc)
+            return []
+
+    def get_weekly_sla_bars(self, job_id: int) -> list[dict]:
+        """Get per-week expected vs actual SLA bar data for the chart."""
+        try:
+            rows = self.connector.execute_query(WEEKLY_SLA_BARS, {"job_id": job_id})
+            return [dict(row) for row in rows]
+        except Exception as exc:
+            logger.error("Weekly SLA bars query failed for job_id=%s: %s", job_id, exc)
             return []
 
     # ── Artifacts ─────────────────────────────────────────────────────────────

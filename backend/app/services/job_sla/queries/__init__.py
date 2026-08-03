@@ -17,10 +17,12 @@ from app.services.job_sla.queries.artifact_queries import (
 from app.services.job_sla.queries.heatmap_queries import (
     DAILY_SLA_TIMELINE,
     DAY_OF_WEEK_DELAY_STATS,
+    DAY_OF_WEEK_SLA_BARS,
     DURATION_DISTRIBUTION,
     HEATMAP_DAY_HOUR,
     MONTHLY_TREND,
     TREND_INSIGHTS,
+    WEEKLY_SLA_BARS,
     WEEKLY_TREND,
 )
 from app.services.job_sla.queries.incident_queries import (
@@ -71,4 +73,6 @@ __all__ = [
     "TREND_INSIGHTS",
     "DAY_OF_WEEK_DELAY_STATS",
     "DAILY_SLA_TIMELINE",
+    "DAY_OF_WEEK_SLA_BARS",
+    "WEEKLY_SLA_BARS",
 ]

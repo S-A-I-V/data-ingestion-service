@@ -1,70 +1,394 @@
 /**
- * OverviewTab — Timeline chart and trend visualization for job SLA.
- * Shows SLA deviation timeline, weekly/monthly trends, and actionable insights.
+ * OverviewTab — SLA performance chart with day-of-week and week-by-week views.
+ *
+ * Primary chart: grouped bars showing avg expected SLA time vs avg actual end
+ * time per day of week (or per week). SLA breach bars are highlighted in amber.
+ * A green reference line marks the expected SLA threshold.
  */
 
-import { useMemo } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Area,
-  ComposedChart,
-  ReferenceLine,
-} from "recharts";
+import { useMemo, useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { Spinner } from "../../ui";
-import { CHART_COLORS, DAY_OF_WEEK_LABELS } from "../../../constants/jobSla";
+import { DAY_OF_WEEK_LABELS } from "../../../constants/jobSla";
 import type {
   TrendPoint,
   JobDefinition,
   JobType,
   SlaPolicy,
-  TrendInsights,
   DayOfWeekStats,
   SlaTimelinePoint,
+  DayOfWeekSlaBars,
+  WeeklySlaBars,
 } from "../../../types/jobSla";
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-/** Chart styling constants */
-const CHART_STYLE = {
-  EXPECTED_SLA_COLOR: "#22c55e", // Green for ideal/expected
-  ACTUAL_COLOR: "#3b82f6", // Blue for actual
-  DEVIATION_FILL: "rgba(239, 68, 68, 0.15)", // Red tint for late deviation area
-  EARLY_FILL: "rgba(34, 197, 94, 0.1)", // Green tint for early area
-  GRID_STROKE: "var(--border)",
-  AXIS_STROKE: "var(--text-secondary)",
-  AXIS_FONT_SIZE: 11,
-} as const;
+const COLOR_ACTUAL_OK = "#3b82f6"; // blue-500  — actual range, within SLA
+const COLOR_ACTUAL_BREACH = "#f59e0b"; // amber-500 — actual range, exceeded SLA
+const COLOR_GRID = "var(--border)";
+const COLOR_AXIS = "var(--text-secondary)";
+const AXIS_FONT_SIZE = 11;
+const CHART_HEIGHT_PX = 300;
+const Y_AXIS_DOMAIN: [number, number] = [0, 1440]; // always full 0–24h
+const Y_AXIS_TICKS = [0, 180, 360, 540, 720, 900, 1080, 1260, 1440]; // every 3h
 
-/** UI Labels */
-const LABELS = {
-  SLA_DEVIATION: "SLA Deviation Timeline",
-  SLA_DEVIATION_HELP:
-    "Green line shows expected SLA time, blue line shows actual completion. The gap shows how much the job deviated from schedule.",
-  WEEKLY_TREND: "Weekly Performance",
-  MONTHLY_TREND: "Monthly Summary",
-  ON_TIME_RATE: "On-Time %",
-  TOTAL_RUNS: "Total Runs",
-  LATE: "Late",
-  FAILED: "Failed",
-  ON_TIME: "On Time",
-  NO_DATA: "No trend data available for this date range.",
-  NO_TIMELINE_DATA: "No SLA timeline data available. This job may not have expected SLA times configured.",
-  JOB_INFO: "Job Information",
-  SLA_POLICIES: "SLA Policies",
-  LOADING: "Loading trends...",
-  WEEKLY_HELP: "Weekly on-time percentage trend",
-  MONTHLY_HELP: "Monthly breakdown of on-time, late, and failed runs",
-  INSIGHTS: "Trend Insights",
-  EXPECTED_SLA: "Expected SLA",
-  ACTUAL_END: "Actual End",
-} as const;
+/** View mode toggle values */
+type ChartView = "day_of_week" | "weekly";
+
+const CHART_VIEW_LABELS: Record<ChartView, string> = {
+  day_of_week: "By Day of Week",
+  weekly: "By Week",
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Convert minutes-from-midnight to "H:MM AM/PM" */
+function minsToTime(mins: number | null): string {
+  if (mins == null) return "—";
+  const h = Math.floor(mins / 60) % 24;
+  const m = Math.round(mins % 60);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+/** Format an ISO date string as "Mon Jan 6" */
+function fmtWeekLabel(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// ── Tooltip ───────────────────────────────────────────────────────────────────
+
+function SlaBarTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  const breached =
+    d?.actual_end_minutes != null && d?.expected_sla_minutes != null && d.actual_end_minutes > d.expected_sla_minutes;
+
+  return (
+    <div className="js-chart-tooltip">
+      <div className="js-tooltip-label">{label}</div>
+      {d?.expected_start_minutes != null && (
+        <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
+          <span>Expected start:</span>
+          <span>{minsToTime(d.expected_start_minutes)}</span>
+        </div>
+      )}
+      {d?.actual_start_minutes != null && (
+        <div className="js-tooltip-row" style={{ color: COLOR_ACTUAL_OK }}>
+          <span>Actual start:</span>
+          <span>{minsToTime(d.actual_start_minutes)}</span>
+        </div>
+      )}
+      {d?.actual_end_minutes != null && (
+        <div className="js-tooltip-row" style={{ color: breached ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK }}>
+          <span>Actual end:</span>
+          <span>{minsToTime(d.actual_end_minutes)}</span>
+        </div>
+      )}
+      {d?.expected_sla_minutes != null && (
+        <div className="js-tooltip-row" style={{ color: COLOR_SLA_END_LINE }}>
+          <span>SLA deadline:</span>
+          <span>{minsToTime(d.expected_sla_minutes)}</span>
+        </div>
+      )}
+      {d?.avg_delay_minutes != null && d.avg_delay_minutes > 0 && (
+        <div className="js-tooltip-row" style={{ color: COLOR_ACTUAL_BREACH }}>
+          <span>Avg delay:</span>
+          <span>+{d.avg_delay_minutes.toFixed(0)} min</span>
+        </div>
+      )}
+      {d?.on_time_percentage != null && (
+        <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
+          <span>On-time rate:</span>
+          <span>{d.on_time_percentage.toFixed(1)}%</span>
+        </div>
+      )}
+      {d?.total_runs != null && (
+        <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
+          <span>{d.occurrence_count != null ? `${d.occurrence_count} occurrences` : "Total runs"}:</span>
+          <span>{d.total_runs}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Combined bar + SLA window lines shape ────────────────────────────────────
+// Single shape renders the floating job-window rect AND the two SLA tick lines
+// in one pass. Lines sit on top of the bar because they're drawn after the rect
+// in the same SVG <g>, with no separate Bar series needed.
+
+const COLOR_SLA_START_LINE = "#4ade80"; // green-400 — bright green, start window
+const COLOR_SLA_END_LINE = "#ef4444"; // red-500   — deadline
+const SLA_LINE_STROKE_WIDTH = 5;
+const SLA_LINE_DASH = "8 4";
+const SLA_LABEL_FONT_SIZE = 9;
+// Inset so adjacent same-value lines have a small visible gap between columns
+const SLA_LINE_INSET_PX = 3;
+
+function JobWindowShape(props: any) {
+  const { x, y, width, height, background, payload, fill } = props;
+  if (!background || !payload || width <= 0) return null;
+
+  const { expected_start_minutes, expected_sla_minutes, isLast } = payload;
+  const plotTop = background.y;
+  const plotHeight = background.height;
+  const domain = 1440; // must match Y_AXIS_DOMAIN max
+
+  const toPixelY = (mins: number) => plotTop + plotHeight * (1 - mins / domain);
+
+  const lx1 = x + SLA_LINE_INSET_PX;
+  const lx2 = x + width - SLA_LINE_INSET_PX;
+  const labelX = x + width + 4;
+
+  return (
+    <g>
+      {/* Job run window rect */}
+      {height > 0 && <rect x={x} y={y} width={width} height={height} fill={fill} rx={2} ry={2} />}
+      {/* SLA start line — drawn over the rect */}
+      {expected_start_minutes != null &&
+        (() => {
+          const ly = toPixelY(expected_start_minutes);
+          return (
+            <g>
+              <line
+                x1={lx1}
+                x2={lx2}
+                y1={ly}
+                y2={ly}
+                stroke={COLOR_SLA_START_LINE}
+                strokeWidth={SLA_LINE_STROKE_WIDTH}
+                strokeDasharray={SLA_LINE_DASH}
+              />
+              {isLast && (
+                <text x={labelX} y={ly + 3} fill={COLOR_SLA_START_LINE} fontSize={SLA_LABEL_FONT_SIZE}>
+                  SLA start
+                </text>
+              )}
+            </g>
+          );
+        })()}
+      {/* SLA deadline line — drawn over the rect */}
+      {expected_sla_minutes != null &&
+        (() => {
+          const ly = toPixelY(expected_sla_minutes);
+          return (
+            <g>
+              <line
+                x1={lx1}
+                x2={lx2}
+                y1={ly}
+                y2={ly}
+                stroke={COLOR_SLA_END_LINE}
+                strokeWidth={SLA_LINE_STROKE_WIDTH}
+                strokeDasharray={SLA_LINE_DASH}
+              />
+              {isLast && (
+                <text x={labelX} y={ly + 3} fill={COLOR_SLA_END_LINE} fontSize={SLA_LABEL_FONT_SIZE}>
+                  SLA deadline
+                </text>
+              )}
+            </g>
+          );
+        })()}
+    </g>
+  );
+}
+
+interface SlaBarChartProps {
+  view: ChartView;
+  dowData: DayOfWeekSlaBars[];
+  weeklyData: WeeklySlaBars[];
+}
+
+function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
+  const chartData = useMemo(() => {
+    // Sort Mon(1)→Tue(2)→…→Sat(6)→Sun(0) regardless of API return order
+    const MON_FIRST = (dow: number) => (dow === 0 ? 7 : dow);
+    const rows =
+      view === "day_of_week"
+        ? [...dowData]
+            .sort((a, b) => MON_FIRST(a.day_of_week) - MON_FIRST(b.day_of_week))
+            .map((d) => {
+              const dayName = DAY_OF_WEEK_LABELS[d.day_of_week] ?? `Day ${d.day_of_week}`;
+              const dateSuffix = d.most_recent_date
+                ? new Date(d.most_recent_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                : null;
+              const base = d.expected_start_minutes ?? 0;
+              const end = d.actual_end_minutes ?? d.expected_sla_minutes ?? base;
+              return {
+                label: dateSuffix ? `${dayName} · ${dateSuffix}` : dayName,
+                base: d.actual_start_minutes ?? d.expected_start_minutes ?? 0,
+                range_height: Math.max(
+                  0,
+                  (d.actual_end_minutes ?? d.expected_sla_minutes ?? 0) -
+                    (d.actual_start_minutes ?? d.expected_start_minutes ?? 0),
+                ),
+                expected_start_minutes: d.expected_start_minutes,
+                actual_start_minutes: d.actual_start_minutes,
+                expected_sla_minutes: d.expected_sla_minutes,
+                actual_end_minutes: d.actual_end_minutes,
+                avg_delay_minutes: d.avg_delay_minutes,
+                on_time_percentage: d.on_time_percentage,
+                total_runs: d.total_runs,
+                occurrence_count: d.occurrence_count,
+                breach_count: d.breach_count,
+                isLast: false,
+                isBreach:
+                  d.actual_end_minutes != null &&
+                  d.expected_sla_minutes != null &&
+                  d.actual_end_minutes > d.expected_sla_minutes,
+              };
+            })
+        : weeklyData.map((d) => {
+            return {
+              label: fmtWeekLabel(d.week_start),
+              base: d.actual_start_minutes ?? d.expected_start_minutes ?? 0,
+              range_height: Math.max(
+                0,
+                (d.actual_end_minutes ?? d.expected_sla_minutes ?? 0) -
+                  (d.actual_start_minutes ?? d.expected_start_minutes ?? 0),
+              ),
+              expected_start_minutes: d.expected_start_minutes,
+              actual_start_minutes: d.actual_start_minutes,
+              expected_sla_minutes: d.expected_sla_minutes,
+              actual_end_minutes: d.actual_end_minutes,
+              avg_delay_minutes: d.avg_delay_minutes,
+              on_time_percentage: d.on_time_percentage,
+              total_runs: d.total_runs,
+              occurrence_count: null,
+              breach_count: d.breach_count,
+              isLast: false,
+              isBreach:
+                d.actual_end_minutes != null &&
+                d.expected_sla_minutes != null &&
+                d.actual_end_minutes > d.expected_sla_minutes,
+            };
+          });
+
+    if (rows.length) rows[rows.length - 1].isLast = true;
+    return rows;
+  }, [view, dowData, weeklyData]);
+
+  // Avg expected SLA deadline is no longer needed for a global ReferenceLine —
+  // per-bar lines are drawn by SlaWindowLines via <Customized> instead.
+
+  if (!chartData.length) {
+    return (
+      <div className="js-chart-empty">
+        No SLA data available — expected SLA times may not be configured for this job.
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={CHART_HEIGHT_PX}>
+      {/*
+        Floating bar technique: two stacked bars per group.
+          1. "base" — transparent, lifts the visible bar to start at expected_start_minutes
+          2. "range_height" — colored, spans from expected_start to actual_end
+        The SLA deadline is a ReferenceLine cutting across all bars.
+      */}
+      <BarChart data={chartData} margin={{ top: 12, right: 60, left: 8, bottom: 0 }} barCategoryGap="20%">
+        <CartesianGrid strokeDasharray="3 3" stroke={COLOR_GRID} vertical={false} />
+        <XAxis dataKey="label" tick={{ fontSize: AXIS_FONT_SIZE }} stroke={COLOR_AXIS} />
+        <YAxis
+          domain={Y_AXIS_DOMAIN}
+          ticks={Y_AXIS_TICKS}
+          tickFormatter={minsToTime}
+          tick={{ fontSize: AXIS_FONT_SIZE }}
+          stroke={COLOR_AXIS}
+          width={72}
+        />
+        <Tooltip content={<SlaBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+        <Legend
+          wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+          content={() => (
+            <div
+              style={{
+                display: "flex",
+                gap: "1.25rem",
+                justifyContent: "center",
+                fontSize: 11,
+                color: "var(--text-secondary)",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 12,
+                    height: 12,
+                    borderRadius: 2,
+                    background: COLOR_ACTUAL_OK,
+                  }}
+                />
+                On-time run
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 12,
+                    height: 12,
+                    borderRadius: 2,
+                    background: COLOR_ACTUAL_BREACH,
+                  }}
+                />
+                SLA breached
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <svg width="20" height="4">
+                  <line
+                    x1="0"
+                    x2="20"
+                    y1="2"
+                    y2="2"
+                    stroke={COLOR_SLA_START_LINE}
+                    strokeWidth="3"
+                    strokeDasharray="5 2"
+                  />
+                </svg>
+                SLA start
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <svg width="20" height="4">
+                  <line
+                    x1="0"
+                    x2="20"
+                    y1="2"
+                    y2="2"
+                    stroke={COLOR_SLA_END_LINE}
+                    strokeWidth="3"
+                    strokeDasharray="5 2"
+                  />
+                </svg>
+                SLA deadline
+              </span>
+            </div>
+          )}
+        />
+        {/* Invisible base — lifts the visible bar to start at expected_start_minutes */}
+        <Bar dataKey="base" stackId="sla" fill="transparent" legendType="none" isAnimationActive={false} />
+        {/* Job run window + SLA lines drawn together in one custom shape */}
+        <Bar
+          dataKey="range_height"
+          name="Job run window"
+          stackId="sla"
+          isAnimationActive={false}
+          shape={<JobWindowShape />}
+        >
+          {chartData.map((d, i) => (
+            <Cell key={i} fill={d.isBreach ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 interface OverviewTabProps {
   job: JobDefinition | null;
@@ -73,164 +397,21 @@ interface OverviewTabProps {
   weeklyTrend: TrendPoint[];
   monthlyTrend: TrendPoint[];
   slaTimeline?: SlaTimelinePoint[];
-  insights?: TrendInsights | null;
   dayOfWeekStats?: DayOfWeekStats[] | null;
+  dayOfWeekSlaBars: DayOfWeekSlaBars[];
+  weeklySlaBars: WeeklySlaBars[];
   loading: boolean;
 }
 
-/** Format date for chart axis */
-function formatDateLabel(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
+// ── Main export ───────────────────────────────────────────────────────────────
 
-function formatWeekLabel(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function formatMonthLabel(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-}
-
-/** Convert minutes from midnight to time string */
-function formatMinutesToTime(minutes: number | null): string {
-  if (minutes === null || minutes === undefined) return "—";
-  const hrs = Math.floor(minutes / 60);
-  const mins = Math.round(minutes % 60);
-  const ampm = hrs >= 12 ? "PM" : "AM";
-  const h12 = hrs === 0 ? 12 : hrs > 12 ? hrs - 12 : hrs;
-  return `${h12}:${mins.toString().padStart(2, "0")} ${ampm}`;
-}
-
-/** Custom tooltip for SLA deviation chart */
-function SlaDeviationTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-
-  const data = payload[0]?.payload;
-  const deviation = data?.deviation_minutes;
-  const isLate = deviation && deviation > 0;
-
-  return (
-    <div className="js-chart-tooltip">
-      <div className="js-tooltip-label">{label}</div>
-      <div className="js-tooltip-row" style={{ color: CHART_STYLE.EXPECTED_SLA_COLOR }}>
-        <span>Expected SLA:</span>
-        <span>{formatMinutesToTime(data?.expected_sla_minutes)}</span>
-      </div>
-      <div className="js-tooltip-row" style={{ color: CHART_STYLE.ACTUAL_COLOR }}>
-        <span>Actual End:</span>
-        <span>{formatMinutesToTime(data?.actual_end_minutes)}</span>
-      </div>
-      {deviation !== null && (
-        <div className="js-tooltip-row" style={{ color: isLate ? "#ef4444" : "#22c55e" }}>
-          <span>Deviation:</span>
-          <span>
-            {isLate ? "+" : ""}
-            {Math.round(deviation)} min
-          </span>
-        </div>
-      )}
-      {data?.current_status && (
-        <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
-          <span>Status:</span>
-          <span style={{ textTransform: "capitalize" }}>{data.current_status}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Custom tooltip for other charts */
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-
-  return (
-    <div className="js-chart-tooltip">
-      <div className="js-tooltip-label">{label}</div>
-      {payload.map((entry: any, index: number) => (
-        <div key={index} className="js-tooltip-row" style={{ color: entry.color }}>
-          <span>{entry.name}:</span>
-          <span>
-            {typeof entry.value === "number"
-              ? entry.name.includes("%")
-                ? `${entry.value.toFixed(1)}%`
-                : entry.value
-              : entry.value}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function OverviewTab({
-  job,
-  jobType,
-  slaPolicies,
-  weeklyTrend,
-  monthlyTrend,
-  slaTimeline = [],
-  insights,
-  dayOfWeekStats,
-  loading,
-}: OverviewTabProps) {
-  // Prepare SLA timeline data
-  const timelineData = useMemo(
-    () =>
-      slaTimeline.map((p) => ({
-        ...p,
-        label: formatDateLabel(p.data_date),
-        // Keep minutes for Y-axis comparison
-        expectedSla: p.expected_sla_minutes,
-        actualEnd: p.actual_end_minutes,
-      })),
-    [slaTimeline],
-  );
-
-  // Calculate Y-axis domain for timeline chart
-  const timelineDomain = useMemo(() => {
-    if (timelineData.length === 0) return [0, 1440]; // Default 0-24 hours
-
-    const allValues = timelineData.flatMap((d) =>
-      [d.expectedSla, d.actualEnd].filter((v): v is number => v !== null && v !== undefined),
-    );
-
-    if (allValues.length === 0) return [0, 1440];
-
-    const min = Math.min(...allValues);
-    const max = Math.max(...allValues);
-    const padding = (max - min) * 0.1 || 60; // 10% padding or 1 hour
-
-    return [Math.max(0, min - padding), Math.min(1440, max + padding)];
-  }, [timelineData]);
-
-  // Prepare weekly chart data
-  const weeklyData = useMemo(
-    () =>
-      weeklyTrend.map((p) => ({
-        ...p,
-        label: formatWeekLabel(p.period_start),
-        onTimeRate: p.on_time_percentage ?? 0,
-      })),
-    [weeklyTrend],
-  );
-
-  // Prepare monthly chart data
-  const monthlyData = useMemo(
-    () =>
-      monthlyTrend.map((p) => ({
-        ...p,
-        label: formatMonthLabel(p.period_start),
-      })),
-    [monthlyTrend],
-  );
+export function OverviewTab({ job, jobType, slaPolicies, dayOfWeekSlaBars, weeklySlaBars, loading }: OverviewTabProps) {
+  const [chartView, setChartView] = useState<ChartView>("day_of_week");
 
   if (loading) {
     return (
       <div className="js-tab-loading">
-        <Spinner size="md" label={LABELS.LOADING} />
+        <Spinner size="md" label="Loading trends..." />
       </div>
     );
   }
@@ -239,153 +420,57 @@ export function OverviewTab({
     return <div className="js-tab-empty">Select a job to view overview</div>;
   }
 
-  const hasTimelineData = timelineData.length > 0;
-  const hasWeeklyData = weeklyData.length > 0;
-  const hasMonthlyData = monthlyData.length > 0;
+  const hasChartData = dayOfWeekSlaBars.length > 0 || weeklySlaBars.length > 0;
 
   return (
     <div className="js-overview-tab">
-      {/* Job Info Section */}
+      {/* Job info */}
       <div className="js-overview-section">
-        <h3 className="js-section-title">{LABELS.JOB_INFO}</h3>
+        <h3 className="js-section-title">Job Information</h3>
         <JobInfoCard job={job} jobType={jobType} slaPolicies={slaPolicies} />
       </div>
 
-      {/* Trend Insights Section */}
-      {insights && (
-        <div className="js-overview-section">
-          <h3 className="js-section-title">{LABELS.INSIGHTS}</h3>
-          <TrendInsightsCard insights={insights} dayOfWeekStats={dayOfWeekStats} />
+      {/* Primary SLA chart */}
+      <div className="js-overview-section">
+        <div className="js-section-header">
+          <div>
+            <h3 className="js-section-title">SLA Performance — Last 90 Days</h3>
+            <p className="js-section-help">
+              Each bar is the job's avg run window (bottom = expected start, top = actual end). Blue = within SLA; amber
+              = breached. The dashed lines per bar mark the SLA window — light green at the start, green at the
+              deadline.
+            </p>
+          </div>
+          {/* View toggle */}
+          <div className="js-view-mode-buttons">
+            {(Object.keys(CHART_VIEW_LABELS) as ChartView[]).map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`js-view-mode-btn${chartView === v ? " js-view-mode-btn--active" : ""}`}
+                onClick={() => setChartView(v)}
+              >
+                {CHART_VIEW_LABELS[v]}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
 
-      {/* SLA Deviation Timeline Chart - Primary chart */}
-      <div className="js-overview-section">
-        <h3 className="js-section-title">{LABELS.SLA_DEVIATION}</h3>
-        <p className="js-section-help">{LABELS.SLA_DEVIATION_HELP}</p>
-        {hasTimelineData ? (
-          <div className="js-chart-container">
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={timelineData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.GRID_STROKE} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: CHART_STYLE.AXIS_FONT_SIZE }}
-                  stroke={CHART_STYLE.AXIS_STROKE}
-                />
-                <YAxis
-                  domain={timelineDomain}
-                  tickFormatter={(val) => formatMinutesToTime(val)}
-                  tick={{ fontSize: CHART_STYLE.AXIS_FONT_SIZE }}
-                  stroke={CHART_STYLE.AXIS_STROKE}
-                  width={70}
-                />
-                <Tooltip content={<SlaDeviationTooltip />} />
-                <Legend />
-                {/* Expected SLA line - Green (ideal) */}
-                <Line
-                  type="monotone"
-                  dataKey="expectedSla"
-                  name={LABELS.EXPECTED_SLA}
-                  stroke={CHART_STYLE.EXPECTED_SLA_COLOR}
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: CHART_STYLE.EXPECTED_SLA_COLOR }}
-                  activeDot={{ r: 5 }}
-                />
-                {/* Actual completion line - Blue */}
-                <Line
-                  type="monotone"
-                  dataKey="actualEnd"
-                  name={LABELS.ACTUAL_END}
-                  stroke={CHART_STYLE.ACTUAL_COLOR}
-                  strokeWidth={2}
-                  dot={{ r: 3, fill: CHART_STYLE.ACTUAL_COLOR }}
-                  activeDot={{ r: 5 }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="js-chart-container">
-            <div className="js-chart-empty">{LABELS.NO_TIMELINE_DATA}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Weekly Trend Chart */}
-      <div className="js-overview-section">
-        <h3 className="js-section-title">{LABELS.WEEKLY_TREND}</h3>
-        <p className="js-section-help">{LABELS.WEEKLY_HELP}</p>
-        {hasWeeklyData ? (
-          <div className="js-chart-container">
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={weeklyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.GRID_STROKE} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: CHART_STYLE.AXIS_FONT_SIZE }}
-                  stroke={CHART_STYLE.AXIS_STROKE}
-                />
-                <YAxis
-                  domain={[0, 100]}
-                  tick={{ fontSize: CHART_STYLE.AXIS_FONT_SIZE }}
-                  stroke={CHART_STYLE.AXIS_STROKE}
-                  tickFormatter={(val) => `${val}%`}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="onTimeRate"
-                  name={LABELS.ON_TIME_RATE}
-                  stroke={CHART_COLORS.onTime}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="js-chart-container">
-            <div className="js-chart-empty">{LABELS.NO_DATA}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Monthly Trend Chart */}
-      <div className="js-overview-section">
-        <h3 className="js-section-title">{LABELS.MONTHLY_TREND}</h3>
-        <p className="js-section-help">{LABELS.MONTHLY_HELP}</p>
-        {hasMonthlyData ? (
-          <div className="js-chart-container">
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={monthlyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.GRID_STROKE} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: CHART_STYLE.AXIS_FONT_SIZE }}
-                  stroke={CHART_STYLE.AXIS_STROKE}
-                />
-                <YAxis tick={{ fontSize: CHART_STYLE.AXIS_FONT_SIZE }} stroke={CHART_STYLE.AXIS_STROKE} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar dataKey="on_time_count" name={LABELS.ON_TIME} fill={CHART_COLORS.onTime} stackId="a" />
-                <Bar dataKey="late_count" name={LABELS.LATE} fill={CHART_COLORS.late} stackId="a" />
-                <Bar dataKey="failed_count" name={LABELS.FAILED} fill={CHART_COLORS.failed} stackId="a" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="js-chart-container">
-            <div className="js-chart-empty">{LABELS.NO_DATA}</div>
-          </div>
-        )}
+        <div className="js-chart-container">
+          {hasChartData ? (
+            <SlaBarChart view={chartView} dowData={dayOfWeekSlaBars} weeklyData={weeklySlaBars} />
+          ) : (
+            <div className="js-chart-empty">
+              No SLA data available — expected SLA times may not be configured for this job.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* SLA Policies */}
       {slaPolicies.length > 0 && (
         <div className="js-overview-section">
-          <h3 className="js-section-title">{LABELS.SLA_POLICIES}</h3>
+          <h3 className="js-section-title">SLA Policies</h3>
           <SlaPoliciesTable policies={slaPolicies} />
         </div>
       )}
@@ -393,105 +478,8 @@ export function OverviewTab({
   );
 }
 
-/** Trend Insights Card - Shows actionable insights */
-function TrendInsightsCard({
-  insights,
-  dayOfWeekStats,
-}: {
-  insights: TrendInsights;
-  dayOfWeekStats?: DayOfWeekStats[] | null;
-}) {
-  const {
-    current_period,
-    duration_trend_percentage,
-    duration_trend_direction,
-    on_time_trend_change,
-    on_time_trend_direction,
-    worst_day_of_week,
-    worst_day_late_percentage,
-  } = insights;
+// ── Job Info Card ─────────────────────────────────────────────────────────────
 
-  const worstDayName = worst_day_of_week !== null ? DAY_OF_WEEK_LABELS[worst_day_of_week] : null;
-
-  return (
-    <div className="js-insights-card">
-      <div className="js-insights-grid">
-        {/* Duration trend */}
-        {duration_trend_percentage !== null && duration_trend_direction && (
-          <div className={`js-insight-item js-insight--${duration_trend_direction === "faster" ? "good" : "warning"}`}>
-            <div className="js-insight-icon">{duration_trend_direction === "faster" ? "↓" : "↑"}</div>
-            <div className="js-insight-content">
-              <div className="js-insight-value">
-                {Math.abs(duration_trend_percentage).toFixed(1)}% {duration_trend_direction}
-              </div>
-              <div className="js-insight-label">
-                vs previous{" "}
-                {Math.ceil(
-                  (new Date(current_period.date_to).getTime() - new Date(current_period.date_from).getTime()) /
-                    (1000 * 60 * 60 * 24),
-                )}{" "}
-                days
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* On-time trend */}
-        {on_time_trend_change !== null && on_time_trend_direction && (
-          <div className={`js-insight-item js-insight--${on_time_trend_direction === "improving" ? "good" : "danger"}`}>
-            <div className="js-insight-icon">{on_time_trend_direction === "improving" ? "↑" : "↓"}</div>
-            <div className="js-insight-content">
-              <div className="js-insight-value">
-                {on_time_trend_change > 0 ? "+" : ""}
-                {on_time_trend_change.toFixed(1)}% on-time rate
-              </div>
-              <div className="js-insight-label">
-                {on_time_trend_direction === "improving" ? "Improving" : "Declining"} trend
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Late runs in period */}
-        {current_period.late_count > 0 && (
-          <div className="js-insight-item js-insight--warning">
-            <div className="js-insight-icon">!</div>
-            <div className="js-insight-content">
-              <div className="js-insight-value">{current_period.late_count} runs above SLA</div>
-              <div className="js-insight-label">in this period ({current_period.total_runs} total)</div>
-            </div>
-          </div>
-        )}
-
-        {/* Worst day */}
-        {worstDayName && worst_day_late_percentage !== null && worst_day_late_percentage > 0 && (
-          <div className="js-insight-item js-insight--info">
-            <div className="js-insight-icon">📅</div>
-            <div className="js-insight-content">
-              <div className="js-insight-value">{worstDayName} has highest delay rate</div>
-              <div className="js-insight-label">
-                {worst_day_late_percentage.toFixed(1)}% late on {worstDayName}s
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* P95 latency */}
-        {current_period.p95_duration_minutes !== null && (
-          <div className="js-insight-item js-insight--neutral">
-            <div className="js-insight-icon">P95</div>
-            <div className="js-insight-content">
-              <div className="js-insight-value">{current_period.p95_duration_minutes.toFixed(1)} min</div>
-              <div className="js-insight-label">95th percentile duration</div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** Job info card sub-component - shows SLA schedule */
 function JobInfoCard({
   job,
   jobType,
@@ -501,42 +489,26 @@ function JobInfoCard({
   jobType: JobType | null;
   slaPolicies: SlaPolicy[];
 }) {
-  // Format SLA time for display
-  const formatSlaTime = (time: string | null) => {
-    if (!time) return "—";
-    const [hours, minutes] = time.split(":");
-    const h = parseInt(hours, 10);
-    const ampm = h >= 12 ? "PM" : "AM";
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${h12}:${minutes} ${ampm}`;
+  const fmtTime = (t: string | null) => {
+    if (!t) return "—";
+    const [h, m] = t.split(":");
+    const hh = parseInt(h, 10);
+    return `${hh === 0 ? 12 : hh > 12 ? hh - 12 : hh}:${m} ${hh >= 12 ? "PM" : "AM"}`;
   };
 
-  // Get schedule summary from SLA policies
-  const getScheduleSummary = () => {
-    if (!slaPolicies || slaPolicies.length === 0) {
-      return { frequency: "No SLA configured", slaTime: "—", timezone: "—" };
+  const schedule = (() => {
+    if (!slaPolicies.length) return { frequency: "No SLA configured", slaTime: "—", timezone: "—" };
+    const p = slaPolicies[0];
+    const days = new Set(slaPolicies.map((x) => x.day_of_week?.toLowerCase()).filter(Boolean));
+    let frequency = p.schedule_frequency ?? "daily";
+    if (days.size === 1) {
+      const d = [...days][0]!;
+      frequency = `Weekly (${d[0].toUpperCase()}${d.slice(1)})`;
+    } else if (days.size > 1 && days.size < 7) {
+      frequency = `${days.size} days/week`;
     }
-
-    const uniqueDays = new Set(slaPolicies.map((p) => p.day_of_week?.toLowerCase()).filter(Boolean));
-    const firstPolicy = slaPolicies[0];
-
-    let frequency = "Daily";
-    if (uniqueDays.size === 1) {
-      const day = Array.from(uniqueDays)[0];
-      frequency = day ? `Weekly (${day.charAt(0).toUpperCase() + day.slice(1)})` : "Daily";
-    } else if (uniqueDays.size > 1 && uniqueDays.size < 7) {
-      frequency = `${uniqueDays.size} days/week`;
-    }
-
-    return {
-      frequency: firstPolicy.schedule_frequency || frequency,
-      slaTime: formatSlaTime(firstPolicy.expected_sla_time),
-      startTime: formatSlaTime(firstPolicy.expected_start_time),
-      timezone: firstPolicy.timezone || "UTC",
-    };
-  };
-
-  const schedule = getScheduleSummary();
+    return { frequency, slaTime: fmtTime(p.expected_sla_time as unknown as string), timezone: p.timezone ?? "UTC" };
+  })();
 
   return (
     <div className="js-job-info-card">
@@ -547,7 +519,7 @@ function JobInfoCard({
       <div className="js-info-row">
         <span className="js-info-label">Type</span>
         <span className="js-info-value">
-          {jobType?.type || "standard"}
+          {jobType?.type ?? "standard"}
           {jobType?.has_artifacts && <span className="js-badge js-badge--artifact">Artifacts</span>}
           {jobType?.is_proxy && <span className="js-badge js-badge--proxy">Proxy</span>}
         </span>
@@ -559,14 +531,15 @@ function JobInfoCard({
       <div className="js-info-row">
         <span className="js-info-label">Expected SLA</span>
         <span className="js-info-value">
-          {schedule.slaTime} {schedule.timezone !== "—" && `(${schedule.timezone})`}
+          {schedule.slaTime} ({schedule.timezone})
         </span>
       </div>
     </div>
   );
 }
 
-/** SLA policies table sub-component */
+// ── SLA Policies Table ────────────────────────────────────────────────────────
+
 function SlaPoliciesTable({ policies }: { policies: SlaPolicy[] }) {
   return (
     <div className="js-table-container">
@@ -581,13 +554,13 @@ function SlaPoliciesTable({ policies }: { policies: SlaPolicy[] }) {
           </tr>
         </thead>
         <tbody>
-          {policies.map((policy) => (
-            <tr key={policy.policy_id}>
-              <td>{policy.day_of_week || "All"}</td>
-              <td>{policy.expected_start_time || "—"}</td>
-              <td>{policy.expected_sla_time || "—"}</td>
-              <td>{policy.expected_duration_minutes ? `${policy.expected_duration_minutes}m` : "—"}</td>
-              <td>{policy.timezone || "—"}</td>
+          {policies.map((p) => (
+            <tr key={p.policy_id}>
+              <td>{p.day_of_week ?? "All"}</td>
+              <td>{p.expected_start_time ? String(p.expected_start_time) : "—"}</td>
+              <td>{p.expected_sla_time ? String(p.expected_sla_time) : "—"}</td>
+              <td>{p.expected_duration_minutes ? `${p.expected_duration_minutes}m` : "—"}</td>
+              <td>{p.timezone ?? "—"}</td>
             </tr>
           ))}
         </tbody>

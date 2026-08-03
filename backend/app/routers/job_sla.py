@@ -20,6 +20,7 @@ from app.services.job_sla import JobSlaService
 from app.services.job_sla.schemas import (
     ArtifactResponse,
     ComplianceSummary,
+    DayOfWeekSlaBars,
     DurationDistributionResponse,
     EventHistoryResponse,
     HeatmapResponse,
@@ -31,6 +32,7 @@ from app.services.job_sla.schemas import (
     LiveStateHistoryResponse,
     ProxyResponse,
     TrendResponse,
+    WeeklySlaBars,
 )
 from app.services.rbac import require_permission
 from app.services.report_health.nfc_connection import resolve_nfc_prod_connection_with_record
@@ -210,6 +212,8 @@ def get_trends(
         sla_timeline = service.get_sla_timeline(job_id)
         insights = service.get_trend_insights(job_id)
         day_of_week_stats = service.get_day_of_week_stats(job_id)
+        day_of_week_sla_bars = service.get_day_of_week_sla_bars(job_id)
+        weekly_sla_bars = service.get_weekly_sla_bars(job_id)
         mark_connection_active(record, db)
         return TrendResponse(
             weekly=weekly,
@@ -217,6 +221,8 @@ def get_trends(
             sla_timeline=sla_timeline if sla_timeline else None,
             insights=insights,
             day_of_week_stats=day_of_week_stats,
+            day_of_week_sla_bars=[DayOfWeekSlaBars(**r) for r in day_of_week_sla_bars],
+            weekly_sla_bars=[WeeklySlaBars(**r) for r in weekly_sla_bars],
         )
     except Exception as exc:
         logger.error("Failed to get trends for job_id=%s: %s", job_id, exc)
