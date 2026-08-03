@@ -12,7 +12,7 @@ Tables used:
 
 SLA_POLICIES_BY_JOB = """
 SELECT
-    sp.policy_id,
+    sp.policy_id::text,
     sp.entity_name,
     sp.entity_type,
     sp.application_name,
@@ -29,7 +29,7 @@ SELECT
     sp.created_at
 FROM sla_policies sp
 WHERE sp.entity_name = :job_name
-  AND sp.entity_type = 'job'
+  AND sp.entity_type = 'JOB'
 ORDER BY
     CASE sp.day_of_week
         WHEN 'monday'    THEN 1

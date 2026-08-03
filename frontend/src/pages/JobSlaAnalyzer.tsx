@@ -30,10 +30,6 @@ import type {
   ComplianceSummary,
   SlaPolicy,
   JobLiveState,
-  TrendPoint,
-  TrendInsights,
-  DayOfWeekStats,
-  SlaTimelinePoint,
   DayOfWeekSlaBars,
   WeeklySlaBars,
   HeatmapCell,
@@ -86,11 +82,6 @@ export default function JobSlaAnalyzer() {
   const [activeTab, setActiveTab] = useState<JobSlaTab>("overview");
 
   // ── Overview tab data ──────────────────────────────────────────────────────
-  const [weeklyTrend, setWeeklyTrend] = useState<TrendPoint[]>([]);
-  const [monthlyTrend, setMonthlyTrend] = useState<TrendPoint[]>([]);
-  const [slaTimeline, setSlaTimeline] = useState<SlaTimelinePoint[]>([]);
-  const [trendInsights, setTrendInsights] = useState<TrendInsights | null>(null);
-  const [dayOfWeekStats, setDayOfWeekStats] = useState<DayOfWeekStats[] | null>(null);
   const [dayOfWeekSlaBars, setDayOfWeekSlaBars] = useState<DayOfWeekSlaBars[]>([]);
   const [weeklySlaBars, setWeeklySlaBars] = useState<WeeklySlaBars[]>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
@@ -178,11 +169,6 @@ export default function JobSlaAnalyzer() {
       try {
         const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/trends`, { signal });
         if (signal.aborted) return;
-        setWeeklyTrend(res.data.weekly);
-        setMonthlyTrend(res.data.monthly);
-        setSlaTimeline(res.data.sla_timeline || []);
-        setTrendInsights(res.data.insights || null);
-        setDayOfWeekStats(res.data.day_of_week_stats || null);
         setDayOfWeekSlaBars(res.data.day_of_week_sla_bars || []);
         setWeeklySlaBars(res.data.weekly_sla_bars || []);
       } catch (err: unknown) {
@@ -327,11 +313,6 @@ export default function JobSlaAnalyzer() {
     setJobType(null);
     setCompliance(null);
     setSlaPolicies([]);
-    setWeeklyTrend([]);
-    setMonthlyTrend([]);
-    setSlaTimeline([]);
-    setTrendInsights(null);
-    setDayOfWeekStats(null);
     setDayOfWeekSlaBars([]);
     setWeeklySlaBars([]);
     setHeatmapCells([]);
@@ -450,14 +431,7 @@ export default function JobSlaAnalyzer() {
                   <div className="js-tab-content">
                     {activeTab === "overview" && (
                       <OverviewTab
-                        job={selectedJob}
-                        jobType={jobType}
                         slaPolicies={slaPolicies}
-                        weeklyTrend={weeklyTrend}
-                        monthlyTrend={monthlyTrend}
-                        slaTimeline={slaTimeline}
-                        insights={trendInsights}
-                        dayOfWeekStats={dayOfWeekStats}
                         dayOfWeekSlaBars={dayOfWeekSlaBars}
                         weeklySlaBars={weeklySlaBars}
                         loading={trendsLoading}

@@ -149,64 +149,19 @@ class JobSlaService:
     # ── SLA Policies & Compliance ─────────────────────────────────────────────
 
     def get_sla_policies(self, job_name: str) -> list[dict]:
-        """Get SLA policies for a job, falling back to inferred from live state."""
-        rows = self.connector.execute_query(SLA_POLICIES_BY_JOB, {"job_name": job_name})
-        policies = [dict(row) for row in rows]
-        if not policies:
-            inferred = self._infer_sla_from_live_state(job_name)
-            if inferred:
-                policies = [inferred]
-        return policies
+        """
+        Fetch SLA policies for a job directly from the sla_policies table.
 
-    def _infer_sla_from_live_state(self, job_name: str) -> Optional[dict]:
-        """Infer SLA schedule from recent job_live_state rows."""
-        query = """
-        SELECT
-            job_expected_sla,
-            expected_start_time,
-            COUNT(*) AS run_count
-        FROM job_live_state
-        WHERE job_name = :job_name
-          AND job_expected_sla IS NOT NULL
-          AND data_date >= CURRENT_DATE - INTERVAL '30 days'
-        GROUP BY job_expected_sla, expected_start_time
-        ORDER BY run_count DESC
-        LIMIT 1
+        Returns an empty list if no policy exists — callers should handle that
+        as a graceful "no SLA configured" state rather than falling back to
+        inferred data from live state.
         """
         try:
-            rows = self.connector.execute_query(query, {"job_name": job_name})
-            if not rows:
-                return None
-            row = rows[0]
-
-            def _to_time_str(val: Any) -> Optional[str]:
-                if val is None:
-                    return None
-                if hasattr(val, "strftime"):
-                    return val.strftime("%H:%M:%S")
-                s = str(val)
-                return s.split(" ")[-1] if " " in s else s
-
-            return {
-                "policy_id": "inferred",
-                "entity_name": job_name,
-                "entity_type": "job",
-                "application_name": None,
-                "day_of_week": None,
-                "expected_time": None,
-                "expected_start_time": _to_time_str(row.get("expected_start_time")),
-                "expected_sla_time": _to_time_str(row.get("job_expected_sla")),
-                "timezone": "UTC",
-                "days_addition_start_time": 0,
-                "days_addition_sla": 0,
-                "expected_duration_minutes": None,
-                "schedule_frequency": "daily (inferred)",
-                "data_date_formula": None,
-                "created_at": None,
-            }
+            rows = self.connector.execute_query(SLA_POLICIES_BY_JOB, {"job_name": job_name})
+            return [dict(row) for row in rows]
         except Exception as exc:
-            logger.warning("Failed to infer SLA for job=%s: %s", job_name, exc)
-            return None
+            logger.error("SLA policies query failed for job=%s: %s", job_name, exc)
+            return []
 
     def get_compliance_summary(self, job_id: int) -> dict:
         """Get SLA compliance summary for the last 90 days."""

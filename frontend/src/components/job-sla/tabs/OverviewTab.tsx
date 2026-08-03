@@ -10,16 +10,7 @@ import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { Spinner } from "../../ui";
 import { DAY_OF_WEEK_LABELS } from "../../../constants/jobSla";
-import type {
-  TrendPoint,
-  JobDefinition,
-  JobType,
-  SlaPolicy,
-  DayOfWeekStats,
-  SlaTimelinePoint,
-  DayOfWeekSlaBars,
-  WeeklySlaBars,
-} from "../../../types/jobSla";
+import type { SlaPolicy, DayOfWeekSlaBars, WeeklySlaBars } from "../../../types/jobSla";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const COLOR_ACTUAL_OK = "#3b82f6"; // blue-500  — actual range, within SLA
@@ -415,13 +406,7 @@ function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface OverviewTabProps {
-  job: JobDefinition | null;
-  jobType: JobType | null;
   slaPolicies: SlaPolicy[];
-  weeklyTrend: TrendPoint[];
-  monthlyTrend: TrendPoint[];
-  slaTimeline?: SlaTimelinePoint[];
-  dayOfWeekStats?: DayOfWeekStats[] | null;
   dayOfWeekSlaBars: DayOfWeekSlaBars[];
   weeklySlaBars: WeeklySlaBars[];
   loading: boolean;
@@ -429,7 +414,7 @@ interface OverviewTabProps {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
-export function OverviewTab({ job, jobType, slaPolicies, dayOfWeekSlaBars, weeklySlaBars, loading }: OverviewTabProps) {
+export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, loading }: OverviewTabProps) {
   const [chartView, setChartView] = useState<ChartView>("day_of_week");
 
   if (loading) {
@@ -440,20 +425,10 @@ export function OverviewTab({ job, jobType, slaPolicies, dayOfWeekSlaBars, weekl
     );
   }
 
-  if (!job) {
-    return <div className="js-tab-empty">Select a job to view overview</div>;
-  }
-
   const hasChartData = dayOfWeekSlaBars.length > 0 || weeklySlaBars.length > 0;
 
   return (
     <div className="js-overview-tab">
-      {/* Job info */}
-      <div className="js-overview-section">
-        <h3 className="js-section-title">Job Information</h3>
-        <JobInfoCard job={job} jobType={jobType} slaPolicies={slaPolicies} />
-      </div>
-
       {/* Primary SLA chart */}
       <div className="js-overview-section">
         <div className="js-section-header">
@@ -492,103 +467,112 @@ export function OverviewTab({ job, jobType, slaPolicies, dayOfWeekSlaBars, weekl
       </div>
 
       {/* SLA Policies */}
-      {slaPolicies.length > 0 && (
-        <div className="js-overview-section">
-          <h3 className="js-section-title">SLA Policies</h3>
+      <div className="js-overview-section">
+        <h3 className="js-section-title">SLA Policies</h3>
+        {slaPolicies.length > 0 ? (
           <SlaPoliciesTable policies={slaPolicies} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Job Info Card ─────────────────────────────────────────────────────────────
-
-function JobInfoCard({
-  job,
-  jobType,
-  slaPolicies,
-}: {
-  job: JobDefinition;
-  jobType: JobType | null;
-  slaPolicies: SlaPolicy[];
-}) {
-  const fmtTime = (t: string | null) => {
-    if (!t) return "—";
-    const [h, m] = t.split(":");
-    const hh = parseInt(h, 10);
-    return `${hh === 0 ? 12 : hh > 12 ? hh - 12 : hh}:${m} ${hh >= 12 ? "PM" : "AM"}`;
-  };
-
-  const schedule = (() => {
-    if (!slaPolicies.length) return { frequency: "No SLA configured", slaTime: "—", timezone: "—" };
-    const p = slaPolicies[0];
-    const days = new Set(slaPolicies.map((x) => x.day_of_week?.toLowerCase()).filter(Boolean));
-    let frequency = p.schedule_frequency ?? "daily";
-    if (days.size === 1) {
-      const d = [...days][0]!;
-      frequency = `Weekly (${d[0].toUpperCase()}${d.slice(1)})`;
-    } else if (days.size > 1 && days.size < 7) {
-      frequency = `${days.size} days/week`;
-    }
-    return { frequency, slaTime: fmtTime(p.expected_sla_time as unknown as string), timezone: p.timezone ?? "UTC" };
-  })();
-
-  return (
-    <div className="js-job-info-card">
-      <div className="js-info-row">
-        <span className="js-info-label">Job Name</span>
-        <span className="js-info-value">{job.job_name}</span>
-      </div>
-      <div className="js-info-row">
-        <span className="js-info-label">Type</span>
-        <span className="js-info-value">
-          {jobType?.type ?? "standard"}
-          {jobType?.has_artifacts && <span className="js-badge js-badge--artifact">Artifacts</span>}
-          {jobType?.is_proxy && <span className="js-badge js-badge--proxy">Proxy</span>}
-        </span>
-      </div>
-      <div className="js-info-row">
-        <span className="js-info-label">Schedule</span>
-        <span className="js-info-value">{schedule.frequency}</span>
-      </div>
-      <div className="js-info-row">
-        <span className="js-info-label">Expected SLA</span>
-        <span className="js-info-value">
-          {schedule.slaTime} ({schedule.timezone})
-        </span>
+        ) : (
+          <div className="js-empty-section">No SLA policies configured for this job.</div>
+        )}
       </div>
     </div>
   );
 }
 
-// ── SLA Policies Table ────────────────────────────────────────────────────────
+// ── SLA Policies Cards ────────────────────────────────────────────────────────
+// Read-only policy cards matching the StepSlaProxy editing layout exactly:
+// job-input-wrap card + POLICY N header + 8 fields in one row (repeat(8, 1fr)).
+
+const POLICY_CARD_STYLE: React.CSSProperties = {
+  border: "1px solid var(--border)",
+  borderRadius: 0,
+  padding: "16px 20px",
+  marginBottom: 12,
+  position: "relative",
+  background: "var(--bg-surface)",
+};
+
+const POLICY_CARD_TITLE: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  color: "var(--text-secondary)",
+  marginBottom: 14,
+};
+
+const POLICY_GRID: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(8, 1fr)",
+  gap: 10,
+};
+
+const POLICY_LABEL: React.CSSProperties = {
+  fontSize: 11,
+  fontWeight: 500,
+  color: "var(--text-muted)",
+  marginBottom: 4,
+  display: "block",
+};
+
+const POLICY_VALUE: React.CSSProperties = {
+  fontSize: 12,
+  color: "var(--text-primary)",
+  fontWeight: 500,
+};
 
 function SlaPoliciesTable({ policies }: { policies: SlaPolicy[] }) {
+  const fmt = (t: string | null | undefined) => {
+    if (!t) return "—";
+    const parts = String(t).split(":");
+    return `${parts[0]}:${parts[1]}`; // HH:MM, drop seconds
+  };
+
+  if (!policies.length) return null;
+
   return (
-    <div className="js-table-container">
-      <table className="js-history-table">
-        <thead>
-          <tr>
-            <th>Day</th>
-            <th>Start Time</th>
-            <th>SLA Time</th>
-            <th>Duration</th>
-            <th>Timezone</th>
-          </tr>
-        </thead>
-        <tbody>
-          {policies.map((p) => (
-            <tr key={p.policy_id}>
-              <td>{p.day_of_week ?? "All"}</td>
-              <td>{p.expected_start_time ? String(p.expected_start_time) : "—"}</td>
-              <td>{p.expected_sla_time ? String(p.expected_sla_time) : "—"}</td>
-              <td>{p.expected_duration_minutes ? `${p.expected_duration_minutes}m` : "—"}</td>
-              <td>{p.timezone ?? "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div>
+      {policies.map((p, idx) => (
+        <div key={p.policy_id} style={POLICY_CARD_STYLE} className="job-input-wrap">
+          <div style={POLICY_CARD_TITLE}>Policy {idx + 1}</div>
+          <div style={POLICY_GRID}>
+            <div>
+              <span style={POLICY_LABEL}>Data Day</span>
+              <span style={POLICY_VALUE}>{p.day_of_week ?? "All"}</span>
+            </div>
+            <div>
+              <span style={POLICY_LABEL}>Frequency</span>
+              <span style={POLICY_VALUE}>{p.schedule_frequency ?? "—"}</span>
+            </div>
+            <div>
+              <span style={POLICY_LABEL}>Timezone</span>
+              <span style={POLICY_VALUE}>{p.timezone ?? "—"}</span>
+            </div>
+            <div>
+              <span style={POLICY_LABEL}>Duration (min)</span>
+              <span style={POLICY_VALUE}>{p.expected_duration_minutes ?? "—"}</span>
+            </div>
+            <div>
+              <span style={POLICY_LABEL}>Start Time</span>
+              <span style={POLICY_VALUE}>{fmt(p.expected_start_time as unknown as string)}</span>
+            </div>
+            <div>
+              <span style={POLICY_LABEL}>SLA Time</span>
+              <span style={POLICY_VALUE}>{fmt(p.expected_sla_time as unknown as string)}</span>
+            </div>
+            <div>
+              <span style={POLICY_LABEL}>Days +Start</span>
+              <span style={POLICY_VALUE}>
+                {p.days_addition_start_time != null ? `+${p.days_addition_start_time}d` : "—"}
+              </span>
+            </div>
+            <div>
+              <span style={POLICY_LABEL}>Days +SLA</span>
+              <span style={POLICY_VALUE}>{p.days_addition_sla != null ? `+${p.days_addition_sla}d` : "—"}</span>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
