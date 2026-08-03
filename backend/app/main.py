@@ -32,6 +32,7 @@ from app.routers import (
     email_discrepancy,
     ingestion,
     job_onboarding,
+    job_sla,
     rbac_admin,
     report_health,
     report_mapping,
@@ -87,6 +88,7 @@ app.include_router(email_discrepancy.router)
 app.include_router(report_health.router)
 app.include_router(report_policies.router)
 app.include_router(rbac_admin.router)
+app.include_router(job_sla.router)
 
 
 # ── Health Check ──────────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import WorkIcon from "@mui/icons-material/Work";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import InfoSidebar from "../components/InfoSidebar";
 import Highlight from "../components/ui/Highlight";
 
@@ -78,6 +79,14 @@ const ADMIN_TOOLS = [
       "View and edit report definitions & SLA policies. Manage expected delivery times, schedule frequencies, and window configurations.",
     icon: MonitorHeartIcon,
     to: "/admin/report-policies",
+  },
+  {
+    permission: "admin:job_sla_analyzer",
+    title: "Job SLA Analyzer",
+    description:
+      "Deep-dive analysis of job SLA compliance. Timeline charts, day×hour heatmaps, run history, artifacts, proxy inference, and incident tracking.",
+    icon: QueryStatsIcon,
+    to: "/admin/job-sla-analyzer",
   },
 ];
 

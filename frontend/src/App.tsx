@@ -22,6 +22,7 @@ import EmailDiscrepancyAudit from "./pages/EmailDiscrepancyAudit";
 import ReportHealthDashboard from "./pages/ReportHealthDashboard";
 import ReportPolicies from "./pages/ReportPolicies";
 import UserManagement from "./pages/UserManagement";
+import JobSlaAnalyzer from "./pages/JobSlaAnalyzer";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
@@ -41,6 +42,7 @@ import {
   PERM_ADMIN_REPORT_POLICIES,
   PERM_ADMIN_REPORT_HEALTH,
   PERM_ADMIN_MANAGE_USERS,
+  PERM_ADMIN_JOB_SLA_ANALYZER,
 } from "./constants/permissions";
 
 export default function App() {
@@ -157,6 +159,7 @@ export default function App() {
                 PERM_ADMIN_REPORT_POLICIES,
                 PERM_ADMIN_REPORT_HEALTH,
                 PERM_ADMIN_MANAGE_USERS,
+                PERM_ADMIN_JOB_SLA_ANALYZER,
               ]}
               feature="Admin Panel"
             >
@@ -277,6 +280,14 @@ export default function App() {
           element={
             <ProtectedRoute user={user} permissions={[PERM_ADMIN_MANAGE_USERS]} feature="User Management">
               <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/job-sla-analyzer"
+          element={
+            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_SLA_ANALYZER]} feature="Job SLA Analyzer">
+              <JobSlaAnalyzer />
             </ProtectedRoute>
           }
         />

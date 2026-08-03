@@ -37,6 +37,7 @@ const ADMIN_PERMISSIONS = [
   "admin:email_discrepancy_audit",
   "admin:report_health",
   "admin:manage_users",
+  "admin:job_sla_analyzer",
 ];
 
 function getDisplayName(name: string, email: string): string {

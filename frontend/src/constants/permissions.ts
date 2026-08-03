@@ -63,6 +63,9 @@ export const PERM_ADMIN_JOB_ONBOARDING = "admin:job_onboarding";
 /** Permission code for using AI-powered query analysis */
 export const PERM_ADMIN_AI_ANALYSIS = "admin:ai_analysis";
 
+/** Permission code for accessing Job SLA Analyzer dashboard */
+export const PERM_ADMIN_JOB_SLA_ANALYZER = "admin:job_sla_analyzer";
+
 /**
  * All admin-level permissions grouped by feature area.
  * Used for checking if user has access to a feature section.
@@ -86,4 +89,6 @@ export const PERMISSION_GROUPS = {
   CLIENT_ONBOARDING: [PERM_ADMIN_CLIENT_ONBOARDING],
   /** Permissions needed for Job Onboarding */
   JOB_ONBOARDING: [PERM_ADMIN_JOB_ONBOARDING],
+  /** Permissions needed for Job SLA Analyzer */
+  JOB_SLA_ANALYZER: [PERM_ADMIN_JOB_SLA_ANALYZER],
 } as const;
