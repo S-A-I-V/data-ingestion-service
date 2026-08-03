@@ -8,9 +8,6 @@
 /** Base URL for Job SLA API endpoints (no /api prefix - handled by axios baseURL) */
 export const JOB_SLA_API_BASE = "/admin/job-sla";
 
-/** Default number of days to show in date range picker */
-export const DEFAULT_DATE_RANGE_DAYS = 30;
-
 /** Maximum events to fetch in history queries */
 export const MAX_EVENT_HISTORY_LIMIT = 2000;
 

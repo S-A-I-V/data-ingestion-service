@@ -1,6 +1,10 @@
 """
 Job definition and live state queries for Job SLA Analyzer.
 
+History queries use a fixed 90-day rolling window computed in SQL.
+No date parameters are accepted — the window is always CURRENT_DATE - 89 days
+through CURRENT_DATE.
+
 Tables used:
 - job_definitions: Master catalogue of all pipeline jobs
 - job_live_state: Current runtime state per job/data_date/client
@@ -50,7 +54,7 @@ WHERE jd.job_id = :job_id
 LIMIT 1
 """
 
-# ── Job Live State History ────────────────────────────────────────────────────
+# ── Job Live State History (90-day window) ────────────────────────────────────
 
 JOB_LIVE_STATE_HISTORY = """
 SELECT
@@ -82,11 +86,12 @@ SELECT
     jls.job_delay_reason
 FROM job_live_state jls
 WHERE jls.job_id = :job_id
-  AND CAST(jls.data_date AS date) BETWEEN CAST(:date_from AS date) AND CAST(:date_to AS date)
+  AND jls.data_date >= CURRENT_DATE - INTERVAL '89 days'
+  AND jls.data_date <= CURRENT_DATE
 ORDER BY jls.data_date DESC, jls.client_name
 """
 
-# ── Job Event History ─────────────────────────────────────────────────────────
+# ── Job Event History (90-day window) ────────────────────────────────────────
 
 JOB_EVENT_HISTORY = """
 SELECT
@@ -106,7 +111,8 @@ SELECT
     jeh.created_at
 FROM job_event_history jeh
 WHERE jeh.job_name = :job_name
-  AND CAST(jeh.data_date AS date) BETWEEN CAST(:date_from AS date) AND CAST(:date_to AS date)
+  AND jeh.data_date >= CURRENT_DATE - INTERVAL '89 days'
+  AND jeh.data_date <= CURRENT_DATE
 ORDER BY jeh.created_at DESC
 LIMIT :limit
 """

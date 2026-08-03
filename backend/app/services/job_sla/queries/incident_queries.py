@@ -1,12 +1,14 @@
 """
 Incident and override queries for Job SLA Analyzer.
 
+Both queries use a fixed 90-day rolling window computed in SQL.
+
 Tables used:
 - sev1_incidents: Severity-1 incidents linked to a job+data_date
 - incident_overrides: Overrides SLA calculations when incidents are active
 """
 
-# ── SEV1 Incidents ────────────────────────────────────────────────────────────
+# ── SEV1 Incidents (90-day window) ────────────────────────────────────────────
 
 SEV1_INCIDENTS_BY_JOB = """
 SELECT
@@ -21,11 +23,12 @@ SELECT
     si.created_at
 FROM sev1_incidents si
 WHERE si.job_name = :job_name
-  AND CAST(si.data_date AS date) BETWEEN CAST(:date_from AS date) AND CAST(:date_to AS date)
+  AND si.data_date >= CURRENT_DATE - INTERVAL '89 days'
+  AND si.data_date <= CURRENT_DATE
 ORDER BY si.data_date DESC, si.created_at DESC
 """
 
-# ── Incident Overrides ────────────────────────────────────────────────────────
+# ── Incident Overrides (90-day window) ────────────────────────────────────────
 
 INCIDENT_OVERRIDES_BY_JOB = """
 SELECT
@@ -38,6 +41,7 @@ SELECT
     io.created_at
 FROM incident_overrides io
 WHERE io.job_name = :job_name
-  AND CAST(io.data_date AS date) BETWEEN CAST(:date_from AS date) AND CAST(:date_to AS date)
+  AND io.data_date >= CURRENT_DATE - INTERVAL '89 days'
+  AND io.data_date <= CURRENT_DATE
 ORDER BY io.data_date DESC, io.created_at DESC
 """

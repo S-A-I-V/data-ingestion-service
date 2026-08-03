@@ -4,7 +4,6 @@
 
 export { JobSelector } from "./JobSelector";
 export { KpiCards } from "./KpiCards";
-export { DateRangePicker } from "./DateRangePicker";
 
 // Tabs
 export { OverviewTab } from "./tabs/OverviewTab";

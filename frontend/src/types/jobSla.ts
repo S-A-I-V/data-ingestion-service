@@ -342,8 +342,3 @@ export interface IncidentResponse {
 // ── UI State Types ───────────────────────────────────────────────────────────
 
 export type JobSlaTab = "overview" | "heatmap" | "history" | "artifacts" | "proxy";
-
-export interface DateRange {
-  from: Date;
-  to: Date;
-}
