@@ -354,60 +354,62 @@ ORDER BY
     END
 """
 
-# ── Weekly SLA Bars ────────────────────────────────────────────────────────────
-# NEW: For the week-by-week view.
-# Each row = one week. avg expected vs avg actual end time (minutes from midnight).
-# breach_pct lets the frontend draw an SLA breach indicator on the bar.
+# ── Daily SLA Bars ────────────────────────────────────────────────────────────
+# "By Week" view — one bar per calendar day, no week grouping.
+# Shows the full 90-day timeline so you can see each day's run window.
 
 WEEKLY_SLA_BARS = """
 SELECT
-    DATE_TRUNC('week', jls.data_date)::date AS week_start,
-    COUNT(*) AS total_runs,
-    COUNT(*) FILTER (
-        WHERE jls.current_status = 'success' AND jls.end_time > jls.job_expected_sla
-    ) AS breach_count,
-    COUNT(*) FILTER (
-        WHERE jls.current_status = 'success' AND jls.end_time <= jls.job_expected_sla
-    ) AS on_time_count,
-    COUNT(*) FILTER (WHERE jls.current_status = 'failed') AS failed_count,
-    ROUND(
-        AVG(
+    jls.data_date,
+    jls.current_status,
+    CASE
+        WHEN jls.current_status = 'success'
+             AND jls.end_time > jls.job_expected_sla THEN 1
+        ELSE 0
+    END AS breach_count,
+    CASE
+        WHEN jls.current_status = 'success'
+             AND jls.end_time <= jls.job_expected_sla THEN 1
+        ELSE 0
+    END AS on_time_count,
+    CASE WHEN jls.current_status = 'failed' THEN 1 ELSE 0 END AS failed_count,
+    CASE WHEN jls.expected_start_time IS NOT NULL
+        THEN ROUND((
             EXTRACT(HOUR FROM jls.expected_start_time) * 60
             + EXTRACT(MINUTE FROM jls.expected_start_time)
-        ) FILTER (WHERE jls.expected_start_time IS NOT NULL),
-        1
-    ) AS expected_start_minutes,
-    ROUND(
-        AVG(
+        )::numeric, 1)
+    END AS expected_start_minutes,
+    CASE WHEN jls.start_time IS NOT NULL
+        THEN ROUND((
+            EXTRACT(HOUR FROM jls.start_time) * 60
+            + EXTRACT(MINUTE FROM jls.start_time)
+        )::numeric, 1)
+    END AS actual_start_minutes,
+    CASE WHEN jls.job_expected_sla IS NOT NULL
+        THEN ROUND((
             EXTRACT(HOUR FROM jls.job_expected_sla) * 60
             + EXTRACT(MINUTE FROM jls.job_expected_sla)
-        ) FILTER (WHERE jls.job_expected_sla IS NOT NULL),
-        1
-    ) AS expected_sla_minutes,
-    ROUND(
-        AVG(
+        )::numeric, 1)
+    END AS expected_sla_minutes,
+    CASE WHEN jls.end_time IS NOT NULL
+        THEN ROUND((
             EXTRACT(HOUR FROM jls.end_time) * 60
             + EXTRACT(MINUTE FROM jls.end_time)
-        ) FILTER (WHERE jls.end_time IS NOT NULL),
-        1
-    ) AS actual_end_minutes,
-    ROUND(
-        AVG(jls.delay_duration_minutes)
-        FILTER (WHERE jls.delay_duration_minutes > 0),
-        1
-    ) AS avg_delay_minutes,
-    ROUND(
-        100.0 * COUNT(*) FILTER (
-            WHERE jls.current_status = 'success' AND jls.end_time <= jls.job_expected_sla
-        ) / NULLIF(COUNT(*), 0),
-        1
-    ) AS on_time_percentage
+        )::numeric, 1)
+    END AS actual_end_minutes,
+    jls.delay_duration_minutes AS avg_delay_minutes,
+    CASE
+        WHEN jls.current_status = 'success'
+             AND jls.end_time <= jls.job_expected_sla THEN 100.0
+        WHEN jls.current_status = 'success'
+             AND jls.end_time > jls.job_expected_sla  THEN 0.0
+        ELSE NULL
+    END AS on_time_percentage
 FROM job_live_state jls
 WHERE jls.job_id = :job_id
   AND jls.data_date >= CURRENT_DATE - INTERVAL '89 days'
   AND jls.data_date <= CURRENT_DATE
-GROUP BY DATE_TRUNC('week', jls.data_date)
-ORDER BY week_start
+ORDER BY jls.data_date, jls.client_name
 """
 
 # ── Daily SLA Deviation Timeline ──────────────────────────────────────────────

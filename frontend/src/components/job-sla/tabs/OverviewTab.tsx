@@ -51,7 +51,7 @@ function minsToTime(mins: number | null): string {
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
-/** Format an ISO date string as "Mon Jan 6" */
+/** Format an ISO date string as "Mon Jan 6" — kept for future use */
 function fmtWeekLabel(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -123,7 +123,6 @@ const COLOR_SLA_START_LINE = "#4ade80"; // green-400 — bright green, start win
 const COLOR_SLA_END_LINE = "#ef4444"; // red-500   — deadline
 const SLA_LINE_STROKE_WIDTH = 5;
 const SLA_LINE_DASH = "8 4";
-const SLA_LABEL_FONT_SIZE = 9;
 // Inset so adjacent same-value lines have a small visible gap between columns
 const SLA_LINE_INSET_PX = 3;
 
@@ -131,12 +130,14 @@ function JobWindowShape(props: any) {
   const { x, y, width, height, background, payload, fill } = props;
   if (!background || !payload || width <= 0) return null;
 
-  const { expected_start_minutes, expected_sla_minutes, isLast } = payload;
+  const { expected_start_minutes, expected_sla_minutes, yDomainMin, yDomainMax } = payload;
   const plotTop = background.y;
   const plotHeight = background.height;
-  const domain = 1440; // must match Y_AXIS_DOMAIN max
+  const domainMin = yDomainMin ?? 0;
+  const domainMax = yDomainMax ?? 1440;
+  const domainRange = domainMax - domainMin;
 
-  const toPixelY = (mins: number) => plotTop + plotHeight * (1 - mins / domain);
+  const toPixelY = (mins: number) => plotTop + plotHeight * (1 - (mins - domainMin) / domainRange);
 
   const lx1 = x + SLA_LINE_INSET_PX;
   const lx2 = x + width - SLA_LINE_INSET_PX;
@@ -161,11 +162,6 @@ function JobWindowShape(props: any) {
                 strokeWidth={SLA_LINE_STROKE_WIDTH}
                 strokeDasharray={SLA_LINE_DASH}
               />
-              {isLast && (
-                <text x={labelX} y={ly + 3} fill={COLOR_SLA_START_LINE} fontSize={SLA_LABEL_FONT_SIZE}>
-                  SLA start
-                </text>
-              )}
             </g>
           );
         })()}
@@ -184,11 +180,6 @@ function JobWindowShape(props: any) {
                 strokeWidth={SLA_LINE_STROKE_WIDTH}
                 strokeDasharray={SLA_LINE_DASH}
               />
-              {isLast && (
-                <text x={labelX} y={ly + 3} fill={COLOR_SLA_END_LINE} fontSize={SLA_LABEL_FONT_SIZE}>
-                  SLA deadline
-                </text>
-              )}
             </g>
           );
         })()}
@@ -243,7 +234,11 @@ function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
             })
         : weeklyData.map((d) => {
             return {
-              label: fmtWeekLabel(d.week_start),
+              label: new Date(d.data_date).toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              }),
               base: d.actual_start_minutes ?? d.expected_start_minutes ?? 0,
               range_height: Math.max(
                 0,
@@ -256,7 +251,7 @@ function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
               actual_end_minutes: d.actual_end_minutes,
               avg_delay_minutes: d.avg_delay_minutes,
               on_time_percentage: d.on_time_percentage,
-              total_runs: d.total_runs,
+              total_runs: 1,
               occurrence_count: null,
               breach_count: d.breach_count,
               isLast: false,
@@ -272,7 +267,36 @@ function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
   }, [view, dowData, weeklyData]);
 
   // Avg expected SLA deadline is no longer needed for a global ReferenceLine —
-  // per-bar lines are drawn by SlaWindowLines via <Customized> instead.
+  // per-bar lines are drawn by JobWindowShape via custom Bar shape instead.
+
+  // Y-axis domain: for the daily view, zoom into the actual data range with
+  // 60-min padding and 3-hour tick boundaries so the axis stays readable.
+  // For the day-of-week view keep the full 0–1440 range (fewer bars, wider spread).
+  const { yDomain, yTicks } = useMemo(() => {
+    if (view !== "weekly" || !chartData.length) {
+      return { yDomain: Y_AXIS_DOMAIN, yTicks: Y_AXIS_TICKS };
+    }
+    const allVals = chartData.flatMap((d) =>
+      [d.expected_start_minutes, d.actual_start_minutes, d.expected_sla_minutes, d.actual_end_minutes].filter(
+        (v): v is number => v != null,
+      ),
+    );
+    if (!allVals.length) return { yDomain: Y_AXIS_DOMAIN, yTicks: Y_AXIS_TICKS };
+    const PAD_MINS = 60; // one hour padding
+    const TICK_STEP = 180; // 3-hour ticks
+    const lo = Math.max(0, Math.floor((Math.min(...allVals) - PAD_MINS) / TICK_STEP) * TICK_STEP);
+    const hi = Math.min(1440, Math.ceil((Math.max(...allVals) + PAD_MINS) / TICK_STEP) * TICK_STEP);
+    const ticks: number[] = [];
+    for (let t = lo; t <= hi; t += TICK_STEP) ticks.push(t);
+    return { yDomain: [lo, hi] as [number, number], yTicks: ticks };
+  }, [view, chartData]);
+
+  // Stamp the active domain bounds into each payload row so JobWindowShape
+  // can interpolate SLA line positions correctly when the domain is zoomed.
+  const chartDataWithDomain = useMemo(
+    () => chartData.map((d) => ({ ...d, yDomainMin: yDomain[0], yDomainMax: yDomain[1] })),
+    [chartData, yDomain],
+  );
 
   if (!chartData.length) {
     return (
@@ -290,12 +314,12 @@ function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
           2. "range_height" — colored, spans from expected_start to actual_end
         The SLA deadline is a ReferenceLine cutting across all bars.
       */}
-      <BarChart data={chartData} margin={{ top: 12, right: 60, left: 8, bottom: 0 }} barCategoryGap="20%">
+      <BarChart data={chartDataWithDomain} margin={{ top: 12, right: 60, left: 8, bottom: 0 }} barCategoryGap="20%">
         <CartesianGrid strokeDasharray="3 3" stroke={COLOR_GRID} vertical={false} />
         <XAxis dataKey="label" tick={{ fontSize: AXIS_FONT_SIZE }} stroke={COLOR_AXIS} />
         <YAxis
-          domain={Y_AXIS_DOMAIN}
-          ticks={Y_AXIS_TICKS}
+          domain={yDomain}
+          ticks={yTicks}
           tickFormatter={minsToTime}
           tick={{ fontSize: AXIS_FONT_SIZE }}
           stroke={COLOR_AXIS}
@@ -379,7 +403,7 @@ function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
           isAnimationActive={false}
           shape={<JobWindowShape />}
         >
-          {chartData.map((d, i) => (
+          {chartDataWithDomain.map((d, i) => (
             <Cell key={i} fill={d.isBreach ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK} />
           ))}
         </Bar>

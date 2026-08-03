@@ -338,10 +338,10 @@ export interface DayOfWeekSlaBars {
   on_time_percentage: number | null;
 }
 
-/** Per-week SLA expected vs actual bar data */
+/** Per-day SLA bar data for the daily timeline view */
 export interface WeeklySlaBars {
-  week_start: string; // ISO date string
-  total_runs: number;
+  data_date: string; // ISO date — individual calendar day
+  current_status: string | null;
   breach_count: number;
   on_time_count: number;
   failed_count: number;

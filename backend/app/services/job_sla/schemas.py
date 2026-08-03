@@ -395,13 +395,13 @@ class DayOfWeekSlaBars(BaseModel):
 
 
 class WeeklySlaBars(BaseModel):
-    """Per-week SLA expected vs actual bar data."""
+    """Per-day SLA bar data for the daily timeline view (formerly 'weekly' grouping)."""
 
-    week_start: date
-    total_runs: int
-    breach_count: int
-    on_time_count: int
-    failed_count: int
+    data_date: date
+    current_status: Optional[str] = None
+    breach_count: int = 0
+    on_time_count: int = 0
+    failed_count: int = 0
     expected_start_minutes: Optional[float] = None
     actual_start_minutes: Optional[float] = None
     expected_sla_minutes: Optional[float] = None
