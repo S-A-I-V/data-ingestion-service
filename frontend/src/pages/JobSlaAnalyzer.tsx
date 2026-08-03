@@ -9,10 +9,10 @@
  *   - Date range picker for historical analysis
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import api from "../api";
-import { useToast } from "../components/ui";
+import { useToast, Toast } from "../components/ui";
 import Highlight from "../components/ui/Highlight";
 import { JobSelector } from "../components/job-sla/JobSelector";
 import { KpiCards } from "../components/job-sla/KpiCards";
@@ -69,7 +69,7 @@ const ERRORS = {
 } as const;
 
 export default function JobSlaAnalyzer() {
-  const { showToast } = useToast();
+  const [toast, setToast] = useToast();
   const defaultDateRange = useDefaultDateRange();
 
   // Jobs state
@@ -120,7 +120,12 @@ export default function JobSlaAnalyzer() {
   // Format date for API
   const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-  // Fetch jobs list
+  // Separate abort controllers: summary is independent of tab, so tab switches
+  // never cancel or re-fire the summary request.
+  const summaryAbortRef = useRef<AbortController | null>(null);
+  const tabAbortRef = useRef<AbortController | null>(null);
+
+  // Fetch jobs list — stable, no deps that change per-job
   const fetchJobs = useCallback(async () => {
     setJobsLoading(true);
     setJobsError(null);
@@ -129,7 +134,7 @@ export default function JobSlaAnalyzer() {
       const jobsList = res.data.jobs;
       setJobs(jobsList);
 
-      // Build job types map from the jobs list (now includes type info)
+      // Build job types map from the jobs list (includes type info from server)
       const typesMap: Record<number, JobTypeLabel> = {};
       jobsList.forEach((job: JobDefinition) => {
         if (job.job_type) {
@@ -139,203 +144,193 @@ export default function JobSlaAnalyzer() {
       setJobTypes(typesMap);
     } catch {
       setJobsError(ERRORS.LOAD_JOBS);
-      showToast({ type: "error", message: ERRORS.LOAD_JOBS });
+      setToast({ ok: false, msg: ERRORS.LOAD_JOBS });
     } finally {
       setJobsLoading(false);
     }
-  }, [showToast]);
+  }, []);
 
-  // Fetch job summary (type, compliance, policies)
-  const fetchJobSummary = useCallback(
-    async (jobId: number) => {
-      setSummaryLoading(true);
-      try {
-        const res = await api.get<JobSummaryResponse>(`${JOB_SLA_API_BASE}/jobs/${jobId}/summary`, {
-          params: { date_from: formatDate(dateRange.from), date_to: formatDate(dateRange.to) },
-        });
-        setJobType(res.data.job_type);
-        setCompliance(res.data.compliance);
-        setSlaPolicies(res.data.sla_policies);
+  // ── Summary loader ─────────────────────────────────────────────────────────
+  // Fires only on job / date range change. Tab switches do NOT re-run this.
 
-        // Update job types cache
-        setJobTypes((prev) => ({ ...prev, [jobId]: res.data.job_type.type }));
-      } catch {
-        showToast({ type: "error", message: ERRORS.LOAD_SUMMARY });
-      } finally {
-        setSummaryLoading(false);
+  const loadSummary = useCallback(async (job: JobDefinition, dateFrom: string, dateTo: string, signal: AbortSignal) => {
+    setSummaryLoading(true);
+    try {
+      const res = await api.get<JobSummaryResponse>(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/summary`, {
+        params: { date_from: dateFrom, date_to: dateTo },
+        signal,
+      });
+      if (signal.aborted) return;
+      setJobType(res.data.job_type);
+      setCompliance(res.data.compliance);
+      setSlaPolicies(res.data.sla_policies);
+      setJobTypes((prev) => ({ ...prev, [job.job_id]: res.data.job_type.type }));
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
+        return;
+      setToast({ ok: false, msg: ERRORS.LOAD_SUMMARY });
+    } finally {
+      if (!signal.aborted) setSummaryLoading(false);
+    }
+  }, []);
+
+  // ── Tab data loader ────────────────────────────────────────────────────────
+  // Fires on job / date range / active tab change. Never re-fetches summary.
+  // jobType is intentionally not used here — selectedJob already carries
+  // has_artifacts/is_proxy/is_trigger from the jobs list API.
+
+  const loadTabData = useCallback(
+    async (job: JobDefinition, tab: JobSlaTab, dateFrom: string, dateTo: string, signal: AbortSignal) => {
+      const params = { date_from: dateFrom, date_to: dateTo };
+
+      if (tab === "overview") {
+        setTrendsLoading(true);
+        try {
+          const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/trends`, {
+            params: { ...params, include_insights: true },
+            signal,
+          });
+          if (signal.aborted) return;
+          setWeeklyTrend(res.data.weekly);
+          setMonthlyTrend(res.data.monthly);
+          setSlaTimeline(res.data.sla_timeline || []);
+          setTrendInsights(res.data.insights || null);
+          setDayOfWeekStats(res.data.day_of_week_stats || null);
+        } catch (err: unknown) {
+          if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
+            return;
+          setToast({ ok: false, msg: ERRORS.LOAD_TRENDS });
+        } finally {
+          if (!signal.aborted) setTrendsLoading(false);
+        }
+      } else if (tab === "heatmap") {
+        setHeatmapLoading(true);
+        try {
+          const [heatmapRes, distRes] = await Promise.all([
+            api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/heatmap`, { params, signal }),
+            api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/duration-distribution`, { params, signal }),
+          ]);
+          if (signal.aborted) return;
+          setHeatmapCells(heatmapRes.data.cells);
+          setDurationBuckets(distRes.data.buckets);
+        } catch (err: unknown) {
+          if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
+            return;
+          setToast({ ok: false, msg: ERRORS.LOAD_HEATMAP });
+        } finally {
+          if (!signal.aborted) setHeatmapLoading(false);
+        }
+      } else if (tab === "history") {
+        setHistoryLoading(true);
+        try {
+          const [histRes, incRes] = await Promise.all([
+            api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/history`, { params, signal }),
+            api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/incidents`, {
+              params: { ...params, job_name: job.job_name },
+              signal,
+            }),
+          ]);
+          if (signal.aborted) return;
+          setHistory(histRes.data.history);
+          setIncidents(incRes.data.sev1_incidents);
+          setOverrides(incRes.data.overrides);
+        } catch (err: unknown) {
+          if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
+            return;
+          setToast({ ok: false, msg: ERRORS.LOAD_HISTORY });
+        } finally {
+          if (!signal.aborted) setHistoryLoading(false);
+        }
+      } else if (
+        tab === "artifacts" &&
+        (job.has_artifacts || job.job_type === "artifact" || job.job_type === "artifact_proxy")
+      ) {
+        setArtifactsLoading(true);
+        try {
+          const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/artifacts`, {
+            params: { ...params, job_name: job.job_name },
+            signal,
+          });
+          if (signal.aborted) return;
+          setArtifactDefs(res.data.definitions);
+          setArtifactLiveState(res.data.live_state);
+          setArtifactEvents(res.data.events);
+        } catch (err: unknown) {
+          if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
+            return;
+          setToast({ ok: false, msg: ERRORS.LOAD_ARTIFACTS });
+        } finally {
+          if (!signal.aborted) setArtifactsLoading(false);
+        }
+      } else if (tab === "proxy" && (job.is_proxy || job.is_trigger)) {
+        setProxyLoading(true);
+        try {
+          const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/proxy`, { signal });
+          if (signal.aborted) return;
+          setProxyRules(res.data.proxy_rules);
+          setTriggerRules(res.data.trigger_rules);
+        } catch (err: unknown) {
+          if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
+            return;
+          setToast({ ok: false, msg: ERRORS.LOAD_PROXY });
+        } finally {
+          if (!signal.aborted) setProxyLoading(false);
+        }
       }
     },
-    [dateRange, showToast],
-  );
-
-  // Fetch trends (for Overview tab)
-  const fetchTrends = useCallback(
-    async (jobId: number) => {
-      setTrendsLoading(true);
-      try {
-        const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${jobId}/trends`, {
-          params: {
-            date_from: formatDate(dateRange.from),
-            date_to: formatDate(dateRange.to),
-            include_insights: true,
-          },
-        });
-        setWeeklyTrend(res.data.weekly);
-        setMonthlyTrend(res.data.monthly);
-        setSlaTimeline(res.data.sla_timeline || []);
-        setTrendInsights(res.data.insights || null);
-        setDayOfWeekStats(res.data.day_of_week_stats || null);
-      } catch {
-        showToast({ type: "error", message: ERRORS.LOAD_TRENDS });
-      } finally {
-        setTrendsLoading(false);
-      }
-    },
-    [dateRange, showToast],
-  );
-
-  // Fetch heatmap data
-  const fetchHeatmap = useCallback(
-    async (jobId: number) => {
-      setHeatmapLoading(true);
-      try {
-        const [heatmapRes, distRes] = await Promise.all([
-          api.get(`${JOB_SLA_API_BASE}/jobs/${jobId}/heatmap`, {
-            params: { date_from: formatDate(dateRange.from), date_to: formatDate(dateRange.to) },
-          }),
-          api.get(`${JOB_SLA_API_BASE}/jobs/${jobId}/duration-distribution`, {
-            params: { date_from: formatDate(dateRange.from), date_to: formatDate(dateRange.to) },
-          }),
-        ]);
-        setHeatmapCells(heatmapRes.data.cells);
-        setDurationBuckets(distRes.data.buckets);
-      } catch {
-        showToast({ type: "error", message: ERRORS.LOAD_HEATMAP });
-      } finally {
-        setHeatmapLoading(false);
-      }
-    },
-    [dateRange, showToast],
-  );
-
-  // Fetch history and incidents
-  const fetchHistory = useCallback(
-    async (jobId: number, jobName: string) => {
-      setHistoryLoading(true);
-      try {
-        const [histRes, incRes] = await Promise.all([
-          api.get(`${JOB_SLA_API_BASE}/jobs/${jobId}/history`, {
-            params: { date_from: formatDate(dateRange.from), date_to: formatDate(dateRange.to) },
-          }),
-          api.get(`${JOB_SLA_API_BASE}/jobs/${jobId}/incidents`, {
-            params: {
-              job_name: jobName,
-              date_from: formatDate(dateRange.from),
-              date_to: formatDate(dateRange.to),
-            },
-          }),
-        ]);
-        setHistory(histRes.data.history);
-        setIncidents(incRes.data.sev1_incidents);
-        setOverrides(incRes.data.overrides);
-      } catch {
-        showToast({ type: "error", message: ERRORS.LOAD_HISTORY });
-      } finally {
-        setHistoryLoading(false);
-      }
-    },
-    [dateRange, showToast],
-  );
-
-  // Fetch artifacts
-  const fetchArtifacts = useCallback(
-    async (jobId: number, jobName: string) => {
-      setArtifactsLoading(true);
-      try {
-        const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${jobId}/artifacts`, {
-          params: {
-            job_name: jobName,
-            date_from: formatDate(dateRange.from),
-            date_to: formatDate(dateRange.to),
-          },
-        });
-        setArtifactDefs(res.data.definitions);
-        setArtifactLiveState(res.data.live_state);
-        setArtifactEvents(res.data.events);
-      } catch {
-        showToast({ type: "error", message: ERRORS.LOAD_ARTIFACTS });
-      } finally {
-        setArtifactsLoading(false);
-      }
-    },
-    [dateRange, showToast],
-  );
-
-  // Fetch proxy rules
-  const fetchProxyRules = useCallback(
-    async (jobId: number) => {
-      setProxyLoading(true);
-      try {
-        const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${jobId}/proxy`);
-        setProxyRules(res.data.proxy_rules);
-        setTriggerRules(res.data.trigger_rules);
-      } catch {
-        showToast({ type: "error", message: ERRORS.LOAD_PROXY });
-      } finally {
-        setProxyLoading(false);
-      }
-    },
-    [showToast],
+    [],
   );
 
   // Initial load
   useEffect(() => {
     fetchJobs();
-  }, []); // Only run once on mount
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load job summary when job or date range changes
+  // Effect 1 — summary: fires only when job or date range changes.
+  // Tab switches do NOT trigger this.
   useEffect(() => {
     if (!selectedJob) return;
-    fetchJobSummary(selectedJob.job_id);
-  }, [selectedJob?.job_id, dateRange.from.getTime(), dateRange.to.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Load tab-specific data when tab changes or date range changes
-  useEffect(() => {
-    if (!selectedJob) return;
-
-    if (activeTab === "overview") {
-      fetchTrends(selectedJob.job_id);
-    } else if (activeTab === "heatmap") {
-      fetchHeatmap(selectedJob.job_id);
-    } else if (activeTab === "history") {
-      fetchHistory(selectedJob.job_id, selectedJob.job_name);
-    } else if (activeTab === "artifacts" && (selectedJob.has_artifacts || jobType?.has_artifacts)) {
-      fetchArtifacts(selectedJob.job_id, selectedJob.job_name);
-    } else if (
-      activeTab === "proxy" &&
-      (selectedJob.is_proxy || selectedJob.is_trigger || jobType?.is_proxy || jobType?.is_trigger)
-    ) {
-      fetchProxyRules(selectedJob.job_id);
-    }
+    summaryAbortRef.current?.abort();
+    const controller = new AbortController();
+    summaryAbortRef.current = controller;
+    loadSummary(selectedJob, formatDate(dateRange.from), formatDate(dateRange.to), controller.signal);
+    return () => {
+      controller.abort();
+    };
   }, [
+    // eslint-disable-line react-hooks/exhaustive-deps
+    selectedJob?.job_id,
+    dateRange.from.getTime(),
+    dateRange.to.getTime(),
+  ]);
+
+  // Effect 2 — tab data: fires when job, date range, or active tab changes.
+  // jobType is intentionally excluded from deps — it is set by the summary
+  // response and must never cause this effect to re-run after load completes.
+  useEffect(() => {
+    if (!selectedJob) return;
+    tabAbortRef.current?.abort();
+    const controller = new AbortController();
+    tabAbortRef.current = controller;
+    loadTabData(selectedJob, activeTab, formatDate(dateRange.from), formatDate(dateRange.to), controller.signal);
+    return () => {
+      controller.abort();
+    };
+  }, [
+    // eslint-disable-line react-hooks/exhaustive-deps
     selectedJob?.job_id,
     selectedJob?.job_name,
     activeTab,
     dateRange.from.getTime(),
     dateRange.to.getTime(),
-    selectedJob?.has_artifacts,
-    selectedJob?.is_proxy,
-    selectedJob?.is_trigger,
-    jobType?.has_artifacts,
-    jobType?.is_proxy,
-    jobType?.is_trigger,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+  ]);
 
-  // Handle job selection
+  // Handle job selection — resets all tab data and switches to overview
   const handleSelectJob = (job: JobDefinition) => {
-    setSelectedJob(job);
-    setActiveTab("overview");
-    // Reset tab data
+    // Reset stale data immediately so the UI doesn't flash old job's content
+    setJobType(null);
+    setCompliance(null);
+    setSlaPolicies([]);
     setWeeklyTrend([]);
     setMonthlyTrend([]);
     setSlaTimeline([]);
@@ -351,12 +346,19 @@ export default function JobSlaAnalyzer() {
     setArtifactEvents([]);
     setProxyRules([]);
     setTriggerRules([]);
+    // Setting selectedJob + activeTab together in the same synchronous block
+    // lets React batch these into a single render before the effect fires.
+    setSelectedJob(job);
+    setActiveTab("overview");
   };
 
-  // Build tabs list based on selected job's type (from jobs list, not separate fetch)
+  // Build tabs list based on selected job's type fields (populated from jobs list).
+  // jobType from summary is intentionally excluded — selectedJob already carries
+  // has_artifacts/is_proxy/is_trigger from the batch jobs API, so there's no
+  // need to wait for summary to resolve before showing the correct tab set.
   const tabs = useMemo(() => {
-    const baseTabs = [...JOB_SLA_TABS];
-    // Use job type from the selected job directly (populated in jobs list)
+    // Widen the array type explicitly so ARTIFACT_TAB / PROXY_TAB can be pushed
+    const baseTabs: { id: JobSlaTab; label: string }[] = [...JOB_SLA_TABS];
     if (selectedJob?.has_artifacts || jobType?.has_artifacts) {
       baseTabs.push(ARTIFACT_TAB);
     }
@@ -364,119 +366,142 @@ export default function JobSlaAnalyzer() {
       baseTabs.push(PROXY_TAB);
     }
     return baseTabs;
-  }, [selectedJob?.has_artifacts, selectedJob?.is_proxy, selectedJob?.is_trigger, jobType]);
+  }, [
+    selectedJob?.has_artifacts,
+    selectedJob?.is_proxy,
+    selectedJob?.is_trigger,
+    jobType?.has_artifacts,
+    jobType?.is_proxy,
+    jobType?.is_trigger,
+  ]);
 
-  // Refresh all data
+  // Refresh — re-run both loaders immediately using the bump-counter pattern
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    if (!selectedJob || refreshTick === 0) return;
+    summaryAbortRef.current?.abort();
+    tabAbortRef.current?.abort();
+    const sumCtrl = new AbortController();
+    const tabCtrl = new AbortController();
+    summaryAbortRef.current = sumCtrl;
+    tabAbortRef.current = tabCtrl;
+    const dateFrom = formatDate(dateRange.from);
+    const dateTo = formatDate(dateRange.to);
+    loadSummary(selectedJob, dateFrom, dateTo, sumCtrl.signal);
+    loadTabData(selectedJob, activeTab, dateFrom, dateTo, tabCtrl.signal);
+    return () => {
+      sumCtrl.abort();
+      tabCtrl.abort();
+    };
+  }, [refreshTick]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleRefresh = () => {
     fetchJobs();
-    if (selectedJob) {
-      fetchJobSummary(selectedJob.job_id);
-      if (activeTab === "overview") fetchTrends(selectedJob.job_id);
-      if (activeTab === "heatmap") fetchHeatmap(selectedJob.job_id);
-      if (activeTab === "history") fetchHistory(selectedJob.job_id, selectedJob.job_name);
-      if (activeTab === "artifacts") fetchArtifacts(selectedJob.job_id, selectedJob.job_name);
-      if (activeTab === "proxy") fetchProxyRules(selectedJob.job_id);
-    }
+    if (selectedJob) setRefreshTick((t) => t + 1);
   };
 
   return (
-    <div className="lf-layout" style={{ gridTemplateColumns: "var(--sidebar-left-width) 1fr" }}>
-      {/* LEFT SIDEBAR — Job Selector */}
-      <aside className="lf-sidebar-left">
-        <div className="sidebar-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-          <JobSelector
-            jobs={jobs}
-            loading={jobsLoading}
-            error={jobsError}
-            selectedJobId={selectedJob?.job_id ?? null}
-            onSelectJob={handleSelectJob}
-            jobTypes={jobTypes}
-          />
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT */}
-      <main className="lf-main">
-        <div style={{ width: "100%" }}>
-          {/* Toolbar */}
-          <div className="toolbar">
-            <span className="toolbar-title">
-              <Highlight>{LABELS.PAGE_TITLE}</Highlight>
-            </span>
-            <div className="toolbar-spacer" />
-            <DateRangePicker value={dateRange} onChange={setDateRange} />
-            <button type="button" className="btn btn-sm" onClick={handleRefresh}>
-              <RefreshIcon sx={{ fontSize: 14 }} /> {LABELS.REFRESH}
-            </button>
+    <>
+      <Toast toast={toast} />
+      <div className="lf-layout" style={{ gridTemplateColumns: "var(--sidebar-left-width) 1fr" }}>
+        {/* LEFT SIDEBAR — Job Selector */}
+        <aside className="lf-sidebar-left">
+          <div className="sidebar-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+            <JobSelector
+              jobs={jobs}
+              loading={jobsLoading}
+              error={jobsError}
+              selectedJobId={selectedJob?.job_id ?? null}
+              onSelectJob={handleSelectJob}
+              jobTypes={jobTypes}
+            />
           </div>
+        </aside>
 
-          {/* Content */}
-          {selectedJob ? (
-            <div className="js-analyzer-content">
-              {/* KPI Cards */}
-              <KpiCards compliance={compliance} loading={summaryLoading} />
+        {/* MAIN CONTENT */}
+        <main className="lf-main">
+          <div style={{ width: "100%" }}>
+            {/* Toolbar */}
+            <div className="toolbar">
+              <span className="toolbar-title">
+                <Highlight>{LABELS.PAGE_TITLE}</Highlight>
+              </span>
+              <div className="toolbar-spacer" />
+              <DateRangePicker value={dateRange} onChange={setDateRange} />
+              <button type="button" className="btn btn-sm" onClick={handleRefresh}>
+                <RefreshIcon sx={{ fontSize: 14 }} /> {LABELS.REFRESH}
+              </button>
+            </div>
 
-              {/* Tabs */}
-              <div className="js-tabs">
-                <div className="js-tab-list">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      className={`js-tab-btn ${activeTab === tab.id ? "js-tab-btn--active" : ""}`}
-                      onClick={() => setActiveTab(tab.id as JobSlaTab)}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
+            {/* Content */}
+            {selectedJob ? (
+              <div className="js-analyzer-content">
+                {/* KPI Cards */}
+                <KpiCards compliance={compliance} loading={summaryLoading} />
 
-                <div className="js-tab-content">
-                  {activeTab === "overview" && (
-                    <OverviewTab
-                      job={selectedJob}
-                      jobType={jobType}
-                      slaPolicies={slaPolicies}
-                      weeklyTrend={weeklyTrend}
-                      monthlyTrend={monthlyTrend}
-                      slaTimeline={slaTimeline}
-                      insights={trendInsights}
-                      dayOfWeekStats={dayOfWeekStats}
-                      loading={trendsLoading}
-                    />
-                  )}
-                  {activeTab === "heatmap" && (
-                    <HeatmapTab cells={heatmapCells} durationBuckets={durationBuckets} loading={heatmapLoading} />
-                  )}
-                  {activeTab === "history" && (
-                    <HistoryTab
-                      history={history}
-                      incidents={incidents}
-                      overrides={overrides}
-                      loading={historyLoading}
-                    />
-                  )}
-                  {activeTab === "artifacts" && (
-                    <ArtifactsTab
-                      definitions={artifactDefs}
-                      liveState={artifactLiveState}
-                      events={artifactEvents}
-                      loading={artifactsLoading}
-                    />
-                  )}
-                  {activeTab === "proxy" && (
-                    <ProxyTab proxyRules={proxyRules} triggerRules={triggerRules} loading={proxyLoading} />
-                  )}
+                {/* Tabs */}
+                <div className="js-tabs">
+                  <div className="js-tab-list">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        className={`js-tab-btn ${activeTab === tab.id ? "js-tab-btn--active" : ""}`}
+                        onClick={() => setActiveTab(tab.id as JobSlaTab)}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="js-tab-content">
+                    {activeTab === "overview" && (
+                      <OverviewTab
+                        job={selectedJob}
+                        jobType={jobType}
+                        slaPolicies={slaPolicies}
+                        weeklyTrend={weeklyTrend}
+                        monthlyTrend={monthlyTrend}
+                        slaTimeline={slaTimeline}
+                        insights={trendInsights}
+                        dayOfWeekStats={dayOfWeekStats}
+                        loading={trendsLoading}
+                      />
+                    )}
+                    {activeTab === "heatmap" && (
+                      <HeatmapTab cells={heatmapCells} durationBuckets={durationBuckets} loading={heatmapLoading} />
+                    )}
+                    {activeTab === "history" && (
+                      <HistoryTab
+                        history={history}
+                        incidents={incidents}
+                        overrides={overrides}
+                        loading={historyLoading}
+                      />
+                    )}
+                    {activeTab === "artifacts" && (
+                      <ArtifactsTab
+                        definitions={artifactDefs}
+                        liveState={artifactLiveState}
+                        events={artifactEvents}
+                        loading={artifactsLoading}
+                      />
+                    )}
+                    {activeTab === "proxy" && (
+                      <ProxyTab proxyRules={proxyRules} triggerRules={triggerRules} loading={proxyLoading} />
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="js-empty-state">
-              <p>{LABELS.SELECT_JOB}</p>
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+            ) : (
+              <div className="js-empty-state">
+                <p>{LABELS.SELECT_JOB}</p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
