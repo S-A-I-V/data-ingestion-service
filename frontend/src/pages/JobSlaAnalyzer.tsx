@@ -113,9 +113,14 @@ export default function JobSlaAnalyzer() {
   const [triggerRules, setTriggerRules] = useState<ProxyRule[]>([]);
   const [proxyLoading, setProxyLoading] = useState(false);
 
-  // ── Abort controllers — summary and tab data are independent ───────────────
+  // ── Abort controllers ─────────────────────────────────────────────────────
+  // One controller per logical fetch group. On job change both are replaced.
+  // On tab switch only tabAbortRef is replaced, summary is left untouched.
   const summaryAbortRef = useRef<AbortController | null>(null);
   const tabAbortRef = useRef<AbortController | null>(null);
+  // Track the last job_id that triggered a full (summary + tab) load so we can
+  // distinguish a job change from a tab switch inside the unified effect.
+  const loadedJobIdRef = useRef<number | null>(null);
 
   // ── Jobs list loader ───────────────────────────────────────────────────────
 
@@ -264,28 +269,50 @@ export default function JobSlaAnalyzer() {
     fetchJobs();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Summary: fires only when the selected job changes.
+  // Unified effect: one dep array covers both job changes and tab switches.
+  //
+  // Job change  → summary + tabData fire in Promise.all so both resolve before
+  //               any state is written. The page paints once, fully populated.
+  // Tab switch  → job_id hasn't changed, so only tabData fires. Summary is
+  //               left completely untouched (no KPI card reload).
+  //
+  // This collapses the old two-effect architecture which caused two separate
+  // React render cycles (one when summary resolved, one when tabData resolved).
   useEffect(() => {
     if (!selectedJob) return;
-    summaryAbortRef.current?.abort();
-    const ctrl = new AbortController();
-    summaryAbortRef.current = ctrl;
-    loadSummary(selectedJob, ctrl.signal);
-    return () => {
-      ctrl.abort();
-    };
-  }, [selectedJob?.job_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Tab data: fires when job or active tab changes.
-  useEffect(() => {
-    if (!selectedJob) return;
-    tabAbortRef.current?.abort();
-    const ctrl = new AbortController();
-    tabAbortRef.current = ctrl;
-    loadTabData(selectedJob, activeTab, ctrl.signal);
-    return () => {
-      ctrl.abort();
-    };
+    const jobChanged = loadedJobIdRef.current !== selectedJob.job_id;
+
+    if (jobChanged) {
+      // Cancel any in-flight requests from the previous job
+      summaryAbortRef.current?.abort();
+      tabAbortRef.current?.abort();
+
+      const sumCtrl = new AbortController();
+      const tabCtrl = new AbortController();
+      summaryAbortRef.current = sumCtrl;
+      tabAbortRef.current = tabCtrl;
+      loadedJobIdRef.current = selectedJob.job_id;
+
+      // Fire both in parallel, write state only after both resolve.
+      // A single Promise.all means React flushes one batch, not two.
+      Promise.all([loadSummary(selectedJob, sumCtrl.signal), loadTabData(selectedJob, activeTab, tabCtrl.signal)]);
+
+      return () => {
+        sumCtrl.abort();
+        tabCtrl.abort();
+      };
+    } else {
+      // Tab switch — only reload the tab content, leave summary/KPIs alone
+      tabAbortRef.current?.abort();
+      const tabCtrl = new AbortController();
+      tabAbortRef.current = tabCtrl;
+      loadTabData(selectedJob, activeTab, tabCtrl.signal);
+
+      return () => {
+        tabCtrl.abort();
+      };
+    }
   }, [selectedJob?.job_id, selectedJob?.job_name, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Job selection ──────────────────────────────────────────────────────────
@@ -340,14 +367,17 @@ export default function JobSlaAnalyzer() {
 
   useEffect(() => {
     if (!selectedJob || refreshTick === 0) return;
+    // Reset the tracked job ID so the unified effect treats this as a fresh
+    // job load and fires Promise.all(summary + tabData) together.
+    loadedJobIdRef.current = null;
     summaryAbortRef.current?.abort();
     tabAbortRef.current?.abort();
     const sumCtrl = new AbortController();
     const tabCtrl = new AbortController();
     summaryAbortRef.current = sumCtrl;
     tabAbortRef.current = tabCtrl;
-    loadSummary(selectedJob, sumCtrl.signal);
-    loadTabData(selectedJob, activeTab, tabCtrl.signal);
+    loadedJobIdRef.current = selectedJob.job_id;
+    Promise.all([loadSummary(selectedJob, sumCtrl.signal), loadTabData(selectedJob, activeTab, tabCtrl.signal)]);
     return () => {
       sumCtrl.abort();
       tabCtrl.abort();
