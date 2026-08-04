@@ -9,7 +9,8 @@
 import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { Spinner, Panel, PanelHeader } from "../../ui";
-import { DAY_OF_WEEK_LABELS } from "../../../constants/jobSla";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { DAY_OF_WEEK_LABELS, TREND_TIMEZONE_OPTIONS, TREND_DEFAULT_TIMEZONE } from "../../../constants/jobSla";
 import type { SlaPolicy, DayOfWeekSlaBars, WeeklySlaBars } from "../../../types/jobSla";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -32,11 +33,16 @@ const CHART_VIEW_LABELS: Record<ChartView, string> = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Convert minutes-from-midnight to "H:MM AM/PM" */
-function minsToTime(mins: number | null): string {
+/**
+ * Convert minutes-from-midnight (UTC) to "H:MM AM/PM" in the given timezone.
+ * tzOffsetMinutes is the signed offset from UTC (e.g. -300 for ET, +330 for IST).
+ * Wraps around midnight correctly.
+ */
+function minsToTime(mins: number | null, tzOffsetMinutes = 0): string {
   if (mins == null) return "—";
-  const h = Math.floor(mins / 60) % 24;
-  const m = Math.round(mins % 60);
+  const shifted = (((mins + tzOffsetMinutes) % 1440) + 1440) % 1440;
+  const h = Math.floor(shifted / 60);
+  const m = Math.round(shifted % 60);
   const ampm = h >= 12 ? "PM" : "AM";
   const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
@@ -50,7 +56,7 @@ function fmtWeekLabel(iso: string): string {
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
 
-function SlaBarTooltip({ active, payload, label }: any) {
+function SlaBarTooltip({ active, payload, label, tzOffset = 0 }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
   const breached =
@@ -62,25 +68,25 @@ function SlaBarTooltip({ active, payload, label }: any) {
       {d?.expected_start_minutes != null && (
         <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
           <span>Expected start:</span>
-          <span>{minsToTime(d.expected_start_minutes)}</span>
+          <span>{minsToTime(d.expected_start_minutes, tzOffset)}</span>
         </div>
       )}
       {d?.actual_start_minutes != null && (
         <div className="js-tooltip-row" style={{ color: COLOR_ACTUAL_OK }}>
           <span>Actual start:</span>
-          <span>{minsToTime(d.actual_start_minutes)}</span>
+          <span>{minsToTime(d.actual_start_minutes, tzOffset)}</span>
         </div>
       )}
       {d?.actual_end_minutes != null && (
         <div className="js-tooltip-row" style={{ color: breached ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK }}>
           <span>Actual end:</span>
-          <span>{minsToTime(d.actual_end_minutes)}</span>
+          <span>{minsToTime(d.actual_end_minutes, tzOffset)}</span>
         </div>
       )}
       {d?.expected_sla_minutes != null && (
         <div className="js-tooltip-row" style={{ color: COLOR_SLA_END_LINE }}>
           <span>SLA deadline:</span>
-          <span>{minsToTime(d.expected_sla_minutes)}</span>
+          <span>{minsToTime(d.expected_sla_minutes, tzOffset)}</span>
         </div>
       )}
       {d?.avg_delay_minutes != null && d.avg_delay_minutes > 0 && (
@@ -202,9 +208,12 @@ interface SlaBarChartProps {
   view: ChartView;
   dowData: DayOfWeekSlaBars[];
   weeklyData: WeeklySlaBars[];
+  tzOffset: number;
 }
 
-function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
+function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) {
+  // Bind the offset into a stable tick formatter for the Y-axis
+  const tickFormatter = (mins: number) => minsToTime(mins, tzOffset);
   const chartData = useMemo(() => {
     // Sort Mon(1)→Tue(2)→…→Sat(6)→Sun(0) regardless of API return order
     const MON_FIRST = (dow: number) => (dow === 0 ? 7 : dow);
@@ -331,12 +340,12 @@ function SlaBarChart({ view, dowData, weeklyData }: SlaBarChartProps) {
         <YAxis
           domain={yDomain}
           ticks={yTicks}
-          tickFormatter={minsToTime}
+          tickFormatter={tickFormatter}
           tick={{ fontSize: AXIS_FONT_SIZE }}
           stroke={COLOR_AXIS}
           width={72}
         />
-        <Tooltip content={<SlaBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+        <Tooltip content={<SlaBarTooltip tzOffset={tzOffset} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
         <Legend
           wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
           content={() => (
@@ -436,6 +445,12 @@ interface OverviewTabProps {
 
 export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, loading }: OverviewTabProps) {
   const [chartView, setChartView] = useState<ChartView>("day_of_week");
+  const [tzValue, setTzValue] = useState(TREND_DEFAULT_TIMEZONE);
+
+  const tzOffset = useMemo(
+    () => TREND_TIMEZONE_OPTIONS.find((o) => o.value === tzValue)?.offsetMinutes ?? 0,
+    [tzValue],
+  );
 
   if (loading) {
     return (
@@ -460,24 +475,41 @@ export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, load
               deadline.
             </p>
           </div>
-          {/* View toggle */}
-          <div className="js-view-mode-buttons">
-            {(Object.keys(CHART_VIEW_LABELS) as ChartView[]).map((v) => (
-              <button
-                key={v}
-                type="button"
-                className={`js-view-mode-btn${chartView === v ? " js-view-mode-btn--active" : ""}`}
-                onClick={() => setChartView(v)}
+          {/* Controls row: view toggles + timezone picker */}
+          <div className="js-trend-controls">
+            <div className="js-view-mode-buttons">
+              {(Object.keys(CHART_VIEW_LABELS) as ChartView[]).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={`js-view-mode-btn${chartView === v ? " js-view-mode-btn--active" : ""}`}
+                  onClick={() => setChartView(v)}
+                >
+                  {CHART_VIEW_LABELS[v]}
+                </button>
+              ))}
+            </div>
+            <Select value={tzValue} onValueChange={setTzValue}>
+              <SelectTrigger
+                className="js-tz-select !rounded-none !border-[var(--text-primary)] !bg-[var(--bg-surface)]"
+                aria-label="Chart timezone"
               >
-                {CHART_VIEW_LABELS[v]}
-              </button>
-            ))}
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TREND_TIMEZONE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <div className="js-chart-container">
           {hasChartData ? (
-            <SlaBarChart view={chartView} dowData={dayOfWeekSlaBars} weeklyData={weeklySlaBars} />
+            <SlaBarChart view={chartView} dowData={dayOfWeekSlaBars} weeklyData={weeklySlaBars} tzOffset={tzOffset} />
           ) : (
             <div className="js-chart-empty">
               No SLA data available — expected SLA times may not be configured for this job.

@@ -176,6 +176,29 @@ export const INCIDENT_COLUMN_LABELS: Record<string, string> = {
   created_by: "Created By",
 };
 
+// ── Trend Timezone Options ───────────────────────────────────────────────────
+
+/**
+ * Timezone options available in the SLA trend chart timezone picker.
+ * label  — display text shown in the dropdown
+ * value  — IANA timezone string passed to Intl / toLocaleString
+ * offset — UTC offset in minutes (used to shift minutes-from-midnight values
+ *           that the backend always returns in UTC)
+ */
+export const TREND_TIMEZONE_OPTIONS: { label: string; value: string; offsetMinutes: number }[] = [
+  { label: "UTC", value: "UTC", offsetMinutes: 0 },
+  { label: "ET (UTC-5/4)", value: "America/New_York", offsetMinutes: -300 },
+  { label: "CT (UTC-6/5)", value: "America/Chicago", offsetMinutes: -360 },
+  { label: "MT (UTC-7/6)", value: "America/Denver", offsetMinutes: -420 },
+  { label: "PT (UTC-8/7)", value: "America/Los_Angeles", offsetMinutes: -480 },
+  { label: "IST (UTC+5:30)", value: "Asia/Kolkata", offsetMinutes: 330 },
+  { label: "CET (UTC+1/2)", value: "Europe/Paris", offsetMinutes: 60 },
+  { label: "Local", value: "__local__", offsetMinutes: -new Date().getTimezoneOffset() },
+];
+
+/** Default timezone for the trend chart */
+export const TREND_DEFAULT_TIMEZONE = "UTC";
+
 // ── Tab Configuration ────────────────────────────────────────────────────────
 
 /** Available tabs in Job SLA Analyzer */

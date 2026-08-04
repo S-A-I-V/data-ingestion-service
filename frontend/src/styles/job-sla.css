@@ -967,6 +967,24 @@
   gap: 0.25rem;
 }
 
+/* Trend controls row — view toggles left, timezone picker far right */
+.js-trend-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Push timezone select to the far right — uses Radix SelectTrigger */
+.js-tz-select {
+  margin-left: auto;
+  width: auto;
+  min-width: 8.5rem;
+  height: 1.75rem;
+  font-size: 11px;
+  border-radius: 0;
+}
+
 .js-view-mode-btn {
   position: relative;
   padding: 0.375rem 0.75rem;
