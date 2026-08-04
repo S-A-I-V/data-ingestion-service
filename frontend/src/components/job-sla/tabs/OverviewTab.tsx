@@ -7,7 +7,18 @@
  */
 
 import { useMemo, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+import {
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { Spinner, Panel, PanelHeader } from "../../ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { DAY_OF_WEEK_LABELS, TREND_TIMEZONE_OPTIONS, TREND_DEFAULT_TIMEZONE } from "../../../constants/jobSla";
@@ -26,10 +37,22 @@ const Y_AXIS_TICKS = [0, 180, 360, 540, 720, 900, 1080, 1260, 1440]; // every 3h
 /** View mode toggle values */
 type ChartView = "day_of_week" | "weekly";
 
+/** Chart style: bars + lines (default) or lines only */
+type ChartStyle = "bar_line" | "line_only";
+
 const CHART_VIEW_LABELS: Record<ChartView, string> = {
   day_of_week: "By Day of Week",
   weekly: "By Week",
 };
+
+const CHART_STYLE_LABELS: Record<ChartStyle, string> = {
+  bar_line: "Bar + Line",
+  line_only: "Line Only",
+};
+
+/** Line colors for overlay trends */
+const COLOR_LINE_ACTUAL = "#f97316"; // orange-500 — actual midpoint (distinct from blue bars)
+const COLOR_LINE_EXPECTED = "#a855f7"; // purple-500 — expected SLA midpoint (distinct from green start lines)
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -62,31 +85,33 @@ function SlaBarTooltip({ active, payload, label, tzOffset = 0 }: any) {
   const breached =
     d?.actual_end_minutes != null && d?.expected_sla_minutes != null && d.actual_end_minutes > d.expected_sla_minutes;
 
+  // Data values are already shifted by tzOffset in chartDataWithDomain,
+  // so we format with offset=0 here to avoid double-shifting.
   return (
     <div className="js-chart-tooltip">
       <div className="js-tooltip-label">{label}</div>
       {d?.expected_start_minutes != null && (
         <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
           <span>Expected start:</span>
-          <span>{minsToTime(d.expected_start_minutes, tzOffset)}</span>
+          <span>{minsToTime(d.expected_start_minutes, 0)}</span>
         </div>
       )}
       {d?.actual_start_minutes != null && (
         <div className="js-tooltip-row" style={{ color: COLOR_ACTUAL_OK }}>
           <span>Actual start:</span>
-          <span>{minsToTime(d.actual_start_minutes, tzOffset)}</span>
+          <span>{minsToTime(d.actual_start_minutes, 0)}</span>
         </div>
       )}
       {d?.actual_end_minutes != null && (
         <div className="js-tooltip-row" style={{ color: breached ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK }}>
           <span>Actual end:</span>
-          <span>{minsToTime(d.actual_end_minutes, tzOffset)}</span>
+          <span>{minsToTime(d.actual_end_minutes, 0)}</span>
         </div>
       )}
       {d?.expected_sla_minutes != null && (
         <div className="js-tooltip-row" style={{ color: COLOR_SLA_END_LINE }}>
           <span>SLA deadline:</span>
-          <span>{minsToTime(d.expected_sla_minutes, tzOffset)}</span>
+          <span>{minsToTime(d.expected_sla_minutes, 0)}</span>
         </div>
       )}
       {d?.avg_delay_minutes != null && d.avg_delay_minutes > 0 && (
@@ -209,11 +234,14 @@ interface SlaBarChartProps {
   dowData: DayOfWeekSlaBars[];
   weeklyData: WeeklySlaBars[];
   tzOffset: number;
+  chartStyle: ChartStyle;
 }
 
-function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) {
+function SlaBarChart({ view, dowData, weeklyData, tzOffset, chartStyle }: SlaBarChartProps) {
   // Bind the offset into a stable tick formatter for the Y-axis
-  const tickFormatter = (mins: number) => minsToTime(mins, tzOffset);
+  // Y-axis always shows 12AM–12AM; the timezone shifts DATA positions instead
+  const tickFormatter = (mins: number) => minsToTime(mins, 0);
+  const showBars = chartStyle === "bar_line";
   const chartData = useMemo(() => {
     // Sort Mon(1)→Tue(2)→…→Sat(6)→Sun(0) regardless of API return order
     const MON_FIRST = (dow: number) => (dow === 0 ? 7 : dow);
@@ -240,6 +268,14 @@ function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) 
                 actual_start_minutes: d.actual_start_minutes,
                 expected_sla_minutes: d.expected_sla_minutes,
                 actual_end_minutes: d.actual_end_minutes,
+                actual_midpoint:
+                  d.actual_start_minutes != null && d.actual_end_minutes != null
+                    ? (d.actual_start_minutes + d.actual_end_minutes) / 2
+                    : null,
+                expected_midpoint:
+                  d.expected_start_minutes != null && d.expected_sla_minutes != null
+                    ? (d.expected_start_minutes + d.expected_sla_minutes) / 2
+                    : null,
                 avg_delay_minutes: d.avg_delay_minutes,
                 on_time_percentage: d.on_time_percentage,
                 total_runs: d.total_runs,
@@ -269,6 +305,14 @@ function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) 
               actual_start_minutes: d.actual_start_minutes,
               expected_sla_minutes: d.expected_sla_minutes,
               actual_end_minutes: d.actual_end_minutes,
+              actual_midpoint:
+                d.actual_start_minutes != null && d.actual_end_minutes != null
+                  ? (d.actual_start_minutes + d.actual_end_minutes) / 2
+                  : null,
+              expected_midpoint:
+                d.expected_start_minutes != null && d.expected_sla_minutes != null
+                  ? (d.expected_start_minutes + d.expected_sla_minutes) / 2
+                  : null,
               avg_delay_minutes: d.avg_delay_minutes,
               on_time_percentage: d.on_time_percentage,
               total_runs: 1,
@@ -286,36 +330,47 @@ function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) 
     return rows;
   }, [view, dowData, weeklyData]);
 
-  // Avg expected SLA deadline is no longer needed for a global ReferenceLine —
-  // per-bar lines are drawn by JobWindowShape via custom Bar shape instead.
-
-  // Y-axis domain: for the daily view, zoom into the actual data range with
-  // 60-min padding and 3-hour tick boundaries so the axis stays readable.
-  // For the day-of-week view keep the full 0–1440 range (fewer bars, wider spread).
-  const { yDomain, yTicks } = useMemo(() => {
-    if (view !== "weekly" || !chartData.length) {
-      return { yDomain: Y_AXIS_DOMAIN, yTicks: Y_AXIS_TICKS };
-    }
-    const allVals = chartData.flatMap((d) =>
-      [d.expected_start_minutes, d.actual_start_minutes, d.expected_sla_minutes, d.actual_end_minutes].filter(
-        (v): v is number => v != null,
-      ),
-    );
-    if (!allVals.length) return { yDomain: Y_AXIS_DOMAIN, yTicks: Y_AXIS_TICKS };
-    const PAD_MINS = 60; // one hour padding
-    const TICK_STEP = 180; // 3-hour ticks
-    const lo = Math.max(0, Math.floor((Math.min(...allVals) - PAD_MINS) / TICK_STEP) * TICK_STEP);
-    const hi = Math.min(1440, Math.ceil((Math.max(...allVals) + PAD_MINS) / TICK_STEP) * TICK_STEP);
-    const ticks: number[] = [];
-    for (let t = lo; t <= hi; t += TICK_STEP) ticks.push(t);
-    return { yDomain: [lo, hi] as [number, number], yTicks: ticks };
-  }, [view, chartData]);
+  // Y-axis always shows full 0–1440 (12:00 AM to 12:00 AM).
+  // Timezone shifting moves the data, not the axis.
+  const yDomain = Y_AXIS_DOMAIN;
+  const yTicks = Y_AXIS_TICKS;
 
   // Stamp the active domain bounds into each payload row so JobWindowShape
   // can interpolate SLA line positions correctly when the domain is zoomed.
+  // Also shift all minute-based values by tzOffset so the bars/lines physically
+  // move on the fixed 0–1440 Y-axis when timezone changes.
+  const shiftMins = (v: number | null | undefined) => (v != null ? (((v + tzOffset) % 1440) + 1440) % 1440 : v);
+
   const chartDataWithDomain = useMemo(
-    () => chartData.map((d) => ({ ...d, yDomainMin: yDomain[0], yDomainMax: yDomain[1] })),
-    [chartData, yDomain],
+    () =>
+      chartData.map((d) => {
+        const shiftedBase = shiftMins(d.base) ?? 0;
+        const shiftedActualStart = shiftMins(d.actual_start_minutes);
+        const shiftedActualEnd = shiftMins(d.actual_end_minutes);
+        const shiftedExpStart = shiftMins(d.expected_start_minutes);
+        const shiftedExpSla = shiftMins(d.expected_sla_minutes);
+        const shiftedActualMidpoint = shiftMins(d.actual_midpoint);
+        const shiftedExpMidpoint = shiftMins(d.expected_midpoint);
+        const shiftedRangeHeight =
+          shiftedActualStart != null && shiftedActualEnd != null
+            ? Math.max(0, shiftedActualEnd - shiftedActualStart)
+            : d.range_height;
+
+        return {
+          ...d,
+          base: shiftedBase,
+          range_height: shiftedRangeHeight,
+          actual_start_minutes: shiftedActualStart,
+          actual_end_minutes: shiftedActualEnd,
+          expected_start_minutes: shiftedExpStart,
+          expected_sla_minutes: shiftedExpSla,
+          actual_midpoint: shiftedActualMidpoint,
+          expected_midpoint: shiftedExpMidpoint,
+          yDomainMin: yDomain[0],
+          yDomainMax: yDomain[1],
+        };
+      }),
+    [chartData, yDomain, tzOffset],
   );
 
   if (!chartData.length) {
@@ -328,13 +383,11 @@ function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) 
 
   return (
     <ResponsiveContainer width="100%" height={CHART_HEIGHT_PX}>
-      {/*
-        Floating bar technique: two stacked bars per group.
-          1. "base" — transparent, lifts the visible bar to start at expected_start_minutes
-          2. "range_height" — colored, spans from expected_start to actual_end
-        The SLA deadline is a ReferenceLine cutting across all bars.
-      */}
-      <BarChart data={chartDataWithDomain} margin={{ top: 12, right: 60, left: 8, bottom: 0 }} barCategoryGap="20%">
+      <ComposedChart
+        data={chartDataWithDomain}
+        margin={{ top: 12, right: 60, left: 8, bottom: 0 }}
+        barCategoryGap="20%"
+      >
         <CartesianGrid strokeDasharray="3 3" stroke={COLOR_GRID} vertical={false} />
         <XAxis dataKey="label" tick={{ fontSize: AXIS_FONT_SIZE }} stroke={COLOR_AXIS} />
         <YAxis
@@ -345,7 +398,7 @@ function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) 
           stroke={COLOR_AXIS}
           width={72}
         />
-        <Tooltip content={<SlaBarTooltip tzOffset={tzOffset} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+        <Tooltip content={<SlaBarTooltip tzOffset={tzOffset} />} cursor={{ fill: "rgba(0,0,0,0.06)" }} />
         <Legend
           wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
           content={() => (
@@ -356,78 +409,122 @@ function SlaBarChart({ view, dowData, weeklyData, tzOffset }: SlaBarChartProps) 
                 justifyContent: "center",
                 fontSize: 11,
                 color: "var(--text-secondary)",
+                flexWrap: "wrap",
               }}
             >
+              {showBars && (
+                <>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 12,
+                        height: 12,
+                        borderRadius: 2,
+                        background: COLOR_ACTUAL_OK,
+                      }}
+                    />
+                    On-time run
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 12,
+                        height: 12,
+                        borderRadius: 2,
+                        background: COLOR_ACTUAL_BREACH,
+                      }}
+                    />
+                    SLA breached
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="20" height="4">
+                      <line
+                        x1="0"
+                        x2="20"
+                        y1="2"
+                        y2="2"
+                        stroke={COLOR_SLA_START_LINE}
+                        strokeWidth="3"
+                        strokeDasharray="5 2"
+                      />
+                    </svg>
+                    SLA start
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <svg width="20" height="4">
+                      <line
+                        x1="0"
+                        x2="20"
+                        y1="2"
+                        y2="2"
+                        stroke={COLOR_SLA_END_LINE}
+                        strokeWidth="3"
+                        strokeDasharray="5 2"
+                      />
+                    </svg>
+                    SLA deadline
+                  </span>
+                </>
+              )}
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 12,
-                    height: 12,
-                    borderRadius: 2,
-                    background: COLOR_ACTUAL_OK,
-                  }}
-                />
-                On-time run
-              </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 12,
-                    height: 12,
-                    borderRadius: 2,
-                    background: COLOR_ACTUAL_BREACH,
-                  }}
-                />
-                SLA breached
+                <svg width="20" height="4">
+                  <line x1="0" x2="20" y1="2" y2="2" stroke={COLOR_LINE_ACTUAL} strokeWidth="2" />
+                </svg>
+                Actual (midpoint)
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <svg width="20" height="4">
-                  <line
-                    x1="0"
-                    x2="20"
-                    y1="2"
-                    y2="2"
-                    stroke={COLOR_SLA_START_LINE}
-                    strokeWidth="3"
-                    strokeDasharray="5 2"
-                  />
+                  <line x1="0" x2="20" y1="2" y2="2" stroke={COLOR_LINE_EXPECTED} strokeWidth="2" />
                 </svg>
-                SLA start
-              </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <svg width="20" height="4">
-                  <line
-                    x1="0"
-                    x2="20"
-                    y1="2"
-                    y2="2"
-                    stroke={COLOR_SLA_END_LINE}
-                    strokeWidth="3"
-                    strokeDasharray="5 2"
-                  />
-                </svg>
-                SLA deadline
+                Expected SLA
               </span>
             </div>
           )}
         />
-        {/* Invisible base — lifts the visible bar to start at expected_start_minutes */}
-        <Bar dataKey="base" stackId="sla" fill="transparent" legendType="none" isAnimationActive={false} />
-        {/* Job run window + SLA lines drawn together in one custom shape */}
-        <Bar
-          dataKey="range_height"
-          name="Job run window"
-          stackId="sla"
+        {/* Bars — only when chartStyle includes bars */}
+        {showBars && (
+          <>
+            <Bar dataKey="base" stackId="sla" fill="transparent" legendType="none" isAnimationActive={false} />
+            <Bar
+              dataKey="range_height"
+              name="Job run window"
+              stackId="sla"
+              isAnimationActive={false}
+              shape={<JobWindowShape />}
+            >
+              {chartDataWithDomain.map((d, i) => (
+                <Cell key={i} fill={d.isBreach ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK} />
+              ))}
+            </Bar>
+          </>
+        )}
+        {/* Line: actual midpoint (orange) */}
+        <Line
+          dataKey="actual_midpoint"
+          name="Actual (midpoint)"
+          type="linear"
+          stroke={COLOR_LINE_ACTUAL}
+          strokeWidth={2}
+          dot={{ r: 3, fill: COLOR_LINE_ACTUAL }}
+          connectNulls
           isAnimationActive={false}
-          shape={<JobWindowShape />}
-        >
-          {chartDataWithDomain.map((d, i) => (
-            <Cell key={i} fill={d.isBreach ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK} />
-          ))}
-        </Bar>
-      </BarChart>
+          legendType="none"
+        />
+        {/* Line: expected SLA midpoint (purple) */}
+        <Line
+          dataKey="expected_midpoint"
+          name="Expected SLA"
+          type="linear"
+          stroke={COLOR_LINE_EXPECTED}
+          strokeWidth={2}
+          dot={{ r: 3, fill: COLOR_LINE_EXPECTED }}
+          connectNulls
+          isAnimationActive={false}
+          legendType="none"
+        />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }
@@ -445,6 +542,7 @@ interface OverviewTabProps {
 
 export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, loading }: OverviewTabProps) {
   const [chartView, setChartView] = useState<ChartView>("day_of_week");
+  const [chartStyle, setChartStyle] = useState<ChartStyle>("bar_line");
   const [tzValue, setTzValue] = useState(TREND_DEFAULT_TIMEZONE);
 
   const tzOffset = useMemo(
@@ -475,7 +573,7 @@ export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, load
               deadline.
             </p>
           </div>
-          {/* Controls row: view toggles + timezone picker */}
+          {/* Controls row: view toggles + chart style + timezone picker */}
           <div className="js-trend-controls">
             <div className="js-view-mode-buttons">
               {(Object.keys(CHART_VIEW_LABELS) as ChartView[]).map((v) => (
@@ -488,6 +586,15 @@ export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, load
                   {CHART_VIEW_LABELS[v]}
                 </button>
               ))}
+            </div>
+            <div className="js-view-mode-buttons">
+              <button
+                type="button"
+                className={`js-view-mode-btn${chartStyle === "line_only" ? " js-view-mode-btn--active" : ""}`}
+                onClick={() => setChartStyle(chartStyle === "line_only" ? "bar_line" : "line_only")}
+              >
+                Line Only
+              </button>
             </div>
             <Select value={tzValue} onValueChange={setTzValue}>
               <SelectTrigger
@@ -509,7 +616,13 @@ export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, load
 
         <div className="js-chart-container">
           {hasChartData ? (
-            <SlaBarChart view={chartView} dowData={dayOfWeekSlaBars} weeklyData={weeklySlaBars} tzOffset={tzOffset} />
+            <SlaBarChart
+              view={chartView}
+              dowData={dayOfWeekSlaBars}
+              weeklyData={weeklySlaBars}
+              tzOffset={tzOffset}
+              chartStyle={chartStyle}
+            />
           ) : (
             <div className="js-chart-empty">
               No SLA data available — expected SLA times may not be configured for this job.
