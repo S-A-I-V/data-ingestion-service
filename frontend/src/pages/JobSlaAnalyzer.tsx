@@ -403,6 +403,12 @@ export default function JobSlaAnalyzer() {
             <div className="toolbar">
               <span className="toolbar-title">
                 <Highlight>{LABELS.PAGE_TITLE}</Highlight>
+                {selectedJob && (
+                  <>
+                    <span style={{ margin: "0 0.5rem", opacity: 0.3 }}>/</span>
+                    <Highlight>{selectedJob.job_name}</Highlight>
+                  </>
+                )}
               </span>
               <div className="toolbar-spacer" />
               <button type="button" className="btn btn-sm" onClick={handleRefresh}>

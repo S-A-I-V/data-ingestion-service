@@ -83,7 +83,7 @@ SELECT
         ) / NULLIF(COUNT(*), 0),
         2
     ) AS on_time_percentage,
-    ROUND(AVG(b.delay_duration_minutes) FILTER (WHERE b.delay_duration_minutes > 0), 2) AS avg_delay_minutes,
+    ROUND((AVG(b.delay_duration_minutes) FILTER (WHERE b.delay_duration_minutes > 0))::numeric, 2) AS avg_delay_minutes,
     ROUND((SELECT AVG(d.dur_min) FROM with_duration d
            WHERE d.week_start = b.week_start)::numeric, 2) AS avg_duration_minutes,
     ROUND((SELECT PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY d.dur_min)
@@ -134,7 +134,7 @@ SELECT
         ) / NULLIF(COUNT(*), 0),
         2
     ) AS on_time_percentage,
-    ROUND(AVG(b.delay_duration_minutes) FILTER (WHERE b.delay_duration_minutes > 0), 2) AS avg_delay_minutes,
+    ROUND((AVG(b.delay_duration_minutes) FILTER (WHERE b.delay_duration_minutes > 0))::numeric, 2) AS avg_delay_minutes,
     ROUND((SELECT AVG(d.dur_min) FROM with_duration d
            WHERE d.month_start = b.month_start)::numeric, 2) AS avg_duration_minutes,
     ROUND((SELECT PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY d.dur_min)
@@ -298,40 +298,40 @@ SELECT
     COUNT(*) FILTER (WHERE jls.current_status = 'failed') AS failed_count,
     -- Average expected start time as minutes from midnight
     ROUND(
-        AVG(
+        (AVG(
             EXTRACT(HOUR FROM jls.expected_start_time) * 60
             + EXTRACT(MINUTE FROM jls.expected_start_time)
-        ) FILTER (WHERE jls.expected_start_time IS NOT NULL),
+        ) FILTER (WHERE jls.expected_start_time IS NOT NULL))::numeric,
         1
     ) AS expected_start_minutes,
     -- Average actual start time as minutes from midnight
     ROUND(
-        AVG(
+        (AVG(
             EXTRACT(HOUR FROM jls.start_time) * 60
             + EXTRACT(MINUTE FROM jls.start_time)
-        ) FILTER (WHERE jls.start_time IS NOT NULL),
+        ) FILTER (WHERE jls.start_time IS NOT NULL))::numeric,
         1
     ) AS actual_start_minutes,
     -- Average expected SLA time as minutes from midnight
     ROUND(
-        AVG(
+        (AVG(
             EXTRACT(HOUR FROM jls.job_expected_sla) * 60
             + EXTRACT(MINUTE FROM jls.job_expected_sla)
-        ) FILTER (WHERE jls.job_expected_sla IS NOT NULL),
+        ) FILTER (WHERE jls.job_expected_sla IS NOT NULL))::numeric,
         1
     ) AS expected_sla_minutes,
     -- Average actual end time as minutes from midnight
     ROUND(
-        AVG(
+        (AVG(
             EXTRACT(HOUR FROM jls.end_time) * 60
             + EXTRACT(MINUTE FROM jls.end_time)
-        ) FILTER (WHERE jls.end_time IS NOT NULL),
+        ) FILTER (WHERE jls.end_time IS NOT NULL))::numeric,
         1
     ) AS actual_end_minutes,
     -- Average delay in minutes (late runs only)
     ROUND(
-        AVG(jls.delay_duration_minutes)
-        FILTER (WHERE jls.delay_duration_minutes > 0),
+        (AVG(jls.delay_duration_minutes)
+        FILTER (WHERE jls.delay_duration_minutes > 0))::numeric,
         1
     ) AS avg_delay_minutes,
     -- On-time rate as percentage

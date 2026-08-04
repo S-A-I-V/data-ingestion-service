@@ -137,7 +137,7 @@ class ComplianceSummary(BaseModel):
     running_count: int = 0
     on_time_percentage: Optional[float] = None
     avg_delay_minutes: Optional[float] = None
-    max_delay_minutes: Optional[int] = None
+    max_delay_minutes: Optional[float] = None
 
 
 # ── Artifact Models ───────────────────────────────────────────────────────────
@@ -265,22 +265,6 @@ class HeatmapCell(BaseModel):
     late_count: int
     failed_count: int
     avg_duration_minutes: Optional[float] = None
-
-
-class TrendPoint(BaseModel):
-    """Single point in weekly/monthly trend."""
-
-    period_start: date
-    total_runs: int
-    delayed_count: int
-    on_time_count: int
-    late_count: Optional[int] = 0
-    failed_count: int
-    on_time_percentage: Optional[float] = None
-    avg_delay_minutes: Optional[float] = None
-    avg_duration_minutes: Optional[float] = None
-    p95_duration_minutes: Optional[float] = None
-    expected_duration_minutes: Optional[float] = None
 
 
 class DurationBucket(BaseModel):
@@ -413,12 +397,9 @@ class WeeklySlaBars(BaseModel):
 class TrendResponse(BaseModel):
     """Response for trend endpoint."""
 
-    weekly: list[TrendPoint]
-    monthly: list[TrendPoint]
     sla_timeline: Optional[list[SlaTimelinePoint]] = None
     insights: Optional[TrendInsights] = None
     day_of_week_stats: Optional[list[DayOfWeekStats]] = None
-    # New: chart-ready bar data
     day_of_week_sla_bars: Optional[list[DayOfWeekSlaBars]] = None
     weekly_sla_bars: Optional[list[WeeklySlaBars]] = None
 

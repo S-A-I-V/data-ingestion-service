@@ -136,6 +136,26 @@ function JobWindowShape(props: any) {
 
   return (
     <g>
+      {/* SLA window band — light grey background from start to deadline */}
+      {expected_start_minutes != null &&
+        expected_sla_minutes != null &&
+        (() => {
+          const yTop = toPixelY(expected_sla_minutes) - SLA_LINE_STROKE_WIDTH / 2; // outer top edge of deadline line
+          const yBot = toPixelY(expected_start_minutes) + SLA_LINE_STROKE_WIDTH / 2; // outer bottom edge of start line
+          const bandHeight = yBot - yTop;
+          if (bandHeight <= 0) return null;
+          return (
+            <rect
+              x={x}
+              y={yTop}
+              width={width}
+              height={bandHeight}
+              fill="rgba(180, 180, 180, 0.15)"
+              stroke="rgba(0, 0, 0, 0.35)"
+              strokeWidth={0.75}
+            />
+          );
+        })()}
       {/* Job run window rect */}
       {height > 0 && <rect x={x} y={y} width={width} height={height} fill={fill} rx={2} ry={2} />}
       {/* SLA start line — drawn over the rect */}

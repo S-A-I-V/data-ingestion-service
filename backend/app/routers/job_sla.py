@@ -207,8 +207,6 @@ def get_trends(
     """Return weekly/monthly trends and insights for the last 90 days."""
     service, record = get_service(user, db)
     try:
-        weekly = service.get_weekly_trend(job_id)
-        monthly = service.get_monthly_trend(job_id)
         sla_timeline = service.get_sla_timeline(job_id)
         insights = service.get_trend_insights(job_id)
         day_of_week_stats = service.get_day_of_week_stats(job_id)
@@ -216,8 +214,6 @@ def get_trends(
         weekly_sla_bars = service.get_weekly_sla_bars(job_id)
         mark_connection_active(record, db)
         return TrendResponse(
-            weekly=weekly,
-            monthly=monthly,
             sla_timeline=sla_timeline if sla_timeline else None,
             insights=insights,
             day_of_week_stats=day_of_week_stats,

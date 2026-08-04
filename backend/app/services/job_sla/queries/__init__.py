@@ -20,10 +20,8 @@ from app.services.job_sla.queries.heatmap_queries import (
     DAY_OF_WEEK_SLA_BARS,
     DURATION_DISTRIBUTION,
     HEATMAP_DAY_HOUR,
-    MONTHLY_TREND,
     TREND_INSIGHTS,
     WEEKLY_SLA_BARS,
-    WEEKLY_TREND,
 )
 from app.services.job_sla.queries.incident_queries import (
     INCIDENT_OVERRIDES_BY_JOB,
@@ -67,8 +65,6 @@ __all__ = [
     "INCIDENT_OVERRIDES_BY_JOB",
     # Heatmap queries
     "HEATMAP_DAY_HOUR",
-    "WEEKLY_TREND",
-    "MONTHLY_TREND",
     "DURATION_DISTRIBUTION",
     "TREND_INSIGHTS",
     "DAY_OF_WEEK_DELAY_STATS",

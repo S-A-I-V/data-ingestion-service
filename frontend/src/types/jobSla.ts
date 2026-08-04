@@ -225,20 +225,6 @@ export interface HeatmapCell {
   avg_duration_minutes: number | null;
 }
 
-export interface TrendPoint {
-  period_start: string;
-  total_runs: number;
-  delayed_count: number;
-  on_time_count: number;
-  late_count: number;
-  failed_count: number;
-  on_time_percentage: number | null;
-  avg_delay_minutes: number | null;
-  avg_duration_minutes: number | null;
-  p95_duration_minutes: number | null;
-  expected_duration_minutes: number | null;
-}
-
 export interface DurationBucket {
   bucket_start: number;
   count: number;
@@ -312,8 +298,6 @@ export interface HeatmapResponse {
 }
 
 export interface TrendResponse {
-  weekly: TrendPoint[];
-  monthly: TrendPoint[];
   sla_timeline: SlaTimelinePoint[] | null;
   insights: TrendInsights | null;
   day_of_week_stats: DayOfWeekStats[] | null;
