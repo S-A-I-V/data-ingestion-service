@@ -8,7 +8,7 @@
 
 import { useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
-import { Spinner } from "../../ui";
+import { Spinner, Panel, PanelHeader } from "../../ui";
 import { DAY_OF_WEEK_LABELS } from "../../../constants/jobSla";
 import type { SlaPolicy, DayOfWeekSlaBars, WeeklySlaBars } from "../../../types/jobSla";
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -499,47 +499,8 @@ export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, load
   );
 }
 
-// ── SLA Policies Cards ────────────────────────────────────────────────────────
-// Read-only policy cards matching the StepSlaProxy editing layout exactly:
-// job-input-wrap card + POLICY N header + 8 fields in one row (repeat(8, 1fr)).
-
-const POLICY_CARD_STYLE: React.CSSProperties = {
-  border: "1px solid var(--border)",
-  borderRadius: 0,
-  padding: "16px 20px",
-  marginBottom: 12,
-  position: "relative",
-  background: "var(--bg-surface)",
-};
-
-const POLICY_CARD_TITLE: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 700,
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  color: "var(--text-secondary)",
-  marginBottom: 14,
-};
-
-const POLICY_GRID: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(8, 1fr)",
-  gap: 10,
-};
-
-const POLICY_LABEL: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 500,
-  color: "var(--text-muted)",
-  marginBottom: 4,
-  display: "block",
-};
-
-const POLICY_VALUE: React.CSSProperties = {
-  fontSize: 12,
-  color: "var(--text-primary)",
-  fontWeight: 500,
-};
+// ── SLA Policies Table ────────────────────────────────────────────────────────
+// Uses the same Panel + data-table structure as the audit log page.
 
 function SlaPoliciesTable({ policies }: { policies: SlaPolicy[] }) {
   const fmt = (t: string | null | undefined) => {
@@ -551,48 +512,37 @@ function SlaPoliciesTable({ policies }: { policies: SlaPolicy[] }) {
   if (!policies.length) return null;
 
   return (
-    <div>
-      {policies.map((p, idx) => (
-        <div key={p.policy_id} style={POLICY_CARD_STYLE} className="job-input-wrap">
-          <div style={POLICY_CARD_TITLE}>Policy {idx + 1}</div>
-          <div style={POLICY_GRID}>
-            <div>
-              <span style={POLICY_LABEL}>Data Day</span>
-              <span style={POLICY_VALUE}>{p.day_of_week ?? "All"}</span>
-            </div>
-            <div>
-              <span style={POLICY_LABEL}>Frequency</span>
-              <span style={POLICY_VALUE}>{p.schedule_frequency ?? "—"}</span>
-            </div>
-            <div>
-              <span style={POLICY_LABEL}>Timezone</span>
-              <span style={POLICY_VALUE}>{p.timezone ?? "—"}</span>
-            </div>
-            <div>
-              <span style={POLICY_LABEL}>Duration (min)</span>
-              <span style={POLICY_VALUE}>{p.expected_duration_minutes ?? "—"}</span>
-            </div>
-            <div>
-              <span style={POLICY_LABEL}>Start Time</span>
-              <span style={POLICY_VALUE}>{fmt(p.expected_start_time as unknown as string)}</span>
-            </div>
-            <div>
-              <span style={POLICY_LABEL}>SLA Time</span>
-              <span style={POLICY_VALUE}>{fmt(p.expected_sla_time as unknown as string)}</span>
-            </div>
-            <div>
-              <span style={POLICY_LABEL}>Days +Start</span>
-              <span style={POLICY_VALUE}>
-                {p.days_addition_start_time != null ? `+${p.days_addition_start_time}d` : "—"}
-              </span>
-            </div>
-            <div>
-              <span style={POLICY_LABEL}>Days +SLA</span>
-              <span style={POLICY_VALUE}>{p.days_addition_sla != null ? `+${p.days_addition_sla}d` : "—"}</span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+    <Panel>
+      <div className="csv-preview-scroll">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Data Day</th>
+              <th>Frequency</th>
+              <th>Timezone</th>
+              <th>Duration (min)</th>
+              <th>Start Time</th>
+              <th>SLA Time</th>
+              <th>Days +Start</th>
+              <th>Days +SLA</th>
+            </tr>
+          </thead>
+          <tbody>
+            {policies.map((p) => (
+              <tr key={p.policy_id}>
+                <td>{p.day_of_week ?? "All"}</td>
+                <td>{p.schedule_frequency ?? "—"}</td>
+                <td>{p.timezone ?? "—"}</td>
+                <td>{p.expected_duration_minutes ?? "—"}</td>
+                <td>{fmt(p.expected_start_time as unknown as string)}</td>
+                <td>{fmt(p.expected_sla_time as unknown as string)}</td>
+                <td>{p.days_addition_start_time != null ? `+${p.days_addition_start_time}d` : "—"}</td>
+                <td>{p.days_addition_sla != null ? `+${p.days_addition_sla}d` : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
   );
 }
