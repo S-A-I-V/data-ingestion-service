@@ -113,6 +113,9 @@ export default function JobSlaAnalyzer() {
   // Track the last job_id that triggered a full (summary + tab) load so we can
   // distinguish a job change from a tab switch inside the unified effect.
   const loadedJobIdRef = useRef<number | null>(null);
+  // Cache which tabs have been loaded for the current job — skip re-fetch on
+  // tab switch if data is already present. Cleared on job change or refresh.
+  const loadedTabsRef = useRef<Set<JobSlaTab>>(new Set());
 
   // ── Jobs list loader ───────────────────────────────────────────────────────
 
@@ -278,21 +281,38 @@ export default function JobSlaAnalyzer() {
       summaryAbortRef.current = sumCtrl;
       tabAbortRef.current = tabCtrl;
       loadedJobIdRef.current = selectedJob.job_id;
+      // Clear the tab cache — new job needs fresh data on every tab
+      loadedTabsRef.current = new Set();
 
       // Fire both in parallel, write state only after both resolve.
       // A single Promise.all means React flushes one batch, not two.
-      Promise.all([loadSummary(selectedJob, sumCtrl.signal), loadTabData(selectedJob, activeTab, tabCtrl.signal)]);
+      Promise.all([loadSummary(selectedJob, sumCtrl.signal), loadTabData(selectedJob, activeTab, tabCtrl.signal)]).then(
+        () => {
+          // Mark this tab as loaded so returning to it doesn't re-fetch
+          if (!sumCtrl.signal.aborted && !tabCtrl.signal.aborted) {
+            loadedTabsRef.current.add(activeTab);
+          }
+        },
+      );
 
       return () => {
         sumCtrl.abort();
         tabCtrl.abort();
       };
     } else {
-      // Tab switch — only reload the tab content, leave summary/KPIs alone
+      // Tab switch — skip fetch if data is already cached for this tab
+      if (loadedTabsRef.current.has(activeTab)) {
+        return;
+      }
+
       tabAbortRef.current?.abort();
       const tabCtrl = new AbortController();
       tabAbortRef.current = tabCtrl;
-      loadTabData(selectedJob, activeTab, tabCtrl.signal);
+      loadTabData(selectedJob, activeTab, tabCtrl.signal).then(() => {
+        if (!tabCtrl.signal.aborted) {
+          loadedTabsRef.current.add(activeTab);
+        }
+      });
 
       return () => {
         tabCtrl.abort();
@@ -358,7 +378,15 @@ export default function JobSlaAnalyzer() {
     summaryAbortRef.current = sumCtrl;
     tabAbortRef.current = tabCtrl;
     loadedJobIdRef.current = selectedJob.job_id;
-    Promise.all([loadSummary(selectedJob, sumCtrl.signal), loadTabData(selectedJob, activeTab, tabCtrl.signal)]);
+    // Clear tab cache so refresh re-fetches all tabs, not just the current one
+    loadedTabsRef.current = new Set();
+    Promise.all([loadSummary(selectedJob, sumCtrl.signal), loadTabData(selectedJob, activeTab, tabCtrl.signal)]).then(
+      () => {
+        if (!sumCtrl.signal.aborted && !tabCtrl.signal.aborted) {
+          loadedTabsRef.current.add(activeTab);
+        }
+      },
+    );
     return () => {
       sumCtrl.abort();
       tabCtrl.abort();

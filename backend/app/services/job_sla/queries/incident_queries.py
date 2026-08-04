@@ -12,7 +12,7 @@ Tables used:
 
 SEV1_INCIDENTS_BY_JOB = """
 SELECT
-    si.incident_id,
+    si.incident_id::text,
     si.job_name,
     si.data_date,
     si.sev1_number,
@@ -32,7 +32,7 @@ ORDER BY si.data_date DESC, si.created_at DESC
 
 INCIDENT_OVERRIDES_BY_JOB = """
 SELECT
-    io.override_id,
+    io.override_id::text,
     io.job_name,
     io.data_date,
     io.proposed_end_time,

@@ -10,7 +10,7 @@ Tables used:
 
 PROXY_RULES_FOR_JOB = """
 SELECT
-    jpir.id,
+    jpir.id::text,
     jpir.proxy_job_id,
     jpir.proxy_job_name,
     jpir.proxy_job_status,
@@ -32,7 +32,7 @@ ORDER BY jpir.trigger_job_name, jpir.trigger_job_status
 
 PROXY_TRIGGERS_FOR_JOB = """
 SELECT
-    jpir.id,
+    jpir.id::text,
     jpir.proxy_job_id,
     jpir.proxy_job_name,
     jpir.proxy_job_status,

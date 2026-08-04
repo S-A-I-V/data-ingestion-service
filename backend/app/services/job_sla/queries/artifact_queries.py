@@ -13,7 +13,7 @@ Tables used:
 
 ARTIFACT_DEFINITIONS_BY_JOB = """
 SELECT
-    ad.definition_id,
+    ad.definition_id::text,
     ad.parent_job_name,
     ad.parent_job_id,
     ad.job_name,
@@ -32,7 +32,7 @@ ORDER BY ad.job_name, ad.artifact_pattern
 
 ARTIFACT_LIVE_STATE_BY_JOB = """
 SELECT
-    als.artifact_id,
+    als.artifact_id::text,
     als.parent_job_name,
     als.parent_job_id,
     als.data_date,
@@ -60,7 +60,7 @@ ORDER BY als.data_date DESC, als.actual_filename
 
 ARTIFACT_EVENT_HISTORY_BY_JOB = """
 SELECT
-    aeh.event_id,
+    aeh.event_id::text,
     aeh.source_type,
     aeh.parent_job_name,
     aeh.data_date,
