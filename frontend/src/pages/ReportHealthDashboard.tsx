@@ -1,177 +1,60 @@
 /**
- * ReportHealthDashboard
- *
- * Dense admin cockpit showing pipeline health for every report on a
- * given DELIVERY DATE. The primary filter is delivery_date (from
- * nfc_prod.report_live_state / reports_delivery_schedule) — the date
- * a report is due to clients. Each row also surfaces data_date,
- * coverage window, SLA, delay attribution, and step progress at a glance.
- *
- * Permission: admin:report_health
+ * ReportHealthDashboard — Dense admin cockpit showing pipeline health
+ * for every report on a given delivery date.
  */
 import "../styles/report-health.css";
-import { useState, useCallback, useMemo, useEffect } from "react";
 
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import Tooltip from "@mui/material/Tooltip";
-import api from "../api";
-import { Toast, useToast } from "../components/ui";
+import { Toast } from "../components/ui";
 import Highlight from "../components/ui/Highlight";
-import type { ReportHealthPayload } from "../types/reportHealth";
 import { APP_FILTER_ALL_VALUE } from "../constants/reportHealth";
 import ReportDetailDrawer from "../components/report-health/ReportDetailDrawer";
 import ReportHealthFilters from "../components/report-health/ReportHealthFilters";
-import type { DateFieldMode } from "../components/report-health/ReportHealthFilters";
 import StatusPill from "../components/report-health/shared/StatusPill";
 import MiniBar from "../components/report-health/shared/MiniBar";
 import Sev1Icon from "../components/report-health/shared/Sev1Icon";
-import { fmt, fmtMins, todayIso, fmtDateDmy } from "../components/report-health/shared/formatters";
-
-// ── Component ──────────────────────────────────────────────
+import { fmt, fmtMins, fmtDateDmy } from "../components/report-health/shared/formatters";
+import { useReportHealth } from "../hooks/useReportHealth";
 
 export default function ReportHealthDashboard() {
-  const [reports, setReports] = useState<ReportHealthPayload[]>([]);
-  const [counts, setCounts] = useState({
-    total: 0,
-    in_progress: 0,
-    client_delayed: 0,
-    internal_delayed: 0,
-    completed: 0,
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
-
-  // ── Filter state ──
-  const [dateFilterMode, setDateFilterMode] = useState<DateFieldMode>("delivery_date");
-  const [dateFrom, setDateFrom] = useState(todayIso());
-  const [dateTo, setDateTo] = useState(todayIso());
-
-  const [reportFilter, setReportFilter] = useState("");
-  const [clientFilter, setClientFilter] = useState("");
-  const [sev1Filter, setSev1Filter] = useState("");
-  const [appFilter, setAppFilter] = useState<string>(APP_FILTER_ALL_VALUE);
-
-  const [selected, setSelected] = useState<ReportHealthPayload | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [toast, setToast] = useToast();
-
-  // ── Available filter options (fetched on mount from report_definitions) ──
-  const [availableReportNames, setAvailableReportNames] = useState<string[]>([]);
-  const [availableAppNames, setAvailableAppNames] = useState<string[]>([]);
-  const [filtersLoading, setFiltersLoading] = useState(true);
-
-  useEffect(() => {
-    setFiltersLoading(true);
-    api
-      .get<{ report_names: string[]; application_names: string[] }>("/admin/report-health/filters")
-      .then((res) => {
-        setAvailableReportNames(res.data.report_names ?? []);
-        setAvailableAppNames(res.data.application_names ?? []);
-      })
-      .catch(() => {
-        // Non-fatal — dropdowns will just be empty
-      })
-      .finally(() => setFiltersLoading(false));
-  }, []);
-
-  // Delivery date range — always uses dateFrom/dateTo directly
-  const resolvedDateRange = useMemo(() => {
-    return { from: dateFrom, to: dateTo };
-  }, [dateFrom, dateTo]);
-
-  // ── Fetch (manual trigger only — all filtering done server-side) ──
-
-  const fetch_ = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params: Record<string, string> = { delivery_date: resolvedDateRange.from };
-      if (resolvedDateRange.to !== resolvedDateRange.from) {
-        params.delivery_date_to = resolvedDateRange.to;
-      }
-      if (reportFilter) params.report_name = reportFilter;
-      if (clientFilter) params.client_name = clientFilter;
-      if (appFilter && appFilter !== APP_FILTER_ALL_VALUE) params.application_name = appFilter;
-      if (sev1Filter) params.sev1 = sev1Filter;
-
-      const res = await api.get<{
-        reports: ReportHealthPayload[];
-        summary: {
-          total: number;
-          in_progress: number;
-          client_delayed: number;
-          internal_delayed: number;
-          completed: number;
-        };
-      }>("/admin/report-health/", { params });
-      const reportData = res.data.reports ?? [];
-      setReports(reportData);
-      setCounts(res.data.summary ?? { total: 0, in_progress: 0, client_delayed: 0, internal_delayed: 0, completed: 0 });
-      setLastRefreshed(new Date());
-      setHasSearched(true);
-    } catch (e: any) {
-      const status = e.response?.status;
-      const detail = e.response?.data?.detail;
-      if (status === 404) {
-        setReports([]);
-        setCounts({ total: 0, in_progress: 0, client_delayed: 0, internal_delayed: 0, completed: 0 });
-      } else if (status === 403) {
-        setError("Permission denied — requires admin:report_health.");
-      } else {
-        setError(detail || "Failed to load.");
-        setToast({ ok: false, msg: detail || "Failed to load." });
-      }
-    }
-    setLoading(false);
-  }, [resolvedDateRange, reportFilter, clientFilter, appFilter, sev1Filter, setToast]);
-
-  // NO auto-fetch on mount — user must click Search
-
-  // ── Detail fetch (on-demand when report row is clicked) ──
-
-  const fetchDetail = useCallback(
-    async (payload: ReportHealthPayload) => {
-      const r = payload.report;
-      // Open drawer immediately with report-level data (no jobs yet)
-      setSelected(payload);
-      setDetailLoading(true);
-      try {
-        const res = await api.get<ReportHealthPayload>(`/admin/report-health/${r.report_id}/detail`, {
-          params: {
-            data_date: r.data_date,
-            delivery_date: r.delivery_date,
-            client_name: r.client_name ?? "",
-          },
-        });
-        setSelected(res.data);
-      } catch (e: any) {
-        const detail = e.response?.data?.detail;
-        setToast({ ok: false, msg: detail || "Failed to load report detail." });
-        // Keep drawer open with report-level data
-      }
-      setDetailLoading(false);
-    },
-    [setToast],
-  );
-
-  // ── Derived ──────────────────────────────────────────────
-  // Frontend is dumb — no filtering, no counting. Just display what the API returns.
-
-  // ── Render ───────────────────────────────────────────────
+  const {
+    toast,
+    reports,
+    counts,
+    loading,
+    error,
+    lastRefreshed,
+    hasSearched,
+    dateFilterMode,
+    dateFrom,
+    dateTo,
+    reportFilter,
+    clientFilter,
+    sev1Filter,
+    appFilter,
+    selected,
+    setSelected,
+    detailLoading,
+    availableReportNames,
+    availableAppNames,
+    filtersLoading,
+    resolvedDateRange,
+    fetch_,
+    fetchDetail,
+    handleFilterChange,
+    handleReset,
+  } = useReportHealth();
 
   return (
     <div className="rh-page">
-      {/* ── Top bar ── */}
+      {/* Top bar */}
       <div className="rh-topbar">
         <div className="rh-topbar-title">
           <MonitorHeartIcon sx={{ fontSize: 15 }} />
           <Highlight>Report Health</Highlight>
         </div>
-
-        {/* Status strip — display only */}
         <div className="rh-status-strip">
           {[
             { cls: "rh-strip-cell--total", num: counts.total, lbl: "Total" },
@@ -186,7 +69,6 @@ export default function ReportHealthDashboard() {
             </div>
           ))}
         </div>
-
         <div className="rh-topbar-spacer" />
         {lastRefreshed && (
           <span className="rh-last-updated">
@@ -201,31 +83,12 @@ export default function ReportHealthDashboard() {
         </div>
       )}
 
-      {/* ── Filter panel ── */}
+      {/* Filters */}
       <ReportHealthFilters
         filters={{ dateFilterMode, dateFrom, dateTo, reportFilter, clientFilter, sev1Filter, appFilter }}
-        onChange={(patch) => {
-          if (patch.dateFilterMode !== undefined) setDateFilterMode(patch.dateFilterMode);
-          if (patch.dateFrom !== undefined) setDateFrom(patch.dateFrom);
-          if (patch.dateTo !== undefined) setDateTo(patch.dateTo);
-          if (patch.reportFilter !== undefined) setReportFilter(patch.reportFilter);
-          if (patch.clientFilter !== undefined) setClientFilter(patch.clientFilter);
-          if (patch.sev1Filter !== undefined) setSev1Filter(patch.sev1Filter);
-          if (patch.appFilter !== undefined) setAppFilter(patch.appFilter);
-        }}
-        onSearch={() => fetch_()}
-        onReset={() => {
-          setDateFilterMode("delivery_date");
-          setDateFrom(todayIso());
-          setDateTo(todayIso());
-          setReportFilter("");
-          setClientFilter("");
-          setSev1Filter("");
-          setAppFilter(APP_FILTER_ALL_VALUE);
-          setReports([]);
-          setCounts({ total: 0, in_progress: 0, client_delayed: 0, internal_delayed: 0, completed: 0 });
-          setHasSearched(false);
-        }}
+        onChange={handleFilterChange}
+        onSearch={fetch_}
+        onReset={handleReset}
         loading={loading}
         filtersLoading={filtersLoading}
         appNames={availableAppNames}
@@ -233,7 +96,7 @@ export default function ReportHealthDashboard() {
         appFilterAllValue={APP_FILTER_ALL_VALUE}
       />
 
-      {/* ── Column headers ── */}
+      {/* Column headers */}
       {!loading && reports.length > 0 && (
         <div className="rh-col-headers">
           <span className="rh-col--name">Report · App · Client</span>
@@ -249,7 +112,7 @@ export default function ReportHealthDashboard() {
         </div>
       )}
 
-      {/* ── Loading ── */}
+      {/* Loading */}
       {loading && (
         <div className="rh-empty">
           <div className="rh-spin" />
@@ -257,7 +120,7 @@ export default function ReportHealthDashboard() {
         </div>
       )}
 
-      {/* ── Empty ── */}
+      {/* Empty */}
       {!loading && !error && reports.length === 0 && (
         <div className="rh-empty">
           <SearchOffIcon sx={{ fontSize: 32, opacity: 0.3 }} />
@@ -269,7 +132,7 @@ export default function ReportHealthDashboard() {
         </div>
       )}
 
-      {/* ── Report rows ── */}
+      {/* Report rows */}
       {!loading &&
         reports.map((payload) => {
           const r = payload.report;
@@ -287,7 +150,6 @@ export default function ReportHealthDashboard() {
               tabIndex={0}
               onKeyDown={(e) => e.key === "Enter" && fetchDetail(payload)}
             >
-              {/* Name + meta */}
               <div className="rh-col--name">
                 <div className="rh-report-name" title={r.report_name}>
                   {r.report_name}
@@ -297,18 +159,12 @@ export default function ReportHealthDashboard() {
                   {r.client_name ? ` · ${r.client_name}` : ""}
                 </div>
               </div>
-
-              {/* Delivery status */}
               <div className="rh-col--status">
                 <StatusPill status={r.report_delivery_status} type="job" />
               </div>
-
-              {/* Delay status */}
               <div className="rh-col--delay">
                 <StatusPill status={r.report_delay_status} type="delay" />
               </div>
-
-              {/* Progress bar */}
               <div className="rh-col--bar">
                 <MiniBar
                   completed={r.no_of_completed_steps}
@@ -317,8 +173,6 @@ export default function ReportHealthDashboard() {
                   status={r.report_delay_status}
                 />
               </div>
-
-              {/* Delay duration */}
               <div
                 className="rh-col--dur"
                 style={{
@@ -328,26 +182,18 @@ export default function ReportHealthDashboard() {
               >
                 {fmtMins(r.report_delay_duration_minutes)}
               </div>
-
-              {/* BAM SLA — UTC only */}
               <div className="rh-col--sla" style={{ color: slaOver ? "var(--danger)" : undefined, fontSize: 11 }}>
                 {r.bam_sla ? fmt(r.bam_sla) : "—"}
               </div>
-
-              {/* Report Start */}
               <div className="rh-col--time" style={{ fontSize: 11 }}>
                 {r.report_start_time ? fmt(r.report_start_time) : "—"}
               </div>
-
-              {/* Report End */}
               <div
                 className="rh-col--time"
                 style={{ fontSize: 11, color: r.report_end_time ? "var(--success)" : undefined }}
               >
                 {r.report_end_time ? fmt(r.report_end_time) : "—"}
               </div>
-
-              {/* SEV1 */}
               <div className="rh-col--sev1">
                 {r.sev1_numbers ? (
                   (() => {
@@ -387,8 +233,6 @@ export default function ReportHealthDashboard() {
                   <span className="rh-text-muted">—</span>
                 )}
               </div>
-
-              {/* Data date + coverage window */}
               <div className="rh-col--date" style={{ fontSize: 11 }}>
                 {r.data_date}
                 {r.coverage_end_date && r.coverage_end_date !== r.data_date ? (
@@ -399,9 +243,8 @@ export default function ReportHealthDashboard() {
           );
         })}
 
-      {/* ── Detail drawer ── */}
+      {/* Detail drawer */}
       {selected && <ReportDetailDrawer payload={selected} loading={detailLoading} onClose={() => setSelected(null)} />}
-
       <Toast toast={toast} />
     </div>
   );

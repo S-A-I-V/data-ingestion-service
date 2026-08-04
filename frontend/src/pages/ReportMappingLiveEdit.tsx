@@ -1,29 +1,9 @@
 /**
  * ReportMappingLiveEdit — Edit an existing report_job_mapping directly on NFC Prod.
- *
- * Flow:
- *   1. Load current mapping from DB into React Flow editor
- *   2. Make changes (same editor as ReportMappingEditor)
- *   3. Click "Preview Changes" → see SQL diff
- *   4. Confirm → execute atomically on NFC Prod
- *   5. Audit logged
- *
  * Route: /admin/report-mapping/live-edit?report=NAME&app=APP&rid=ID
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import type { Node, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import api from "../api";
-import { Spinner } from "../components/ui";
-import { useGraphEditor, type JobNodeSettings } from "../hooks/useGraphEditor";
-import { applyDagreLayout } from "../utils/dagreLayout";
-import GraphCanvas from "../components/report-mapping/GraphCanvas";
-import LiveEditSuccess from "../components/report-mapping/LiveEditSuccess";
-import ReportSelector from "../components/report-mapping/ReportSelector";
-import PreviewPanel from "../components/report-mapping/PreviewPanel";
-import JobSettingsModal from "../components/report-mapping/JobSettingsModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
@@ -33,61 +13,41 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CircularProgress from "@mui/material/CircularProgress";
+import GraphCanvas from "../components/report-mapping/GraphCanvas";
+import LiveEditSuccess from "../components/report-mapping/LiveEditSuccess";
+import ReportSelector from "../components/report-mapping/ReportSelector";
+import PreviewPanel from "../components/report-mapping/PreviewPanel";
+import JobSettingsModal from "../components/report-mapping/JobSettingsModal";
 import {
   LIVE_EDIT_STEPS,
   TOOLBAR_ICON_SIZE_PX,
   BUTTON_SPINNER_SIZE_PX,
   PREVIEW_BUTTON_MIN_WIDTH_PX,
-  TOAST_DISPLAY_DURATION_MS,
   DEFAULT_RUN_MODE,
 } from "../constants/reportMapping";
-
-interface Job {
-  job_id: number;
-  job_name: string;
-  category: string | null;
-}
-
-interface ExistingReport {
-  report_id: number;
-  report_name: string;
-  application_name: string;
-  job_count: number;
-}
+import { useLiveEditFlow } from "../hooks/useLiveEditFlow";
 
 export default function ReportMappingLiveEdit() {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const reportName = searchParams.get("report") || "";
-  const appName = searchParams.get("app") || "";
-  const reportId = Number(searchParams.get("rid") || 0);
-
-  // Selection phase state
-  const [reports, setReports] = useState<ExistingReport[]>([]);
-  const [reportsLoading, setReportsLoading] = useState(!reportId);
-
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Preview/Execute state
-  const [previewStatements, setPreviewStatements] = useState<any[] | null>(null);
-  const [previewing, setPreviewing] = useState(false);
-  const [executing, setExecuting] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [toast, setToast] = useState("");
-  const initialStateRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
-
-  // Settings modal state
-  const [settingsNodeId, setSettingsNodeId] = useState<string | null>(null);
-
-  // Graph editor hook with settings callback
   const {
+    navigate,
+    reportName,
+    appName,
+    reportId,
+    reports,
+    reportsLoading,
+    loading,
+    error,
+    previewStatements,
+    setPreviewStatements,
+    previewing,
+    executing,
+    result,
+    toast,
+    settingsNodeId,
+    setSettingsNodeId,
+    settingsNode,
     nodes,
-    setNodes,
     edges,
-    setEdges,
-    graph,
     nodeTypes,
     onNodesChange,
     onEdgesChange,
@@ -97,210 +57,33 @@ export default function ReportMappingLiveEdit() {
     clearLastAddedNodeId,
     handleRelayout,
     updateNodeSettings,
-  } = useGraphEditor({
-    jobs,
-    onOpenSettings: (nodeId) => setSettingsNodeId(nodeId),
-  });
+    graph,
+    handleReset,
+    handlePreview,
+    handleApply,
+    handleReportSelect,
+    activeStep,
+  } = useLiveEditFlow();
 
-  // Get the node for the settings modal
-  const settingsNode = settingsNodeId ? nodes.find((n) => n.id === settingsNodeId) : null;
+  // ── Success State ──────────────────────────────────────────────────────────
+  if (result) return <LiveEditSuccess result={result} />;
 
-  // Load report list when no report selected
-  useEffect(() => {
-    if (!reportId) {
-      // Reset all editor state when going back to selection
-      setPreviewStatements(null);
-      setError(null);
-      setLoading(true);
-      initDoneRef.current = false;
-      setReportsLoading(true);
-      api
-        .get("/admin/report-mapping/existing")
-        .then((r) => setReports(r.data.reports || []))
-        .catch((e) => setError(e.response?.data?.detail || "Failed to load reports"))
-        .finally(() => setReportsLoading(false));
-    }
-  }, [reportId]);
-
-  // Load data when report is selected
-  const initDoneRef = useRef(false);
-  useEffect(() => {
-    if (!reportId) return;
-    if (initDoneRef.current) return; // Already loaded — skip re-init
-    let cancelled = false;
-    const controller = new AbortController();
-
-    const init = async () => {
-      setLoading(true);
-      try {
-        const [jobsRes, mappingRes] = await Promise.all([
-          api.get("/admin/report-mapping/jobs", { signal: controller.signal }),
-          api.get(`/admin/report-mapping/existing/${reportId}`, { signal: controller.signal }),
-        ]);
-        if (cancelled) return;
-        initDoneRef.current = true; // Mark init as done — no re-fire
-        setJobs(jobsRes.data.jobs || []);
-        const data = mappingRes.data.mapping_data;
-        const jobsList = jobsRes.data.jobs || [];
-        const proxyJobIds = new Set(jobsList.filter((j: any) => j.is_proxy).map((j: any) => j.job_id));
-        const flowNodes: Node[] = (data.nodes || []).map((n: any) => ({
-          id: n.id,
-          type: "jobNode",
-          position: n.position || { x: 0, y: 0 },
-          data: {
-            job_id: n.job_id,
-            job_name: n.job_name || "",
-            is_proxy: proxyJobIds.has(n.job_id),
-            // Run requirement fields from DB
-            run_requirement_mode: n.run_requirement_mode || DEFAULT_RUN_MODE,
-            required_offsets_json: n.required_offsets_json,
-            min_success_count: n.min_success_count,
-          },
-        }));
-        const flowEdges: Edge[] = (data.edges || []).map((e: any) => ({
-          id: e.id || `e-${e.source}-${e.target}`,
-          source: e.source,
-          target: e.target,
-          type: "smoothstep",
-          animated: true,
-          style: { stroke: "var(--accent)" },
-        }));
-        const layouted = applyDagreLayout(flowNodes, flowEdges);
-        setNodes(layouted);
-        setEdges(flowEdges);
-        graph.reset({ nodes: layouted, edges: flowEdges });
-        initialStateRef.current = { nodes: layouted, edges: flowEdges };
-      } catch (e: any) {
-        if (cancelled) return;
-        setError(e.response?.data?.detail || "Failed to load mapping");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    init();
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [reportId]);
-
-  const handleReset = () => {
-    if (!initialStateRef.current) return;
-    const { nodes: initNodes, edges: initEdges } = initialStateRef.current;
-    setNodes(JSON.parse(JSON.stringify(initNodes)));
-    setEdges(JSON.parse(JSON.stringify(initEdges)));
-    graph.reset({ nodes: initNodes, edges: initEdges });
-    setToast("Reset to original mapping");
-    setTimeout(() => setToast(""), TOAST_DISPLAY_DURATION_MS);
-  };
-
-  const handlePreview = async () => {
-    const unassigned = nodes.filter((n) => !n.data.job_id);
-    if (unassigned.length > 0) {
-      setError("All nodes must have a job assigned before previewing");
-      return;
-    }
-    setPreviewing(true);
-    setError(null);
-    try {
-      const res = await api.post("/admin/report-mapping/preview-changes", {
-        report_name: reportName,
-        application_name: appName,
-        report_id: reportId,
-        nodes: nodes.map((n) => ({
-          id: n.id,
-          job_id: n.data.job_id,
-          job_name: n.data.job_name,
-          run_requirement_mode: n.data.run_requirement_mode || DEFAULT_RUN_MODE,
-          required_offsets_json: n.data.required_offsets_json,
-          min_success_count: n.data.min_success_count,
-        })),
-        edges: edges.map((e) => ({ source: e.source, target: e.target })),
-      });
-      if (res.data.total === 0) {
-        setToast("No changes detected — mapping is identical to database");
-        setTimeout(() => setToast(""), TOAST_DISPLAY_DURATION_MS);
-      } else {
-        setPreviewStatements(res.data.statements);
-      }
-    } catch (e: any) {
-      setError(e.response?.data?.detail || "Preview failed");
-    } finally {
-      setPreviewing(false);
-    }
-  };
-
-  const handleApply = async () => {
-    setExecuting(true);
-    setError(null);
-    try {
-      const res = await api.post("/admin/report-mapping/apply-changes", {
-        report_name: reportName,
-        application_name: appName,
-        report_id: reportId,
-        nodes: nodes.map((n) => ({
-          id: n.id,
-          job_id: n.data.job_id,
-          job_name: n.data.job_name,
-          run_requirement_mode: n.data.run_requirement_mode || DEFAULT_RUN_MODE,
-          required_offsets_json: n.data.required_offsets_json,
-          min_success_count: n.data.min_success_count,
-        })),
-        edges: edges.map((e) => ({ source: e.source, target: e.target })),
-      });
-      setResult(res.data);
-      setPreviewStatements(null);
-    } catch (e: any) {
-      setError(e.response?.data?.detail || "Apply failed");
-    } finally {
-      setExecuting(false);
-    }
-  };
-
-  const handleReportSelect = useCallback(
-    (report: ExistingReport) => {
-      // Reset preview state when selecting a new report
-      setPreviewStatements(null);
-      setError(null);
-      setResult(null);
-      initDoneRef.current = false;
-      setSearchParams({
-        report: report.report_name,
-        app: report.application_name,
-        rid: String(report.report_id),
-      });
-    },
-    [setSearchParams],
-  );
-
-  // ── Render: Success State ──────────────────────────────────────────────────
-  if (result) {
-    return <LiveEditSuccess result={result} />;
-  }
-
-  // ── Render: Report Selection ───────────────────────────────────────────────
-  if (!reportId) {
+  // ── Report Selection ───────────────────────────────────────────────────────
+  if (!reportId)
     return (
       <ReportSelector reports={reports} reportsLoading={reportsLoading} onSelect={handleReportSelect} currentStep={0} />
     );
-  }
 
-  // ── Render: Loading ────────────────────────────────────────────────────────
-  if (loading) {
-    return <ReportSelector reports={[]} reportsLoading={true} onSelect={() => {}} currentStep={1} />;
-  }
+  // ── Loading ────────────────────────────────────────────────────────────────
+  if (loading) return <ReportSelector reports={[]} reportsLoading={true} onSelect={() => {}} currentStep={1} />;
 
-  // Determine current step for sidebar
-  const activeStep = previewStatements ? 2 : 1;
-
-  // ── Render: Editor ─────────────────────────────────────────────────────────
+  // ── Editor ─────────────────────────────────────────────────────────────────
   return (
     <div className="lf-layout" style={{ gridTemplateColumns: "var(--sidebar-left-width) 1fr" }}>
-      {/* LEFT SIDEBAR — Step Timeline + Report Info */}
+      {/* LEFT SIDEBAR */}
       <aside className="lf-sidebar-left">
         <div className="sidebar-card" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
           <div className="sidebar-card-content" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            {/* Report info card at top */}
             <div className="rm-sidebar-report-info">
               <p className="rm-sidebar-report-name">{reportName}</p>
               <span className="rm-sidebar-report-app">{appName}</span>
@@ -336,11 +119,7 @@ export default function ReportMappingLiveEdit() {
             type="button"
             className="btn btn-sm"
             onClick={() => {
-              if (previewStatements) {
-                setPreviewStatements(null);
-              } else {
-                navigate("/admin/report-mapping/live-edit");
-              }
+              previewStatements ? setPreviewStatements(null) : navigate("/admin/report-mapping/live-edit");
             }}
           >
             <ArrowBackIcon sx={{ fontSize: TOOLBAR_ICON_SIZE_PX }} /> Back
@@ -397,7 +176,6 @@ export default function ReportMappingLiveEdit() {
 
         {error && <div className="rm-editor-error">{error}</div>}
 
-        {/* Preview Panel */}
         {previewStatements && (
           <PreviewPanel
             statements={previewStatements}
@@ -407,7 +185,6 @@ export default function ReportMappingLiveEdit() {
           />
         )}
 
-        {/* Graph Canvas */}
         {!previewStatements && (
           <>
             <div className="rm-editor-canvas">
@@ -431,7 +208,6 @@ export default function ReportMappingLiveEdit() {
           </>
         )}
 
-        {/* Job Settings Modal */}
         {settingsNode && (
           <JobSettingsModal
             nodeId={settingsNode.id}
