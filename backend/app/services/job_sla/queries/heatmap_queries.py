@@ -466,3 +466,59 @@ ORDER BY
         WHEN 0 THEN 7
     END
 """
+
+# ── 90-Day Calendar ───────────────────────────────────────────────────────────
+# One row per data_date. Provides everything needed to colour a calendar cell:
+# status, on-time flag, breach flag, run counts.
+# Jobs that run multiple times per day (multi-client) are aggregated per date:
+# the date is "on-time" only if ALL successful runs were within SLA.
+
+JOB_CALENDAR_90D = """
+SELECT
+    jls.data_date,
+    -- Aggregate status: failed > late > on_time > running > no_data
+    CASE
+        WHEN COUNT(*) FILTER (WHERE jls.current_status = 'failed')  > 0 THEN 'failed'
+        WHEN COUNT(*) FILTER (
+            WHERE jls.current_status = 'success'
+              AND jls.end_time > jls.job_expected_sla
+        ) > 0                                                              THEN 'late'
+        WHEN COUNT(*) FILTER (
+            WHERE jls.current_status = 'success'
+              AND jls.end_time <= jls.job_expected_sla
+        ) > 0                                                              THEN 'on_time'
+        WHEN COUNT(*) FILTER (WHERE jls.current_status = 'running') > 0  THEN 'running'
+        ELSE 'unknown'
+    END AS status,
+    COUNT(*)                                                                AS total_runs,
+    COUNT(*) FILTER (WHERE jls.current_status = 'failed')                  AS failed_count,
+    COUNT(*) FILTER (
+        WHERE jls.current_status = 'success'
+          AND jls.end_time <= jls.job_expected_sla
+    )                                                                       AS on_time_count,
+    COUNT(*) FILTER (
+        WHERE jls.current_status = 'success'
+          AND jls.end_time > jls.job_expected_sla
+    )                                                                       AS late_count,
+    COUNT(*) FILTER (
+        WHERE jls.delay_status IN ('client_delayed', 'internal_delayed')
+    )                                                                       AS delayed_count,
+    -- Minutes past SLA on the worst run of the day (NULL if all on-time)
+    ROUND(
+        (MAX(
+            CASE
+                WHEN jls.end_time > jls.job_expected_sla
+                 AND jls.end_time IS NOT NULL
+                 AND jls.job_expected_sla IS NOT NULL
+                THEN EXTRACT(EPOCH FROM (jls.end_time - jls.job_expected_sla)) / 60.0
+            END
+        ))::numeric,
+        1
+    )                                                                       AS max_overrun_minutes
+FROM job_live_state jls
+WHERE jls.job_id = :job_id
+  AND jls.data_date >= CURRENT_DATE - INTERVAL '89 days'
+  AND jls.data_date <= CURRENT_DATE
+GROUP BY jls.data_date
+ORDER BY jls.data_date
+"""

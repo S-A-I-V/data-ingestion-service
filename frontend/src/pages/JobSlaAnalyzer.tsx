@@ -30,10 +30,9 @@ import type {
   ComplianceSummary,
   SlaPolicy,
   JobLiveState,
+  CalendarDay,
   DayOfWeekSlaBars,
   WeeklySlaBars,
-  HeatmapCell,
-  DurationBucket,
   Sev1Incident,
   IncidentOverride,
   ArtifactDefinition,
@@ -86,8 +85,7 @@ export default function JobSlaAnalyzer() {
   const [weeklySlaBars, setWeeklySlaBars] = useState<WeeklySlaBars[]>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
   // ── Heatmap tab data ───────────────────────────────────────────────────────
-  const [heatmapCells, setHeatmapCells] = useState<HeatmapCell[]>([]);
-  const [durationBuckets, setDurationBuckets] = useState<DurationBucket[]>([]);
+  const [calendarData, setCalendarData] = useState<CalendarDay[]>([]);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
 
   // ── History tab data ───────────────────────────────────────────────────────
@@ -181,13 +179,9 @@ export default function JobSlaAnalyzer() {
     } else if (tab === "heatmap") {
       setHeatmapLoading(true);
       try {
-        const [heatmapRes, distRes] = await Promise.all([
-          api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/heatmap`, { signal }),
-          api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/duration-distribution`, { signal }),
-        ]);
+        const res = await api.get(`${JOB_SLA_API_BASE}/jobs/${job.job_id}/calendar`, { signal });
         if (signal.aborted) return;
-        setHeatmapCells(heatmapRes.data.cells);
-        setDurationBuckets(distRes.data.buckets);
+        setCalendarData(res.data.days);
       } catch (err: unknown) {
         if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError")
           return;
@@ -315,8 +309,7 @@ export default function JobSlaAnalyzer() {
     setSlaPolicies([]);
     setDayOfWeekSlaBars([]);
     setWeeklySlaBars([]);
-    setHeatmapCells([]);
-    setDurationBuckets([]);
+    setCalendarData([]);
     setHistory([]);
     setIncidents([]);
     setOverrides([]);
@@ -443,9 +436,7 @@ export default function JobSlaAnalyzer() {
                         loading={trendsLoading}
                       />
                     )}
-                    {activeTab === "heatmap" && (
-                      <HeatmapTab cells={heatmapCells} durationBuckets={durationBuckets} loading={heatmapLoading} />
-                    )}
+                    {activeTab === "heatmap" && <HeatmapTab calendarData={calendarData} loading={heatmapLoading} />}
                     {activeTab === "history" && (
                       <HistoryTab
                         history={history}

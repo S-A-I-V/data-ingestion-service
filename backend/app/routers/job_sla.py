@@ -19,6 +19,8 @@ from app.services.connection_status import mark_connection_active, mark_connecti
 from app.services.job_sla import JobSlaService
 from app.services.job_sla.schemas import (
     ArtifactResponse,
+    CalendarDay,
+    CalendarResponse,
     ComplianceSummary,
     DayOfWeekSlaBars,
     DurationDistributionResponse,
@@ -168,6 +170,29 @@ def get_event_history(
         logger.error("Failed to get event history for job=%s: %s", job_name, exc)
         mark_connection_failed(record, db)
         raise HTTPException(status_code=500, detail="Failed to fetch events.") from exc
+
+
+# ── Calendar ──────────────────────────────────────────────────────────────────
+
+
+@router.get("/jobs/{job_id}/calendar", response_model=CalendarResponse)
+@limiter.limit(RATE_LIMIT_PER_MINUTE)
+def get_calendar(
+    request: Request,
+    job_id: int,
+    user: User = Depends(require_permission(REQUIRED_PERMISSION)),
+    db: Session = Depends(get_db),
+) -> CalendarResponse:
+    """Return per-date run status for the last 90 days (calendar view)."""
+    service, record = get_service(user, db)
+    try:
+        days = service.get_calendar_data(job_id)
+        mark_connection_active(record, db)
+        return CalendarResponse(days=[CalendarDay(**d) for d in days])
+    except Exception as exc:
+        logger.error("Failed to get calendar for job_id=%s: %s", job_id, exc)
+        mark_connection_failed(record, db)
+        raise HTTPException(status_code=500, detail="Failed to fetch calendar.") from exc
 
 
 # ── Heatmap ───────────────────────────────────────────────────────────────────

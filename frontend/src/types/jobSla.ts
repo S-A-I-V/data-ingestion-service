@@ -225,6 +225,17 @@ export interface HeatmapCell {
   avg_duration_minutes: number | null;
 }
 
+export interface CalendarDay {
+  data_date: string; // ISO date string
+  status: "on_time" | "late" | "failed" | "running" | "unknown";
+  total_runs: number;
+  on_time_count: number;
+  late_count: number;
+  failed_count: number;
+  delayed_count: number;
+  max_overrun_minutes: number | null;
+}
+
 export interface DurationBucket {
   bucket_start: number;
   count: number;

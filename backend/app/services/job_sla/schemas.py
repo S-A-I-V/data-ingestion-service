@@ -324,6 +324,25 @@ class SlaTimelinePoint(BaseModel):
     delay_duration_minutes: Optional[int] = None
 
 
+class CalendarDay(BaseModel):
+    """Single day in the 90-day calendar view."""
+
+    data_date: date
+    status: str  # on_time | late | failed | running | unknown
+    total_runs: int
+    on_time_count: int
+    late_count: int
+    failed_count: int
+    delayed_count: int
+    max_overrun_minutes: Optional[float] = None
+
+
+class CalendarResponse(BaseModel):
+    """Response for calendar endpoint."""
+
+    days: list[CalendarDay]
+
+
 # ── Response Models ───────────────────────────────────────────────────────────
 
 

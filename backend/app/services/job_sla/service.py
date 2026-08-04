@@ -27,6 +27,7 @@ from app.services.job_sla.queries import (
     DURATION_DISTRIBUTION,
     HEATMAP_DAY_HOUR,
     INCIDENT_OVERRIDES_BY_JOB,
+    JOB_CALENDAR_90D,
     JOB_DEFINITION_BY_ID,
     JOB_DEFINITIONS_LIST,
     JOB_EVENT_HISTORY,
@@ -224,6 +225,15 @@ class JobSlaService:
             raise
 
     # ── Heatmap & Trends ──────────────────────────────────────────────────────
+
+    def get_calendar_data(self, job_id: int) -> list[dict]:
+        """Get per-date run status for the last 90 days (calendar view)."""
+        try:
+            rows = self.connector.execute_query(JOB_CALENDAR_90D, {"job_id": job_id})
+            return [dict(row) for row in rows]
+        except Exception as exc:
+            logger.error("get_calendar_data failed for job_id=%s: %s", job_id, exc)
+            return []
 
     def get_heatmap_data(self, job_id: int) -> list[dict]:
         """Get day-of-week × hour heatmap for the last 90 days."""
