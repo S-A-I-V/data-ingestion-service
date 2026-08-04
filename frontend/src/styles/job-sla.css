@@ -846,7 +846,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
   font-size: 11px;
   color: var(--text-secondary);
@@ -865,59 +865,80 @@
   flex-shrink: 0;
 }
 
-.js-cal-grid {
+/* ── Month grid — side by side ─────────────────────────────────────────────── */
+
+.js-cal-months {
   display: grid;
-  /* month label col + 7 day cols */
-  grid-template-columns: 72px repeat(7, 1fr);
-  gap: 3px;
-  min-width: 420px;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
 }
 
-.js-cal-col-header {
+.js-cal-month-wrapper {
+  width: 100%;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.js-cal-month {
+  width: 100%;
+}
+
+.js-cal-month-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.js-cal-dow-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.js-cal-dow-label {
   font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;
-  padding-bottom: 4px;
+  padding: 2px 0;
 }
 
-.js-cal-month-col {
-  /* empty top-left corner */
+.js-cal-month-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 2px;
 }
 
-.js-cal-week-row {
-  display: contents; /* each row's children participate directly in the parent grid */
-}
-
-.js-cal-month-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  padding-right: 6px;
-  min-height: 28px;
-}
-
-.js-cal-cell {
-  position: relative;
+.js-cal-month-cell {
   border-radius: 3px;
-  min-height: 28px;
+  aspect-ratio: 1;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: default;
 }
 
-.js-cal-cell--empty {
+.js-cal-month-cell--pad {
   background: transparent;
+  border: none;
 }
 
-.js-cal-cell-date {
-  font-size: 9px;
+.js-cal-month-cell--empty {
+  background: transparent;
+  border: 1px dashed var(--border);
+}
+
+/* All in-range cells (data + no-data) get a dashed outline via the component */
+
+.js-cal-month-date {
+  font-size: 10px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.55);
+  color: rgba(0, 0, 0, 0.6);
   line-height: 1;
   pointer-events: none;
 }

@@ -8,20 +8,20 @@
  *   Grey   = no data
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Spinner } from "../../ui";
 import type { CalendarDay } from "../../../types/jobSla";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CAL_COLS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const CAL_COLS = ["S", "M", "T", "W", "T", "F", "S"];
 
 const STATUS_COLOR: Record<string, string> = {
   on_time: "#22c55e",
   late: "#f59e0b",
   failed: "#ef4444",
   running: "#3b82f6",
-  unknown: "var(--bg-glass-hover)",
+  unknown: "transparent",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -32,15 +32,30 @@ const STATUS_LABEL: Record<string, string> = {
   unknown: "No data",
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-function toMonFirstDow(jsDay: number): number {
-  return (jsDay + 6) % 7;
+interface MonthBlock {
+  year: number;
+  month: number;
+  label: string;
+  weeks: (CalendarDay | null | "pad")[][];
 }
+
+interface TooltipState {
+  x: number;
+  y: number;
+  day: CalendarDay;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function parseDate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d, 12);
+}
+
+function isoFromDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function fmtDateFull(iso: string): string {
@@ -48,10 +63,11 @@ function fmtDateFull(iso: string): string {
     weekday: "short",
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
 
-function buildWeeks(days: CalendarDay[]): (CalendarDay | null)[][] {
+function buildMonthBlocks(days: CalendarDay[]): MonthBlock[] {
   if (!days.length) return [];
 
   const byDate: Record<string, CalendarDay> = {};
@@ -59,55 +75,66 @@ function buildWeeks(days: CalendarDay[]): (CalendarDay | null)[][] {
     byDate[d.data_date] = d;
   });
 
-  const first = parseDate(days[0].data_date);
-  const last = parseDate(days[days.length - 1].data_date);
+  const firstDate = parseDate(days[0].data_date);
+  const lastDate = parseDate(days[days.length - 1].data_date);
 
-  const startPad = toMonFirstDow(first.getDay());
-  const cur = new Date(first);
-  cur.setDate(cur.getDate() - startPad);
-
-  const weeks: (CalendarDay | null)[][] = [];
-  let week: (CalendarDay | null)[] = [];
-
-  while (cur <= last || week.length > 0) {
-    const iso = cur.toISOString().split("T")[0];
-    week.push(byDate[iso] ?? null);
-    if (week.length === 7) {
-      weeks.push(week);
-      week = [];
-    }
-    cur.setDate(cur.getDate() + 1);
-    if (cur > last && week.length > 0 && week.length < 7) {
-      while (week.length < 7) week.push(null);
-      weeks.push(week);
-      break;
-    }
+  const months: { year: number; month: number }[] = [];
+  const cur = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  while (cur <= lastDate) {
+    months.push({ year: cur.getFullYear(), month: cur.getMonth() });
+    cur.setMonth(cur.getMonth() + 1);
   }
 
-  return weeks;
+  return months.map(({ year, month }) => {
+    const label = new Date(year, month, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const firstOfMonth = new Date(year, month, 1);
+    const lastOfMonth = new Date(year, month + 1, 0);
+    const startPad = firstOfMonth.getDay();
+    const totalCells = startPad + lastOfMonth.getDate();
+    const endPad = (7 - (totalCells % 7)) % 7;
+
+    const cells: (CalendarDay | null | "pad")[] = [...Array(startPad).fill("pad")];
+
+    for (let d = 1; d <= lastOfMonth.getDate(); d++) {
+      const iso = isoFromDate(new Date(year, month, d));
+      const date = new Date(year, month, d, 12);
+      const inRange = date >= firstDate && date <= lastDate;
+      cells.push(inRange ? byDate[iso] ?? null : "pad");
+    }
+
+    cells.push(...Array(endPad).fill("pad"));
+
+    const weeks: (CalendarDay | null | "pad")[][] = [];
+    for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+
+    return { year, month, label, weeks };
+  });
 }
 
-function weekMonthLabel(week: (CalendarDay | null)[]): string | null {
-  const first = week.find((d) => d !== null);
-  if (!first) return null;
-  const d = parseDate(first.data_date);
-  if (d.getDate() <= 7) {
-    return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  }
-  return null;
-}
+// ── Floating tooltip ──────────────────────────────────────────────────────────
 
-function buildTooltip(d: CalendarDay): string {
-  const lines = [fmtDateFull(d.data_date), `Status: ${STATUS_LABEL[d.status] ?? d.status}`];
-  if (d.total_runs > 0) {
-    lines.push(
-      `Runs: ${d.total_runs}  ·  On-time: ${d.on_time_count}  ·  Late: ${d.late_count}  ·  Failed: ${d.failed_count}`,
-    );
-  }
-  if (d.max_overrun_minutes != null && d.max_overrun_minutes > 0) {
-    lines.push(`Max overrun: ${d.max_overrun_minutes.toFixed(0)} min`);
-  }
-  return lines.join("\n");
+function CalTooltip({ tt }: { tt: TooltipState }) {
+  const d = tt.day;
+  const breached = d.status === "late" || d.status === "failed";
+  return (
+    <div className="js-job-tooltip" style={{ top: tt.y + 12, left: tt.x + 12, pointerEvents: "none", zIndex: 9999 }}>
+      <div className="js-tooltip-name">{fmtDateFull(d.data_date)}</div>
+      <div className="js-tooltip-desc">
+        Status: <strong style={{ color: STATUS_COLOR[d.status] }}>{STATUS_LABEL[d.status]}</strong>
+      </div>
+      {d.total_runs > 0 && (
+        <div className="js-tooltip-owner">
+          Runs: {d.total_runs}&nbsp;·&nbsp; On-time: {d.on_time_count}&nbsp;·&nbsp; Late: {d.late_count}&nbsp;·&nbsp;
+          Failed: {d.failed_count}
+        </div>
+      )}
+      {breached && d.max_overrun_minutes != null && d.max_overrun_minutes > 0 && (
+        <div className="js-tooltip-owner" style={{ color: "#f59e0b" }}>
+          Delay: +{d.max_overrun_minutes.toFixed(0)} min past SLA
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -118,7 +145,8 @@ interface HeatmapTabProps {
 }
 
 export function HeatmapTab({ calendarData, loading }: HeatmapTabProps) {
-  const weeks = useMemo(() => buildWeeks(calendarData), [calendarData]);
+  const monthBlocks = useMemo(() => buildMonthBlocks(calendarData), [calendarData]);
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   if (loading) {
     return (
@@ -136,57 +164,76 @@ export function HeatmapTab({ calendarData, loading }: HeatmapTabProps) {
     <div className="js-heatmap-tab">
       <div className="js-overview-section">
         <h3 className="js-section-title">90-Day Run Calendar</h3>
-        <p className="js-section-help">
-          Each cell is one calendar day. Green = all runs on-time · Amber = SLA breached · Red = failed · Grey = no
-          data.
-        </p>
 
-        <div className="js-chart-container" style={{ overflowX: "auto" }}>
-          {/* Legend */}
-          <div className="js-cal-legend">
-            {Object.entries(STATUS_LABEL).map(([status, label]) => (
-              <span key={status} className="js-cal-legend-item">
-                <span className="js-cal-legend-dot" style={{ background: STATUS_COLOR[status] }} />
-                {label}
-              </span>
-            ))}
-          </div>
+        {/* Legend */}
+        <div className="js-cal-legend">
+          {Object.entries(STATUS_LABEL).map(([status, label]) => (
+            <span key={status} className="js-cal-legend-item">
+              <span
+                className="js-cal-legend-dot"
+                style={{
+                  background: STATUS_COLOR[status],
+                  border: status === "unknown" ? "1px dashed var(--border)" : "none",
+                }}
+              />
+              {label}
+            </span>
+          ))}
+        </div>
 
-          {/* Calendar grid */}
-          <div className="js-cal-grid">
-            <div className="js-cal-month-col" />
-            {CAL_COLS.map((col) => (
-              <div key={col} className="js-cal-col-header">
-                {col}
-              </div>
-            ))}
+        {/* Month grid */}
+        <div className="js-cal-months">
+          {monthBlocks.map((block) => (
+            <div key={`${block.year}-${block.month}`} className="js-cal-month-wrapper js-chart-container">
+              <div className="js-cal-month">
+                <div className="js-cal-month-title">{block.label}</div>
 
-            {weeks.map((week, wi) => {
-              const monthLabel = weekMonthLabel(week);
-              return (
-                <div key={wi} className="js-cal-week-row">
-                  <div className="js-cal-month-label">{monthLabel ?? ""}</div>
-                  {week.map((day, di) => {
-                    if (!day) {
-                      return <div key={di} className="js-cal-cell js-cal-cell--empty" />;
-                    }
-                    return (
-                      <div
-                        key={di}
-                        className="js-cal-cell"
-                        style={{ background: STATUS_COLOR[day.status] ?? STATUS_COLOR.unknown }}
-                        title={buildTooltip(day)}
-                      >
-                        <span className="js-cal-cell-date">{parseDate(day.data_date).getDate()}</span>
-                      </div>
-                    );
-                  })}
+                {/* Day-of-week headers */}
+                <div className="js-cal-dow-row">
+                  {CAL_COLS.map((d, i) => (
+                    <div key={i} className="js-cal-dow-label">
+                      {d}
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Weeks */}
+                {block.weeks.map((week, wi) => (
+                  <div key={wi} className="js-cal-month-week">
+                    {week.map((cell, di) => {
+                      if (cell === "pad") {
+                        return <div key={di} className="js-cal-month-cell js-cal-month-cell--pad" />;
+                      }
+                      if (cell === null) {
+                        return <div key={di} className="js-cal-month-cell js-cal-month-cell--empty" />;
+                      }
+                      const dayNum = parseDate(cell.data_date).getDate();
+                      return (
+                        <div
+                          key={di}
+                          className="js-cal-month-cell"
+                          style={{
+                            background: STATUS_COLOR[cell.status] ?? STATUS_COLOR.unknown,
+                            border: "1px dashed rgba(0,0,0,0.15)",
+                          }}
+                          onMouseEnter={(e) => setTooltip({ x: e.clientX, y: e.clientY, day: cell })}
+                          onMouseMove={(e) => setTooltip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : null))}
+                          onMouseLeave={() => setTooltip(null)}
+                        >
+                          <span className="js-cal-month-date">{dayNum}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Floating tooltip */}
+      {tooltip && <CalTooltip tt={tooltip} />}
     </div>
   );
 }
