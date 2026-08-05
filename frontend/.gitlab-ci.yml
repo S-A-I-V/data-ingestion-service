@@ -56,7 +56,7 @@ BUILD_FRONTEND_DEV:
       - frontend/conf/dev-env/apps/nfc/
       - frontend/scripts/
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
 
 DEPLOY_FRONTEND_DEV:
   stage: deploy
@@ -84,7 +84,7 @@ DEPLOY_FRONTEND_DEV:
       --assets-app-version "$ASSETS_VERSION"
     - 'echo "Assets deployed successfully"'
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
 
 DEPLOY_MANIFEST_DEV:
   stage: deploy-manifest
@@ -110,7 +110,7 @@ DEPLOY_MANIFEST_DEV:
       --manifest-path "conf/dev-env/apps/nfc/nfc.json"
     - 'echo "Manifest deployed successfully"'
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
 
 # =========================================================
 # 2. QA / STAGING ENVIRONMENT

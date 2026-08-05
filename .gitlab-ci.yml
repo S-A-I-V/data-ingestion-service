@@ -48,7 +48,7 @@ BUILD_BACKEND_DEV:
         --build-arg APP_ENV=dev \
         --build-arg CI_JOB_TOKEN=${CI_JOB_TOKEN}
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
 
 DEPLOY_BACKEND_DEV:
   stage: deploy
@@ -69,7 +69,7 @@ DEPLOY_BACKEND_DEV:
     - kubectl rollout restart deployment/nfc-ingestion-backend --namespace=nfc-backend
     - kubectl rollout status deployment/nfc-ingestion-backend --namespace=nfc-backend --timeout=300s
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
 
 # ==========================================
 # BACKEND - QA
@@ -172,7 +172,7 @@ TRIGGER_FRONTEND_PIPELINE:
     include:
       - local: frontend/.gitlab-ci.yml
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "qa" || $CI_COMMIT_BRANCH == "prod"'
+    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "qa" || $CI_COMMIT_BRANCH == "prod" || $CI_COMMIT_BRANCH == "feature/maf-deployment"'
 
 # ==========================================
 # SECRET CREATION (Manual)
