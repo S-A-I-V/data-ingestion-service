@@ -22,12 +22,14 @@ export function SlaBarTooltip({ active, payload, label }: any) {
           <span>{minsToTime(d.expected_start_minutes, 0)}</span>
         </div>
       )}
-      {d?.actual_start_minutes != null && (
-        <div className="js-tooltip-row" style={{ color: COLOR_ACTUAL_OK }}>
-          <span>Actual start:</span>
-          <span>{minsToTime(d.actual_start_minutes, 0)}</span>
-        </div>
-      )}
+      {/* Actual start — always shown; "Not received" when null */}
+      <div
+        className="js-tooltip-row"
+        style={{ color: d?.actual_start_minutes != null ? COLOR_ACTUAL_OK : "var(--text-muted)" }}
+      >
+        <span>Actual start:</span>
+        <span>{d?.actual_start_minutes != null ? minsToTime(d.actual_start_minutes, 0) : "Not received"}</span>
+      </div>
       {d?.actual_end_minutes != null && (
         <div className="js-tooltip-row" style={{ color: breached ? COLOR_ACTUAL_BREACH : COLOR_ACTUAL_OK }}>
           <span>Actual end:</span>
@@ -40,22 +42,18 @@ export function SlaBarTooltip({ active, payload, label }: any) {
           <span>{minsToTime(d.expected_sla_minutes, 0)}</span>
         </div>
       )}
-      {d?.avg_delay_minutes != null && d.avg_delay_minutes > 0 && (
-        <div className="js-tooltip-row" style={{ color: COLOR_ACTUAL_BREACH }}>
-          <span>Avg delay:</span>
-          <span>+{d.avg_delay_minutes.toFixed(0)} min</span>
-        </div>
-      )}
-      {d?.on_time_percentage != null && (
+      {d?.actual_end_minutes != null &&
+        d?.expected_sla_minutes != null &&
+        d.actual_end_minutes > d.expected_sla_minutes && (
+          <div className="js-tooltip-row" style={{ color: COLOR_ACTUAL_BREACH }}>
+            <span>Delay:</span>
+            <span>+{(d.actual_end_minutes - d.expected_sla_minutes).toFixed(0)} min</span>
+          </div>
+        )}
+      {d?.occurrence_count != null && d.occurrence_count > 1 && (
         <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
-          <span>On-time rate:</span>
-          <span>{d.on_time_percentage.toFixed(1)}%</span>
-        </div>
-      )}
-      {d?.total_runs != null && (
-        <div className="js-tooltip-row" style={{ color: "var(--text-muted)" }}>
-          <span>{d.occurrence_count != null ? `${d.occurrence_count} occurrences` : "Total runs"}:</span>
-          <span>{d.total_runs}</span>
+          <span>Occurrences:</span>
+          <span>{d.occurrence_count}</span>
         </div>
       )}
     </div>
