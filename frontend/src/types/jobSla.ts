@@ -340,12 +340,11 @@ export interface WeeklySlaBars {
   breach_count: number;
   on_time_count: number;
   failed_count: number;
-  expected_start_minutes: number | null;
-  actual_start_minutes: number | null;
-  expected_sla_minutes: number | null;
-  actual_end_minutes: number | null;
-  avg_delay_minutes: number | null;
-  on_time_percentage: number | null;
+  actual_start_ts: string | null;
+  actual_end_ts: string | null;
+  expected_start_ts: string | null;
+  expected_sla_ts: string | null;
+  delay_duration_minutes: number | null;
 }
 
 export interface DurationDistributionResponse {

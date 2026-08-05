@@ -296,36 +296,32 @@ SELECT
         WHERE jls.current_status = 'success' AND jls.end_time <= jls.job_expected_sla
     ) AS on_time_count,
     COUNT(*) FILTER (WHERE jls.current_status = 'failed') AS failed_count,
-    -- Average expected start time as minutes from midnight
+    -- Average expected start time as minutes from expected_start_time's midnight
     ROUND(
         (AVG(
-            EXTRACT(HOUR FROM jls.expected_start_time) * 60
-            + EXTRACT(MINUTE FROM jls.expected_start_time)
+            EXTRACT(EPOCH FROM (jls.expected_start_time - DATE_TRUNC('day', jls.expected_start_time))) / 60
         ) FILTER (WHERE jls.expected_start_time IS NOT NULL))::numeric,
         1
     ) AS expected_start_minutes,
-    -- Average actual start time as minutes from midnight
+    -- Average actual start time as minutes from expected_start_time's midnight
     ROUND(
         (AVG(
-            EXTRACT(HOUR FROM jls.start_time) * 60
-            + EXTRACT(MINUTE FROM jls.start_time)
-        ) FILTER (WHERE jls.start_time IS NOT NULL))::numeric,
+            EXTRACT(EPOCH FROM (jls.start_time - DATE_TRUNC('day', jls.expected_start_time))) / 60
+        ) FILTER (WHERE jls.start_time IS NOT NULL AND jls.expected_start_time IS NOT NULL))::numeric,
         1
     ) AS actual_start_minutes,
-    -- Average expected SLA time as minutes from midnight
+    -- Average expected SLA time as minutes from expected_start_time's midnight
     ROUND(
         (AVG(
-            EXTRACT(HOUR FROM jls.job_expected_sla) * 60
-            + EXTRACT(MINUTE FROM jls.job_expected_sla)
-        ) FILTER (WHERE jls.job_expected_sla IS NOT NULL))::numeric,
+            EXTRACT(EPOCH FROM (jls.job_expected_sla - DATE_TRUNC('day', jls.expected_start_time))) / 60
+        ) FILTER (WHERE jls.job_expected_sla IS NOT NULL AND jls.expected_start_time IS NOT NULL))::numeric,
         1
     ) AS expected_sla_minutes,
-    -- Average actual end time as minutes from midnight
+    -- Average actual end time as minutes from expected_start_time's midnight
     ROUND(
         (AVG(
-            EXTRACT(HOUR FROM jls.end_time) * 60
-            + EXTRACT(MINUTE FROM jls.end_time)
-        ) FILTER (WHERE jls.end_time IS NOT NULL))::numeric,
+            EXTRACT(EPOCH FROM (jls.end_time - DATE_TRUNC('day', jls.expected_start_time))) / 60
+        ) FILTER (WHERE jls.end_time IS NOT NULL AND jls.expected_start_time IS NOT NULL))::numeric,
         1
     ) AS actual_end_minutes,
     -- Average delay in minutes (late runs only)
@@ -373,38 +369,11 @@ SELECT
         ELSE 0
     END AS on_time_count,
     CASE WHEN jls.current_status = 'failed' THEN 1 ELSE 0 END AS failed_count,
-    CASE WHEN jls.expected_start_time IS NOT NULL
-        THEN ROUND((
-            EXTRACT(HOUR FROM jls.expected_start_time) * 60
-            + EXTRACT(MINUTE FROM jls.expected_start_time)
-        )::numeric, 1)
-    END AS expected_start_minutes,
-    CASE WHEN jls.start_time IS NOT NULL
-        THEN ROUND((
-            EXTRACT(HOUR FROM jls.start_time) * 60
-            + EXTRACT(MINUTE FROM jls.start_time)
-        )::numeric, 1)
-    END AS actual_start_minutes,
-    CASE WHEN jls.job_expected_sla IS NOT NULL
-        THEN ROUND((
-            EXTRACT(HOUR FROM jls.job_expected_sla) * 60
-            + EXTRACT(MINUTE FROM jls.job_expected_sla)
-        )::numeric, 1)
-    END AS expected_sla_minutes,
-    CASE WHEN jls.end_time IS NOT NULL
-        THEN ROUND((
-            EXTRACT(HOUR FROM jls.end_time) * 60
-            + EXTRACT(MINUTE FROM jls.end_time)
-        )::numeric, 1)
-    END AS actual_end_minutes,
-    jls.delay_duration_minutes AS avg_delay_minutes,
-    CASE
-        WHEN jls.current_status = 'success'
-             AND jls.end_time <= jls.job_expected_sla THEN 100.0
-        WHEN jls.current_status = 'success'
-             AND jls.end_time > jls.job_expected_sla  THEN 0.0
-        ELSE NULL
-    END AS on_time_percentage
+    jls.start_time AS actual_start_ts,
+    jls.end_time AS actual_end_ts,
+    jls.expected_start_time AS expected_start_ts,
+    jls.job_expected_sla AS expected_sla_ts,
+    jls.delay_duration_minutes
 FROM job_live_state jls
 WHERE jls.job_id = :job_id
   AND jls.data_date >= CURRENT_DATE - INTERVAL '89 days'

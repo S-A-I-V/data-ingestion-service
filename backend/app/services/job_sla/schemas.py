@@ -405,12 +405,11 @@ class WeeklySlaBars(BaseModel):
     breach_count: int = 0
     on_time_count: int = 0
     failed_count: int = 0
-    expected_start_minutes: Optional[float] = None
-    actual_start_minutes: Optional[float] = None
-    expected_sla_minutes: Optional[float] = None
-    actual_end_minutes: Optional[float] = None
-    avg_delay_minutes: Optional[float] = None
-    on_time_percentage: Optional[float] = None
+    actual_start_ts: Optional[datetime] = None
+    actual_end_ts: Optional[datetime] = None
+    expected_start_ts: Optional[datetime] = None
+    expected_sla_ts: Optional[datetime] = None
+    delay_duration_minutes: Optional[float] = None
 
 
 class TrendResponse(BaseModel):

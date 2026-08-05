@@ -100,8 +100,8 @@ export function OverviewTab({ slaPolicies, dayOfWeekSlaBars, weeklySlaBars, load
           {hasChartData ? (
             <SlaBarChart
               view={chartView}
-              dowData={dayOfWeekSlaBars}
               weeklyData={weeklySlaBars}
+              slaPolicies={slaPolicies}
               tzOffset={tzOffset}
               chartStyle={chartStyle}
             />
