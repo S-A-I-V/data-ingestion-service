@@ -20,9 +20,8 @@ const appName = process.env.REACT_APP_APP_DISPLAY_CODE || "nfc";
 module.exports = {
   appName,
   appEntry: {
-    // Single-screen mode for nfc-preprod deployment
-    "nfc-admin": "./src/maf-routes/nfc-admin.tsx",
     // Individual screen entries (for full multi-screen deployment)
+    "nfc-admin": "./src/maf-routes/nfc-admin.tsx",
     index: "./src/maf-routes/index.ts",
     home: "./src/maf-routes/home.tsx",
     dashboard: "./src/maf-routes/dashboard.tsx",

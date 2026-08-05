@@ -41,16 +41,16 @@ BUILD_FRONTEND_DEV:
     - npm ci
   script:
     - npm run build:preprod
-    - export ZIP_NAME="nfc-preprod.zip"
-    - export FOLDER_NAME="nfc-preprod"
+    - export ZIP_NAME="nfc-admin.zip"
+    - export FOLDER_NAME="nfc-admin"
     - *build_zip_and_verify
   artifacts:
     name: "build-dev-$CI_COMMIT_SHORT_SHA"
     expire_in: 1 week
     paths:
-      - frontend/build/nfc-preprod/
-      - frontend/build/nfc-preprod.zip
-      - frontend/conf/dev-env/apps/nfc-preprod/
+      - frontend/build/nfc-admin/
+      - frontend/build/nfc-admin.zip
+      - frontend/conf/dev-env/apps/nfc-admin/
   rules:
     - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
 
@@ -58,7 +58,7 @@ DEPLOY_FRONTEND_DEV:
   stage: deploy
   environment:
     name: dev
-    url: https://nfc.dev.apps.nielsen.com/nfc
+    url: https://nfc.dev.apps.nielsen.com/nfc-admin
   image: node:${NODE_VERSION}-alpine
   needs: ["BUILD_FRONTEND_DEV"]
   before_script:
@@ -67,16 +67,16 @@ DEPLOY_FRONTEND_DEV:
     - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
-    - 'echo "Starting ASSET deployment for NFC DEV"'
+    - 'echo "Starting ASSET deployment for NFC Admin DEV"'
     - "command -v maf-cli >/dev/null || exit 1"
-    - '[ -f "build/nfc-preprod.zip" ] || exit 1'
+    - '[ -f "build/nfc-admin.zip" ] || exit 1'
     - >
       maf-cli deploy "$MAF_CLI_FLAGS"
       --external-gw-url "$EXTERNAL_GW_URL"
       --app-token "$MAF_APP_TOKEN"
       --api-token "$MAF_API_TOKEN"
       --type assets
-      --assets-zip-path "build/nfc-preprod.zip"
+      --assets-zip-path "build/nfc-admin.zip"
       --assets-app-version "$ASSETS_VERSION"
     - 'echo "Assets deployed successfully"'
   rules:
@@ -94,16 +94,16 @@ DEPLOY_MANIFEST_DEV:
     - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
-    - 'echo "Starting MANIFEST deployment for NFC DEV"'
+    - 'echo "Starting MANIFEST deployment for NFC Admin DEV"'
     - "command -v maf-cli >/dev/null || exit 1"
-    - '[ -f "conf/dev-env/apps/nfc-preprod/nfc-preprod.json" ] || exit 1'
+    - '[ -f "conf/dev-env/apps/nfc-admin/nfc-admin.json" ] || exit 1'
     - >
       maf-cli deploy "$MAF_CLI_FLAGS"
       --external-gw-url "$EXTERNAL_GW_URL"
       --app-token "$MAF_APP_TOKEN"
       --api-token "$MAF_API_TOKEN"
       --type manifest
-      --manifest-path "conf/dev-env/apps/nfc-preprod/nfc-preprod.json"
+      --manifest-path "conf/dev-env/apps/nfc-admin/nfc-admin.json"
     - 'echo "Manifest deployed successfully"'
   rules:
     - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"

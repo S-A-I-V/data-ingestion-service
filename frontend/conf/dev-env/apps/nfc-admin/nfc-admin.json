@@ -27,7 +27,7 @@
       "dependency_rest_actions": [
         {
           "path": "/api/nfc-admin/health$",
-          "appCode": "nfc-preprod",
+          "appCode": "nfc-admin",
           "method": "GET"
         }
       ]

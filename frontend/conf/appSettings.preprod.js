@@ -1,5 +1,5 @@
-// MAF Application Settings — nfc-preprod single-screen deployment
-// Builds only the nfc-admin screen bundle for deployment to nfc-preprod app.
+// MAF Application Settings — nfc-admin standalone deployment
+// Builds the nfc-admin screen as a standalone MAF application.
 
 const dotenv = require("dotenv");
 const path = require("path");
@@ -8,9 +8,8 @@ const envFile = process.env.ENVIRONMENT || "dev";
 const envPath = path.resolve(__dirname, `../.env.${envFile}`);
 dotenv.config({ path: envPath });
 
-// For preprod, the display_code is "nfc-preprod" (the MAF app)
-// and the screen is "nfc-admin"
-const appName = "nfc-preprod";
+// Standalone app with display_code "nfc-admin"
+const appName = "nfc-admin";
 
 module.exports = {
   appName,

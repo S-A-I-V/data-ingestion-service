@@ -4,8 +4,8 @@
  * This renders the entire NFC Data Ingestion admin tool as a single MAF screen.
  * It wraps the full React Router SPA inside MAF's registerModule lifecycle.
  *
- * Deployed to: nfc-preprod application → display_code "nfc-admin"
- * URL in MAF:  https://nfc-preprod.dev.apps.nielsen.com/nfc-preprod/nfc-admin
+ * Deployed to: nfc-admin standalone application
+ * URL in MAF:  https://nfc-admin.dev.apps.nielsen.com/nfc-admin
  */
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -31,7 +31,7 @@ import AuditLog from "../pages/AuditLog";
 
 const NfcAdminScreen: React.FC = () => {
   // The basename ensures all routes are relative to the MAF screen URL
-  const basename = "/nfc-preprod/nfc-admin";
+  const basename = "/nfc-admin/nfc-admin";
 
   return (
     <BrowserRouter basename={basename}>

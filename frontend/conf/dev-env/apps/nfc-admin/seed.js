@@ -1,8 +1,8 @@
 module.exports = {
   app: {
-    name: "Nielsen Fulfillment Center Pre-Prod",
-    displayCode: "nfc-preprod",
-    token: "REPLACE_WITH_NFC_PREPROD_APP_TOKEN",
+    name: "Nielsen Fulfillment Center Admin",
+    displayCode: "nfc-admin",
+    token: "REPLACE_WITH_NFC_ADMIN_APP_TOKEN",
     entryPoint: "http://host.docker.internal:6101",
     frontendLayerVersion: 2,
     reactVersion: 18,

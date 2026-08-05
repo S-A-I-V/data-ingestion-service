@@ -1,7 +1,6 @@
 /**
- * Webpack config for nfc-preprod deployment.
- * Builds only the nfc-admin screen as a single bundle to be deployed
- * to the existing nfc-preprod MAF application.
+ * Webpack config for nfc-admin standalone deployment.
+ * Builds the nfc-admin screen as a standalone MAF application.
  */
 const { merge } = require("webpack-merge");
 const baseConfig = require("./webpack.base.config");
