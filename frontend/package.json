@@ -2,7 +2,6 @@
   "name": "@nielsen-media/nfc-ingestion-fe",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "main": "build/nfc/index.js",
   "files": [
     "build/nfc/**/*"
