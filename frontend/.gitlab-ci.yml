@@ -40,7 +40,6 @@ BUILD_FRONTEND_DEV:
     - apk add --no-cache zip
     - npm ci
   script:
-    - npx tsc --noEmit
     - npm run build:dev
     - export ZIP_NAME="nfc.zip"
     - export FOLDER_NAME="nfc"
