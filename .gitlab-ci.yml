@@ -1,0 +1,200 @@
+# Root GitLab CI/CD Pipeline for NFC Data Ingestion
+# Backend (Python/FastAPI) deploys to KaaS via Docker + k8s
+# Frontend deploys to MAF via maf-cli
+
+include:
+  - project: 'nielsen-media/cybersecurity/product-security/gold-config'
+    ref: main
+    file: 'sast/sast.nlsn.yml'
+
+stages:
+  - build
+  - test
+  - deploy
+  - deploy-manifest
+
+default:
+  tags:
+    - $GITLAB_RUNNER
+
+variables:
+  IMAGE_BASE: "registry.gitlab.com/nielsen-media/nfc"
+  PROD_IMAGE_VERSION: v1.0.0
+  # Kubernetes Contexts — update with your actual runner contexts
+  DEV_KUBE_CONTEXT: "nielsen-media/platforms/tools-devops-external/runners-as-a-service/runner-nfc-backend:kaas2"
+  QA_KUBE_CONTEXT: "nielsen-media/platforms/tools-devops-external/runners-as-a-service/runner-nfc-staging:kaas2"
+  PROD_KUBE_CONTEXT: "nielsen-media/platforms/tools-devops-external/runners-as-a-service/runner-nfc-backend:kaas2-ue1-prod"
+  SAST_EXCLUDED_PATHS: "node_modules, dist, build, frontend/node_modules, backend/.pytest_cache"
+
+# ==========================================
+# BACKEND - DEV
+# ==========================================
+BUILD_BACKEND_DEV:
+  stage: build
+  environment:
+    name: dev
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - echo "Building Docker image for Dev"
+    - mkdir -p /kaniko/.docker
+    - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/backend/" \
+        --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile" \
+        --destination "${IMAGE_BASE}/backend:dev-${CI_COMMIT_SHORT_SHA}" \
+        --build-arg APP_ENV=dev \
+        --build-arg CI_JOB_TOKEN=${CI_JOB_TOKEN}
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+
+DEPLOY_BACKEND_DEV:
+  stage: deploy
+  environment:
+    name: dev
+  image: registry.gitlab.com/nielsen-media/nfc/kubectl:v1.0.0
+  needs:
+    - BUILD_BACKEND_DEV
+  variables:
+    KUBE_CONTEXT: $DEV_KUBE_CONTEXT
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context "$KUBE_CONTEXT"
+    - sed -i "s|__IMAGE_TAG__|dev-${CI_COMMIT_SHORT_SHA}|g" ./backend/k8s/dev/deployment.yaml
+    - kubectl apply -f ./backend/k8s/dev/deployment.yaml
+    - kubectl apply -f ./backend/k8s/dev/service.yaml
+    - kubectl apply -f ./backend/k8s/dev/ingress.yaml
+    - kubectl rollout restart deployment/nfc-ingestion-backend --namespace=nfc-backend
+    - kubectl rollout status deployment/nfc-ingestion-backend --namespace=nfc-backend --timeout=300s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+
+# ==========================================
+# BACKEND - QA
+# ==========================================
+BUILD_BACKEND_QA:
+  stage: build
+  environment:
+    name: qa
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - echo "Building Docker image for QA"
+    - mkdir -p /kaniko/.docker
+    - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/backend/" \
+        --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile" \
+        --destination "${IMAGE_BASE}/qa/backend:qa-${CI_COMMIT_SHORT_SHA}" \
+        --build-arg APP_ENV=qa \
+        --build-arg CI_JOB_TOKEN=${CI_JOB_TOKEN}
+  rules:
+    - if: $CI_COMMIT_BRANCH == "qa"
+
+DEPLOY_BACKEND_QA:
+  stage: deploy
+  environment:
+    name: qa
+  image: registry.gitlab.com/nielsen-media/nfc/kubectl:v1.0.0
+  needs:
+    - BUILD_BACKEND_QA
+  variables:
+    KUBE_CONTEXT: $QA_KUBE_CONTEXT
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context "$KUBE_CONTEXT"
+    - sed -i "s|__IMAGE_TAG__|qa-${CI_COMMIT_SHORT_SHA}|g" ./backend/k8s/qa/deployment.yaml
+    - kubectl apply -f ./backend/k8s/qa/deployment.yaml
+    - kubectl apply -f ./backend/k8s/qa/service.yaml
+    - kubectl apply -f ./backend/k8s/qa/ingress.yaml
+    - kubectl rollout restart deployment/nfc-ingestion-backend-qa --namespace=nfc-staging
+    - kubectl rollout status deployment/nfc-ingestion-backend-qa --namespace=nfc-staging --timeout=300s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "qa"
+  when: manual
+
+# ==========================================
+# BACKEND - PROD
+# ==========================================
+BUILD_BACKEND_PROD:
+  stage: build
+  environment:
+    name: prod
+  image:
+    name: gcr.io/kaniko-project/executor:v1.14.0-debug
+    entrypoint: [""]
+  script:
+    - echo "Building Docker image for Prod"
+    - mkdir -p /kaniko/.docker
+    - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/backend/" \
+        --dockerfile "${CI_PROJECT_DIR}/backend/Dockerfile" \
+        --destination "${IMAGE_BASE}/prod/backend:${PROD_IMAGE_VERSION}" \
+        --build-arg APP_ENV=prod \
+        --build-arg CI_JOB_TOKEN=${CI_JOB_TOKEN}
+  rules:
+    - if: $CI_COMMIT_BRANCH == "prod"
+
+DEPLOY_BACKEND_PROD:
+  stage: deploy
+  environment:
+    name: prod
+  image: registry.gitlab.com/nielsen-media/nfc/kubectl:v1.0.0
+  needs:
+    - BUILD_BACKEND_PROD
+  variables:
+    KUBE_CONTEXT: $PROD_KUBE_CONTEXT
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context "$KUBE_CONTEXT"
+    - sed -i "s|__IMAGE_TAG__|${PROD_IMAGE_VERSION}|g" ./backend/k8s/prod/deployment.yaml
+    - kubectl apply -f ./backend/k8s/prod/deployment.yaml
+    - kubectl apply -f ./backend/k8s/prod/service.yaml
+    - kubectl apply -f ./backend/k8s/prod/ingress.yaml
+    - kubectl rollout restart deployment/nfc-ingestion-backend --namespace=nfc-backend
+    - kubectl rollout status deployment/nfc-ingestion-backend --namespace=nfc-backend --timeout=300s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "prod"
+  when: manual
+
+# ==========================================
+# FRONTEND PIPELINE TRIGGER (MAF)
+# ==========================================
+TRIGGER_FRONTEND_PIPELINE:
+  stage: build
+  trigger:
+    include:
+      - local: frontend/.gitlab-ci.yml
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "qa" || $CI_COMMIT_BRANCH == "prod"'
+
+# ==========================================
+# SECRET CREATION (Manual)
+# ==========================================
+SECRET_CREATION_DEV:
+  stage: deploy
+  environment:
+    name: dev
+  image: registry.gitlab.com/nielsen-media/nfc/kubectl:v1.0.0
+  needs: []
+  variables:
+    KUBE_CONTEXT: $DEV_KUBE_CONTEXT
+  script:
+    - kubectl config use-context "$KUBE_CONTEXT"
+    - kubectl delete secret gitlab-registry-secret --namespace=nfc-backend --ignore-not-found
+    - >
+      kubectl create secret docker-registry gitlab-registry-secret
+      --namespace=nfc-backend
+      --docker-server="$CI_REGISTRY"
+      --docker-username="$REGISTRY_USER"
+      --docker-password="$REGISTRY_PASSWORD"
+      --docker-email="$REGISTRY_EMAIL"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+  when: manual

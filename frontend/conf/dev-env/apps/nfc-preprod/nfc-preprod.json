@@ -1,0 +1,546 @@
+{
+  "apps_configuration": {
+    "jwt-key-version": 3,
+    "use-private-jwt-key-pair": true
+  },
+  "cookies": [],
+  "rest_actions": [
+    {
+      "path": "/api/nfc-admin/health$",
+      "display_path": "/api/nfc-admin/health",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "NFC Admin health check",
+          "force_user": false,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/connections$",
+      "display_path": "/api/nfc-admin/connections",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List database connections",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "POST",
+          "description": "Create a database connection",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/connections/[0-9]+$",
+      "display_path": "/api/nfc-admin/connections/{connId}",
+      "methods": [
+        {
+          "method": "PUT",
+          "description": "Update a database connection",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "DELETE",
+          "description": "Delete a database connection",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/connections/[0-9]+/test$",
+      "display_path": "/api/nfc-admin/connections/{connId}/test",
+      "methods": [
+        {
+          "method": "POST",
+          "description": "Test a database connection",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/connections/[0-9]+/tables$",
+      "display_path": "/api/nfc-admin/connections/{connId}/tables",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List tables for a connection",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/connections/[0-9]+/tables/[^/]+/columns$",
+      "display_path": "/api/nfc-admin/connections/{connId}/tables/{tableName}/columns",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List columns for a table",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/ingestion/preview$",
+      "display_path": "/api/nfc-admin/ingestion/preview",
+      "methods": [
+        {
+          "method": "POST",
+          "description": "Preview CSV file before ingestion",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/ingestion/execute$",
+      "display_path": "/api/nfc-admin/ingestion/execute",
+      "methods": [
+        {
+          "method": "POST",
+          "description": "Execute data ingestion",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/audit$",
+      "display_path": "/api/nfc-admin/audit",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get audit log entries",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/audit/metrics$",
+      "display_path": "/api/nfc-admin/audit/metrics",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get aggregated audit metrics",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/report-health$",
+      "display_path": "/api/nfc-admin/report-health",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get report health dashboard data",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/report-health/filters$",
+      "display_path": "/api/nfc-admin/report-health/filters",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get report health filter options",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/report-health/[0-9]+$",
+      "display_path": "/api/nfc-admin/report-health/{reportId}",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get detailed report health for a specific report",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/report-mapping/.*$",
+      "display_path": "/api/nfc-admin/report-mapping/*",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Report mapping read operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "POST",
+          "description": "Report mapping write operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "PUT",
+          "description": "Report mapping update operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "DELETE",
+          "description": "Report mapping delete operations",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/report-policies/.*$",
+      "display_path": "/api/nfc-admin/report-policies/*",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Report policy read operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "POST",
+          "description": "Report policy write operations",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/job-onboarding/.*$",
+      "display_path": "/api/nfc-admin/job-onboarding/*",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Job onboarding read operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "POST",
+          "description": "Job onboarding write operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "PUT",
+          "description": "Job onboarding update operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "DELETE",
+          "description": "Job onboarding delete operations",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/client-onboarding/.*$",
+      "display_path": "/api/nfc-admin/client-onboarding/*",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Client onboarding read operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "POST",
+          "description": "Client onboarding write operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "PUT",
+          "description": "Client onboarding update operations",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/job-sla/.*$",
+      "display_path": "/api/nfc-admin/job-sla/*",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Job SLA analytics operations",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/associate-lookup$",
+      "display_path": "/api/nfc-admin/associate-lookup",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Lookup associates by BEID or DMZID",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/email-discrepancy/.*$",
+      "display_path": "/api/nfc-admin/email-discrepancy/*",
+      "methods": [
+        {
+          "method": "POST",
+          "description": "Email discrepancy operations",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    },
+    {
+      "path": "/api/nfc-admin/rbac/.*$",
+      "display_path": "/api/nfc-admin/rbac/*",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "RBAC read operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "POST",
+          "description": "RBAC write operations",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "DELETE",
+          "description": "RBAC delete operations",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
+    }
+  ],
+  "ui_toggles": [
+    {
+      "name": "NFC_ADMIN_DATA_INGESTION",
+      "description": "Allows data ingestion (CSV upload and execute)",
+      "dependency_rest_actions": [
+        {
+          "path": "/api/nfc-admin/ingestion/preview$",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/ingestion/execute$",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "name": "NFC_ADMIN_MANAGE_CONNECTIONS",
+      "description": "Allows creating, editing, and deleting database connections",
+      "dependency_rest_actions": [
+        {
+          "path": "/api/nfc-admin/connections$",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/connections/[0-9]+$",
+          "method": "PUT"
+        },
+        {
+          "path": "/api/nfc-admin/connections/[0-9]+$",
+          "method": "DELETE"
+        }
+      ]
+    },
+    {
+      "name": "NFC_ADMIN_REPORT_POLICIES",
+      "description": "Allows editing report SLA policies",
+      "dependency_rest_actions": [
+        {
+          "path": "/api/nfc-admin/report-policies/.*$",
+          "method": "POST"
+        }
+      ]
+    },
+    {
+      "name": "NFC_ADMIN_ONBOARDING",
+      "description": "Allows job and client onboarding operations",
+      "dependency_rest_actions": [
+        {
+          "path": "/api/nfc-admin/job-onboarding/.*$",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/client-onboarding/.*$",
+          "method": "POST"
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "name": "NFC Admin",
+      "description": "NFC Data Ingestion Admin Tool — connections, data ingestion, report health, mapping, policies, onboarding, SLA analysis, and user management",
+      "display_code": "nfc-admin",
+      "dependency_rest_actions": [
+        {
+          "path": "/api/nfc-admin/health$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/connections$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/connections$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/connections/[0-9]+$",
+          "appCode": "nfc-preprod",
+          "method": "PUT"
+        },
+        {
+          "path": "/api/nfc-admin/connections/[0-9]+$",
+          "appCode": "nfc-preprod",
+          "method": "DELETE"
+        },
+        {
+          "path": "/api/nfc-admin/connections/[0-9]+/test$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/connections/[0-9]+/tables$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/connections/[0-9]+/tables/[^/]+/columns$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/ingestion/preview$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/ingestion/execute$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/audit$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/audit/metrics$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/report-health$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/report-health/filters$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/report-health/[0-9]+$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/report-mapping/.*$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/report-mapping/.*$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/report-policies/.*$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/report-policies/.*$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/job-onboarding/.*$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/job-onboarding/.*$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/client-onboarding/.*$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/client-onboarding/.*$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/job-sla/.*$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/associate-lookup$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/email-discrepancy/.*$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        },
+        {
+          "path": "/api/nfc-admin/rbac/.*$",
+          "appCode": "nfc-preprod",
+          "method": "GET"
+        },
+        {
+          "path": "/api/nfc-admin/rbac/.*$",
+          "appCode": "nfc-preprod",
+          "method": "POST"
+        }
+      ]
+    }
+  ]
+}
