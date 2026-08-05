@@ -65,7 +65,7 @@ DEPLOY_FRONTEND_DEV:
   before_script:
     - cd frontend
     - npm config set @nielsen-media:registry https://gitlab.com/api/v4/projects/23296024/packages/npm/
-    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${CI_JOB_TOKEN}
+    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
     - 'echo "Starting ASSET deployment for NFC DEV"'
@@ -92,7 +92,7 @@ DEPLOY_MANIFEST_DEV:
   before_script:
     - cd frontend
     - npm config set @nielsen-media:registry https://gitlab.com/api/v4/projects/23296024/packages/npm/
-    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${CI_JOB_TOKEN}
+    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
     - 'echo "Starting MANIFEST deployment for NFC DEV"'
@@ -147,7 +147,7 @@ DEPLOY_FRONTEND_QA:
   before_script:
     - cd frontend
     - npm config set @nielsen-media:registry https://gitlab.com/api/v4/projects/23296024/packages/npm/
-    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${CI_JOB_TOKEN}
+    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
     - 'echo "Starting ASSET deployment for NFC QA"'
@@ -175,7 +175,7 @@ DEPLOY_MANIFEST_QA:
   before_script:
     - cd frontend
     - npm config set @nielsen-media:registry https://gitlab.com/api/v4/projects/23296024/packages/npm/
-    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${CI_JOB_TOKEN}
+    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
     - 'echo "Starting MANIFEST deployment for NFC QA"'
@@ -231,7 +231,7 @@ DEPLOY_FRONTEND_PROD:
   before_script:
     - cd frontend
     - npm config set @nielsen-media:registry https://gitlab.com/api/v4/projects/23296024/packages/npm/
-    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${CI_JOB_TOKEN}
+    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
     - 'echo "Starting ASSET deployment for NFC PROD"'
@@ -259,7 +259,7 @@ DEPLOY_MANIFEST_PROD:
   before_script:
     - cd frontend
     - npm config set @nielsen-media:registry https://gitlab.com/api/v4/projects/23296024/packages/npm/
-    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${CI_JOB_TOKEN}
+    - npm config set //gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken ${MAF_REGISTRY_TOKEN}
     - npm install -g @nielsen-media/maf-cli
   script:
     - 'echo "Starting MANIFEST deployment for NFC PROD"'
