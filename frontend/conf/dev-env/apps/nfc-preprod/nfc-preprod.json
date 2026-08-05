@@ -336,64 +336,7 @@
       ]
     }
   ],
-  "ui_toggles": [
-    {
-      "name": "NFC_ADMIN_DATA_INGESTION",
-      "description": "Allows data ingestion (CSV upload and execute)",
-      "dependency_rest_actions": [
-        {
-          "path": "/api/nfc-admin/ingestion/preview$",
-          "method": "POST"
-        },
-        {
-          "path": "/api/nfc-admin/ingestion/execute$",
-          "method": "POST"
-        }
-      ]
-    },
-    {
-      "name": "NFC_ADMIN_MANAGE_CONNECTIONS",
-      "description": "Allows creating, editing, and deleting database connections",
-      "dependency_rest_actions": [
-        {
-          "path": "/api/nfc-admin/connections$",
-          "method": "POST"
-        },
-        {
-          "path": "/api/nfc-admin/connections/[0-9]+$",
-          "method": "PUT"
-        },
-        {
-          "path": "/api/nfc-admin/connections/[0-9]+$",
-          "method": "DELETE"
-        }
-      ]
-    },
-    {
-      "name": "NFC_ADMIN_REPORT_POLICIES",
-      "description": "Allows editing report SLA policies",
-      "dependency_rest_actions": [
-        {
-          "path": "/api/nfc-admin/report-policies/.*$",
-          "method": "POST"
-        }
-      ]
-    },
-    {
-      "name": "NFC_ADMIN_ONBOARDING",
-      "description": "Allows job and client onboarding operations",
-      "dependency_rest_actions": [
-        {
-          "path": "/api/nfc-admin/job-onboarding/.*$",
-          "method": "POST"
-        },
-        {
-          "path": "/api/nfc-admin/client-onboarding/.*$",
-          "method": "POST"
-        }
-      ]
-    }
-  ],
+  "ui_toggles": [],
   "screens": [
     {
       "name": "NFC Admin",
