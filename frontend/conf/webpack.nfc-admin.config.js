@@ -1,6 +1,6 @@
 /**
- * Webpack config for nfc-admin standalone deployment.
- * Builds the nfc-admin screen as a standalone MAF application.
+ * Webpack production config for nfc-admin standalone MAF app.
+ * Builds all screen bundles for deployment to the nfc-admin MAF application.
  */
 const { merge } = require("webpack-merge");
 const baseConfig = require("./webpack.base.config");
@@ -8,7 +8,7 @@ const path = require("path");
 const TerserPlugin = require("terser-webpack-plugin");
 const AssetsPlugin = require("assets-webpack-plugin");
 
-const { appName, appEntry } = require("./appSettings.preprod");
+const { appName, appEntry } = require("./appSettings.nfc-admin");
 
 const outputPath = path.join(__dirname, `/../build/${appName}`);
 

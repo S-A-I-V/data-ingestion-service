@@ -462,24 +462,28 @@
   "ui_toggles": [],
   "screens": [
     {
-      "name": "Report Health",
-      "description": "Report delivery health monitoring with SLA tracking",
-      "display_code": "report-health",
+      "name": "NFC Admin",
+      "description": "NFC Admin — full SPA entry with internal routing",
+      "display_code": "nfc-admin",
       "dependency_rest_actions": [
         { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/auth/logout$", "appCode": "nfc-admin", "method": "POST" },
+        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "POST" },
+        { "path": "/api/connections/[0-9]+$", "appCode": "nfc-admin", "method": "PUT" },
+        { "path": "/api/connections/[0-9]+$", "appCode": "nfc-admin", "method": "DELETE" },
+        { "path": "/api/connections/[0-9]+/test$", "appCode": "nfc-admin", "method": "POST" },
+        { "path": "/api/connections/[0-9]+/tables$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/ingestion/preview$", "appCode": "nfc-admin", "method": "POST" },
+        { "path": "/api/ingestion/execute$", "appCode": "nfc-admin", "method": "POST" },
+        { "path": "/api/audit/?$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/audit/metrics$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/audit/verify-integrity$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-health/?$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-health/filters$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-health/[0-9]+/detail$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Report Mapping",
-      "description": "Report-to-job workflow mapping editor",
-      "display_code": "report-mapping",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/admin/report-health/[0-9]+/detail$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-mapping/jobs$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-mapping/existing$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-mapping/existing/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
@@ -490,29 +494,11 @@
         { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "appCode": "nfc-admin", "method": "DELETE" },
         { "path": "/api/admin/report-mapping/export/[a-f0-9-]+$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-mapping/preview-changes$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/report-mapping/apply-changes$", "appCode": "nfc-admin", "method": "POST" }
-      ]
-    },
-    {
-      "name": "Report Policies",
-      "description": "Report SLA policy editor",
-      "display_code": "report-policies",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/admin/report-mapping/apply-changes$", "appCode": "nfc-admin", "method": "POST" },
         { "path": "/api/admin/report-policies/reports$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-policies/reports/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/report-policies/preview$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/report-policies/apply$", "appCode": "nfc-admin", "method": "POST" }
-      ]
-    },
-    {
-      "name": "Job SLA Analyzer",
-      "description": "Job-level SLA analytics with trends, heatmaps, and incidents",
-      "display_code": "job-sla",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/admin/report-policies/apply$", "appCode": "nfc-admin", "method": "POST" },
         { "path": "/api/admin/job-sla/jobs$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-sla/jobs/[0-9]+/summary$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-sla/jobs/[0-9]+/history$", "appCode": "nfc-admin", "method": "GET" },
@@ -523,16 +509,7 @@
         { "path": "/api/admin/job-sla/jobs/[0-9]+/duration-distribution$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-sla/jobs/[0-9]+/artifacts$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-sla/jobs/[0-9]+/proxy$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/incidents$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Job Onboarding",
-      "description": "Job creation and management",
-      "display_code": "job-onboarding",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/incidents$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-onboarding/jobs$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "appCode": "nfc-admin", "method": "DELETE" },
@@ -542,82 +519,16 @@
         { "path": "/api/admin/job-onboarding/report-sla-options$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-onboarding/report-sla/[0-9]+/convert$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/job-onboarding/execute$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/job-onboarding/update$", "appCode": "nfc-admin", "method": "PUT" }
-      ]
-    },
-    {
-      "name": "Client Onboarding",
-      "description": "Client creation and management",
-      "display_code": "client-onboarding",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/update$", "appCode": "nfc-admin", "method": "PUT" },
         { "path": "/api/admin/client-onboarding/report-definitions$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/client-onboarding/next-ids$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/client-onboarding/execute$", "appCode": "nfc-admin", "method": "POST" },
         { "path": "/api/admin/client-onboarding/clients$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/client-onboarding/client/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/client-onboarding/update$", "appCode": "nfc-admin", "method": "PUT" }
-      ]
-    },
-    {
-      "name": "Data Ingestion",
-      "description": "CSV upload and database ingestion",
-      "display_code": "ingest",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/ingestion/preview$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/ingestion/execute$", "appCode": "nfc-admin", "method": "POST" }
-      ]
-    },
-    {
-      "name": "Connections",
-      "description": "Database connection management",
-      "display_code": "admin",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/connections/[0-9]+$", "appCode": "nfc-admin", "method": "PUT" },
-        { "path": "/api/connections/[0-9]+$", "appCode": "nfc-admin", "method": "DELETE" },
-        { "path": "/api/connections/[0-9]+/test$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/connections/[0-9]+/tables$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Associate Lookup",
-      "description": "Associate/Business entity lookup",
-      "display_code": "associate-lookup",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/associate-lookup/?$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Email Discrepancy",
-      "description": "Email discrepancy scanner and fix tool",
-      "display_code": "email-discrepancy",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/admin/client-onboarding/update$", "appCode": "nfc-admin", "method": "PUT" },
+        { "path": "/api/admin/associate-lookup/?$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/email-discrepancy/scan$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/email-discrepancy/fix-emails$", "appCode": "nfc-admin", "method": "POST" }
-      ]
-    },
-    {
-      "name": "User Management",
-      "description": "RBAC user and role management",
-      "display_code": "user-management",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/admin/email-discrepancy/fix-emails$", "appCode": "nfc-admin", "method": "POST" },
         { "path": "/api/admin/rbac/users$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/rbac/users/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/rbac/users/[0-9]+/roles$", "appCode": "nfc-admin", "method": "POST" },
@@ -625,18 +536,6 @@
         { "path": "/api/admin/rbac/roles$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/rbac/roles/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
         { "path": "/api/admin/rbac/permissions$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Audit Log",
-      "description": "Data ingestion audit trail with integrity verification",
-      "display_code": "audit-log",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/audit/?$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/audit/metrics$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/audit/verify-integrity$", "appCode": "nfc-admin", "method": "GET" }
       ]
     }
   ]

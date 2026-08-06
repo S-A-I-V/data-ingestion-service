@@ -40,7 +40,7 @@ BUILD_FRONTEND_DEV:
     - apk add --no-cache zip
     - npm ci
   script:
-    - npm run build:preprod
+    - npm run build:nfc-admin
     - export ZIP_NAME="nfc-admin.zip"
     - export FOLDER_NAME="nfc-admin"
     - *build_zip_and_verify

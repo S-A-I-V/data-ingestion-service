@@ -17,7 +17,7 @@
     "build:dev": "ENVIRONMENT=dev yarn clean && ENVIRONMENT=dev NODE_ENV=production webpack --config conf/webpack.production.config.js",
     "build:qa": "ENVIRONMENT=qa yarn clean && ENVIRONMENT=qa NODE_ENV=production webpack --config conf/webpack.production.config.js",
     "build:prod": "ENVIRONMENT=prod yarn clean && ENVIRONMENT=prod NODE_ENV=production webpack --config conf/webpack.production.config.js",
-    "build:preprod": "ENVIRONMENT=dev NODE_ENV=production webpack --config conf/webpack.preprod.config.js",
+    "build:nfc-admin": "ENVIRONMENT=dev NODE_ENV=production webpack --config conf/webpack.nfc-admin.config.js",
     "watch:maf": "ENVIRONMENT=dev REACT_APP_IS_LOCAL_DEV=true webpack --config conf/webpack.development.config.js --watch"
   },
   "dependencies": {
