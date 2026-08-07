@@ -1,246 +1,319 @@
 {
-  "services": {
-    "apps": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-app-service:release",
-      "ports": ["50001:9090"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
-      },
-      "networks": ["maf"],
-      "command": "/src/wait-for-service.sh -t 0 mysql-maf:3388 -- /src/wait-for-service.sh -t 0 redis:6379 -- npm run start:local2",
-      "depends_on": ["redis"],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:9090/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
+    "services": {
+        "apps": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-app-service:release",
+            "ports": [
+                "50001:9090"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "/src/wait-for-service.sh -t 0 mysql-maf:3388 -- /src/wait-for-service.sh -t 0 redis:6379 -- npm run start:local2",
+            "depends_on": [
+                "redis"
+            ],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:9090/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "app-gateway": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-app-gateway:release",
+            "ports": [
+                "6200:6200"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "/src/wait-for-service.sh -t 0 apps:9090 -- node /src/index.js",
+            "depends_on": [
+                "authorization",
+                "authentication"
+            ],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:6200/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "authentication": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-identity-manager-service:release",
+            "ports": [
+                "50002:9090"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "npm run start:local",
+            "depends_on": [],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:9090/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "authorization": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-authorization-service:release",
+            "ports": [
+                "50003:9090"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json",
+                "CI_MODE": "true"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "/src/wait-for-service.sh -t 0 mysql-maf:3388 -- npm run start:prod",
+            "depends_on": [
+                "mysql-maf"
+            ],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:9090/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "browser-gateway": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-browser-gateway:release",
+            "ports": [
+                "6100:9090"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json",
+                "WI_REDIS_ADDRESS": "redis://redis:6379",
+                "WITHOUT_EXTRA_SERVICE_COMMUNICATION": "true",
+                "NODE_ENV": "development"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "/src/wait-for-service.sh -t 0 apps:9090 -- /src/wait-for-service.sh -t 0 authorization:9090 -- node /src/index.js",
+            "depends_on": [
+                "authorization"
+            ],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:9090/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "entities": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-entity-service:release",
+            "ports": [
+                "50005:9090"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "node /src/index.js",
+            "depends_on": [],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:9090/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "external-gateway": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-external-gateway:release",
+            "ports": [
+                "6300:6300"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "/src/wait-for-service.sh -t 0 authorization:9090 -- /src/wait-for-service.sh -t 0 app-gateway:6200 -- node /src/index.js",
+            "depends_on": [
+                "app-gateway",
+                "authorization",
+                "authentication"
+            ],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:6300/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "infra-frontend-layers-nginx": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/infra-frontend-layers-nginx:latest",
+            "ports": [
+                "9001:9003"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/Documents/EMP/apps/nfc:/etc/nginx/apps/nfc",
+                "/Users/Saverma2501/Documents/EMP/apps/nfc-admin:/etc/nginx/apps/nfc-admin",
+                "/Users/Saverma2501/Documents/EMP/apps/nfc-staging:/etc/nginx/apps/nfc-staging"
+            ],
+            "networks": [
+                "maf"
+            ]
+        },
+        "mysql-maf": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/mysql:8.0.32",
+            "ports": [
+                "3388:3388"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/config/disable_strict_mode.cnf:/etc/mysql/conf.d/disable_strict_mode.cnf",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/mysql_admin_creation.sql:/docker-entrypoint-initdb.d/mysql_admin_creation.sql",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/webinfra.sql:/docker-entrypoint-initdb.d/webinfra.sql",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/userdata.sql:/docker-entrypoint-initdb.d/userdata.sql",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/identity_schema.sql:/docker-entrypoint-initdb.d/identity_schema.sql",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/applications_schema.sql:/docker-entrypoint-initdb.d/applications_schema.sql"
+            ],
+            "environment": {
+                "MYSQL_ROOT_PASSWORD": "smellyCat"
+            },
+            "networks": [
+                "maf"
+            ],
+            "healthcheck": {
+                "test": [
+                    "CMD",
+                    "mysql",
+                    "-u",
+                    "admin",
+                    "-psmellyCat",
+                    "-e",
+                    "SELECT 1"
+                ],
+                "interval": "5s",
+                "timeout": "5s",
+                "retries": 99,
+                "start_period": "30s"
+            }
+        },
+        "redis": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/redis:6.2.11",
+            "ports": [
+                "6379:6379"
+            ],
+            "networks": [
+                "maf"
+            ]
+        },
+        "tenant": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-tenant-service:release",
+            "ports": [
+                "50008:9090"
+            ],
+            "volumes": [
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
+                "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
+            ],
+            "environment": {
+                "ENV_TYPE": "container",
+                "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
+                "NODE_OTEL_TRACE_ENABLED": "y",
+                "NODE_OTEL_METRICS_ENABLED": "y",
+                "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json",
+                "TENANT_MESSAGE_BUS": "disable"
+            },
+            "networks": [
+                "maf"
+            ],
+            "command": "/src/wait-for-service.sh -t 0 mysql-maf:3388 -- npm run start:local",
+            "depends_on": [
+                "mysql-maf"
+            ],
+            "healthcheck": {
+                "test": "wget -q -O- http://localhost:9090/service/health",
+                "timeout": "60s",
+                "interval": "5s",
+                "retries": 60
+            }
+        },
+        "jeager-ui": {
+            "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/jaegertracing/jaeger:2.6.0",
+            "ports": [
+                "16686:16686",
+                "4318:4318"
+            ],
+            "networks": [
+                "maf"
+            ]
+        }
     },
-    "app-gateway": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-app-gateway:release",
-      "ports": ["6200:6200"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
-      },
-      "networks": ["maf"],
-      "command": "/src/wait-for-service.sh -t 0 apps:9090 -- node /src/index.js",
-      "depends_on": ["authorization", "authentication"],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:6200/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
-    },
-    "authentication": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-identity-manager-service:release",
-      "ports": ["50002:9090"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
-      },
-      "networks": ["maf"],
-      "command": "npm run start:local",
-      "depends_on": [],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:9090/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
-    },
-    "authorization": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-authorization-service:release",
-      "ports": ["50003:9090"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json",
-        "CI_MODE": "true"
-      },
-      "networks": ["maf"],
-      "command": "/src/wait-for-service.sh -t 0 mysql-maf:3388 -- npm run start:prod",
-      "depends_on": ["mysql-maf"],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:9090/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
-    },
-    "browser-gateway": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-browser-gateway:release",
-      "ports": ["6100:9090"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json",
-        "WI_REDIS_ADDRESS": "redis://redis:6379",
-        "WITHOUT_EXTRA_SERVICE_COMMUNICATION": "true",
-        "NODE_ENV": "development"
-      },
-      "networks": ["maf"],
-      "command": "/src/wait-for-service.sh -t 0 apps:9090 -- /src/wait-for-service.sh -t 0 authorization:9090 -- node /src/index.js",
-      "depends_on": ["authorization"],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:9090/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
-    },
-    "entities": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-entity-service:release",
-      "ports": ["50005:9090"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
-      },
-      "networks": ["maf"],
-      "command": "node /src/index.js",
-      "depends_on": [],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:9090/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
-    },
-    "external-gateway": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-external-gateway:release",
-      "ports": ["6300:6300"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json"
-      },
-      "networks": ["maf"],
-      "command": "/src/wait-for-service.sh -t 0 authorization:9090 -- /src/wait-for-service.sh -t 0 app-gateway:6200 -- node /src/index.js",
-      "depends_on": ["app-gateway", "authorization", "authentication"],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:6300/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
-    },
-    "infra-frontend-layers-nginx": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/infra-frontend-layers-nginx:latest",
-      "ports": ["9001:9003"],
-      "volumes": [
-        "/Users/Saverma2501/Documents/EMP/apps/nfc:/etc/nginx/apps/nfc",
-        "/Users/Saverma2501/Documents/EMP/apps/nfc-staging:/etc/nginx/apps/nfc-staging"
-      ],
-      "networks": ["maf"]
-    },
-    "mysql-maf": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/mysql:8.0.32",
-      "ports": ["3388:3388"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/config/disable_strict_mode.cnf:/etc/mysql/conf.d/disable_strict_mode.cnf",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/mysql_admin_creation.sql:/docker-entrypoint-initdb.d/mysql_admin_creation.sql",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/webinfra.sql:/docker-entrypoint-initdb.d/webinfra.sql",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/userdata.sql:/docker-entrypoint-initdb.d/userdata.sql",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/identity_schema.sql:/docker-entrypoint-initdb.d/identity_schema.sql",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/mysql-maf/sqls/applications_schema.sql:/docker-entrypoint-initdb.d/applications_schema.sql"
-      ],
-      "environment": {
-        "MYSQL_ROOT_PASSWORD": "smellyCat"
-      },
-      "networks": ["maf"],
-      "healthcheck": {
-        "test": ["CMD", "mysql", "-u", "admin", "-psmellyCat", "-e", "SELECT 1"],
-        "interval": "5s",
-        "timeout": "5s",
-        "retries": 99,
-        "start_period": "30s"
-      }
-    },
-    "redis": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/redis:6.2.11",
-      "ports": ["6379:6379"],
-      "networks": ["maf"]
-    },
-    "tenant": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/webinfra-tenant-service:release",
-      "ports": ["50008:9090"],
-      "volumes": [
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/wait-for-service.sh:/src/wait-for-service.sh",
-        "/Users/Saverma2501/.nvm/versions/node/v22.19.0/lib/node_modules/@nielsen-media/maf-cli/resources/docker-compose/config.json:/etc/config/config.json"
-      ],
-      "environment": {
-        "ENV_TYPE": "container",
-        "NODE_OTEL_TRACE_ENDPOINT": "http://jeager-ui:4318/v1/traces",
-        "NODE_OTEL_TRACE_ENABLED": "y",
-        "NODE_OTEL_METRICS_ENABLED": "y",
-        "USE_LOCAL_CONFIG_PATH": "/etc/config/config.json",
-        "TENANT_MESSAGE_BUS": "disable"
-      },
-      "networks": ["maf"],
-      "command": "/src/wait-for-service.sh -t 0 mysql-maf:3388 -- npm run start:local",
-      "depends_on": ["mysql-maf"],
-      "healthcheck": {
-        "test": "wget -q -O- http://localhost:9090/service/health",
-        "timeout": "60s",
-        "interval": "5s",
-        "retries": 60
-      }
-    },
-    "jeager-ui": {
-      "image": "registry.gitlab.com/nielsen-media/maf/maf-public/packages/jaegertracing/jaeger:2.6.0",
-      "ports": ["16686:16686", "4318:4318"],
-      "networks": ["maf"]
+    "networks": {
+        "maf": null
     }
-  },
-  "networks": {
-    "maf": null
-  }
 }
