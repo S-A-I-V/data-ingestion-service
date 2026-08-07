@@ -27,7 +27,26 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader", "postcss-loader"],
+        use: [
+          "style-loader",
+          {
+            loader: "css-loader",
+            options: {
+              // Ensure @import'ed CSS files also pass through postcss-loader
+              importLoaders: 1,
+            },
+          },
+          {
+            loader: "postcss-loader",
+            options: {
+              postcssOptions: {
+                // Explicit path so postcss-loader always finds the config
+                // regardless of which directory webpack is invoked from
+                config: path.resolve(__dirname, "../postcss.config.js"),
+              },
+            },
+          },
+        ],
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif|woff|woff2|eot|ttf|otf)$/i,
