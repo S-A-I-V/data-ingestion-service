@@ -34,5 +34,8 @@ Thumbs.db
 *.sqlite
 *.db
 
+# MAF local development runtime
+.maf/
+
 # Generated CSVs (user data)
 users/*.csv
