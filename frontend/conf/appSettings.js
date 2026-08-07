@@ -15,7 +15,7 @@ const envPath = path.resolve(__dirname, `../.env.${envFile}`);
 dotenv.config({ path: envPath });
 
 // Read appName from environment variable with fallback
-const appName = process.env.REACT_APP_APP_DISPLAY_CODE || "nfc";
+const appName = process.env.REACT_APP_APP_DISPLAY_CODE || "nfc-admin";
 
 module.exports = {
   appName,

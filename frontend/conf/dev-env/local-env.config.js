@@ -1,5 +1,5 @@
 module.exports = {
-  apps: ["nfc"],
+  apps: ["nfc-admin"],
   alpha: true,
   frontendLayerVersion: 2,
 };
