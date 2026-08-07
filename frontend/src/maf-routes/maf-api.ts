@@ -1,30 +1,20 @@
 /**
  * MAF API helper — provides registerModule and useMAFContext.
  *
- * In local development (Vite), these are no-ops / pass-throughs.
- * In the MAF shell, the global `window.__MAF__` object provides the real implementations.
+ * In the MAF shell (IFL2), `window.maf` provides the real implementations.
+ * In local development (Vite standalone), these are no-ops / pass-throughs.
  */
 
-type MAFContext = {
-  actions: {
-    navigate: (opts: { screenId?: string; appState?: Record<string, any> }) => void;
-  };
-  selectors: {
-    useAppState: () => Record<string, any>;
-  };
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const globalMAF = (window as any).__MAF__;
+const mafGlobal = (window as any).maf;
 
 /**
  * Register a React component as a MAF screen module.
- * In standalone mode (Vite dev), this is a no-op — the component renders via React Router.
- * In MAF shell, this wires the component into the framework's screen lifecycle.
+ * Uses window.maf.registerModule — the IFL2 registration API.
  */
 export function registerModule(Component: React.FC<any>, options?: { routeOverrides?: Record<string, any> }): void {
-  if (globalMAF && globalMAF.registerModule) {
-    globalMAF.registerModule(Component, options);
+  if (mafGlobal && mafGlobal.registerModule) {
+    mafGlobal.registerModule(Component, options);
   }
 }
 
@@ -32,15 +22,15 @@ export function registerModule(Component: React.FC<any>, options?: { routeOverri
  * Access MAF shell context (navigation, app state, user info).
  * Falls back to no-op defaults when running standalone.
  */
-export function useMAFContext(): MAFContext {
-  if (globalMAF && globalMAF.useContext) {
-    return globalMAF.useContext();
+export function useMAFContext() {
+  if (mafGlobal && mafGlobal.useMAFContext) {
+    return mafGlobal.useMAFContext();
   }
 
   // Standalone fallback
   return {
     actions: {
-      navigate: ({ screenId }) => {
+      navigate: ({ screenId }: { screenId?: string }) => {
         if (screenId) {
           window.location.hash = `#/${screenId}`;
         }
@@ -48,6 +38,7 @@ export function useMAFContext(): MAFContext {
     },
     selectors: {
       useAppState: () => ({}),
+      useUIToggles: () => ({}),
     },
   };
 }

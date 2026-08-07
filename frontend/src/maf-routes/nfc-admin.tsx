@@ -6,7 +6,7 @@
  *
  * App: nfc-admin (standalone)
  * Screen: nfc-admin
- * URL: https://nfc-admin.dev.apps.nielsen.com/nfc-admin/nfc-admin
+ * URL: https://nfc.dev.apps.nielsen.com/nfc-admin/nfc-admin
  */
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
