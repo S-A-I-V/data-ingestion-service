@@ -462,6 +462,15 @@
   "ui_toggles": [],
   "screens": [
     {
+      "name": "NFC Admin",
+      "description": "NFC Admin tool — full application entry point",
+      "display_code": "nfc-admin",
+      "dependency_rest_actions": [
+        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
+        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" }
+      ]
+    },
+    {
       "name": "Report Health",
       "description": "Report delivery health monitoring with SLA tracking",
       "display_code": "report-health",
