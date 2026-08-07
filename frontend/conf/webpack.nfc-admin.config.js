@@ -44,6 +44,7 @@ module.exports = merge(baseConfig, {
       filename: `${appName}-assets-manifest.json`,
       path: outputPath,
       prettyPrint: true,
+      removeFullPathAutoPrefix: true,
     }),
   ],
 });
