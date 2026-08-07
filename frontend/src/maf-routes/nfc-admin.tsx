@@ -10,6 +10,9 @@
  */
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// Global styles — must be imported here so webpack bundles them into the screen chunk
+import "../styles/index.css";
 import { registerModule } from "./maf-api";
 
 // Pages
