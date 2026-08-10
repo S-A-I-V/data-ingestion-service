@@ -4,7 +4,7 @@ import { PROBLEMS } from "../constants/problems";
 import ProblemPopup from "./ProblemPopup";
 
 /**
- * Problems/Features Section — "All the tools, one integrated platform" style.
+ * Problems/Features Section — "From problem to production, covered" style.
  * Clean card grid with subtle borders and minimal colors.
  */
 import Highlight from "./ui/Highlight";
@@ -18,7 +18,7 @@ export default function ProblemsSection() {
       <div className="problems-section" ref={sectionRef}>
         <p className="problems-title">The full data engineering loop</p>
         <h2 className="problems-heading">
-          All the tools, <Highlight>one</Highlight> <Highlight>integrated platform.</Highlight>
+          From problem to <Highlight>production,</Highlight> <Highlight>covered.</Highlight>
         </h2>
         <div className="problems-grid">
           {PROBLEMS.map((item, i) => {
