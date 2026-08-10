@@ -8,7 +8,7 @@ module.exports = {
   chunkManifestFileName: `${appName}-chunk-manifest.json`,
   chunkManifestVariable: `${appName}ChunkManifest`,
   filenameTemplate: "[name].js",
-  filenameChunkhashTemplate: "[name].js",
+  filenameChunkhashTemplate: "[name].js?[chunkhash]",
   initScreens: ["vendors", "commons"],
   chunkLoadingGlobal: `${appName}ChunkLoadingGlobal`,
   path: path.join(__dirname, `/../build/${appName}`),
