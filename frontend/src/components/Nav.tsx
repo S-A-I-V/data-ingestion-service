@@ -23,10 +23,10 @@ const TAB_PERMISSIONS: Record<string, string[]> = {
 };
 
 const NAV_TABS = [
-  { label: "Home", to: "/home" },
-  { label: "Connections", to: "/connections" },
-  { label: "Data Transfer", to: "/ingest" },
-  { label: "Audit Log", to: "/audit" },
+  { label: "Home", to: "/home", screenId: "nfc-admin" },
+  { label: "Connections", to: "/connections", screenId: "dashboard" },
+  { label: "Data Transfer", to: "/ingest", screenId: "ingest" },
+  { label: "Audit Log", to: "/audit", screenId: "audit-log" },
 ];
 
 const ADMIN_PERMISSIONS = [
@@ -75,6 +75,21 @@ export default function Nav({ user }: Props) {
   const isOnAdminPage = loc.pathname.startsWith("/admin");
 
   const logout = () => {
+    // In MAF mode: use MAF's logout which handles session clearing + redirect
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maf = (window as any).maf;
+    if (maf?.useMAFContext) {
+      try {
+        const ctx = maf.useMAFContext();
+        if (ctx?.actions?.logout) {
+          ctx.actions.logout();
+          return;
+        }
+      } catch {
+        // Fall through to legacy logout
+      }
+    }
+    // Legacy fallback (Vite standalone mode)
     localStorage.removeItem("token");
     fetch("/api/auth/logout", { method: "POST", credentials: "include" })
       .catch(() => {})
@@ -89,12 +104,42 @@ export default function Nav({ user }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Detect MAF shell
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mafContext = (window as any).maf?.useMAFContext?.();
+  const mafNavigate = mafContext?.actions?.navigate;
+
+  const handleNavClick = (tab: (typeof NAV_TABS)[0]) => {
+    if (mafNavigate && tab.screenId) {
+      // MAF mode — navigate between screens
+      mafNavigate({ screenId: tab.screenId });
+    }
+    // In Vite standalone, the <Link> handles navigation via React Router
+  };
+
   return (
     <nav className="nav">
       {/* Left column — logo */}
-      <Link to="/home" className="nav-brand-link">
+      <Link to="/home" className="nav-brand-link" onClick={() => mafNavigate?.({ screenId: "nfc-admin" })}>
         <span className="nav-brand">
-          <img src="/images/logo.jpeg" alt="NFC Logo" className="brand-logo" />
+          <span
+            className="brand-logo"
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 5,
+              background: "#1a1a1a",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontSize: 11,
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
+          >
+            N
+          </span>
           <span className="nav-brand-name">NFC Data Hub</span>
         </span>
       </Link>
@@ -105,6 +150,12 @@ export default function Nav({ user }: Props) {
           <Link
             key={tab.to}
             to={tab.to}
+            onClick={(e) => {
+              if (mafNavigate && tab.screenId) {
+                e.preventDefault();
+                mafNavigate({ screenId: tab.screenId });
+              }
+            }}
             className={`btn btn-sm no-underline ${(tab.to === "/admin" ? isOnAdminPage : loc.pathname === tab.to) ? "btn--active" : "btn--ghost"}`}
           >
             {tab.label}

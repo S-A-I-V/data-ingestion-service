@@ -144,6 +144,37 @@ def _reset_failed_login(user: User, db: Session) -> None:
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+    """
+    Unified auth dependency — works in both MAF and local modes.
+
+    MAF mode (AUTH_MODE=maf):
+      Extracts email from MAF gateway JWT, returns or creates a User record.
+
+    Local mode (AUTH_MODE=local):
+      Decodes self-issued HS256 JWT from cookie or Authorization header.
+    """
+    if settings.AUTH_MODE == "maf":
+        from app.services.maf_auth import get_maf_user
+
+        maf_user = get_maf_user(request)
+        # Look up or auto-create user by email
+        user = db.query(User).filter(User.email == maf_user.email).first()
+        if not user:
+            import secrets as _secrets
+
+            user = User(
+                id=_secrets.token_hex(16),
+                email=maf_user.email,
+                name=maf_user.name or maf_user.email.split("@")[0],
+                picture="",
+                email_verified=True,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        return user
+
+    # Local mode — original self-managed JWT auth
     token = request.cookies.get("token") or request.headers.get("Authorization", "").replace("Bearer ", "")
     if not token:
         raise HTTPException(401, "Not authenticated")

@@ -2,18 +2,25 @@ import { Link, useLocation } from "react-router-dom";
 
 /**
  * Public navigation — minimal template.
- * Grid: Logo (left) | empty center spacer | Sign In (right).
- * Center column is intentionally empty — same 3-column grid alignment
- * as the rest of the page layout.
+ * Grid: Logo (left) | empty center spacer | User name or Sign In (right).
+ * In MAF mode, the user is always authenticated so we show their name.
  */
-export default function PublicNav() {
+
+interface Props {
+  userName?: string;
+  userEmail?: string;
+}
+
+export default function PublicNav({ userName, userEmail }: Props) {
   const loc = useLocation();
 
   const goHome = () => {
-    if (loc.pathname === "/home") {
+    if (loc.pathname === "/home" || loc.pathname === "/") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+  const displayName = userName || (userEmail ? userEmail.split("@")[0] : "");
 
   return (
     <nav className="nav">
@@ -50,11 +57,15 @@ export default function PublicNav() {
         </Link>
       </div>
 
-      {/* Right: Sign In */}
+      {/* Right: User name (MAF mode) or Sign In fallback */}
       <div className="nav-right-ctas">
-        <Link to="/login" className="btn btn-primary btn-sm no-underline">
-          Sign In <span className="nav-cta-kbd">S</span>
-        </Link>
+        {displayName ? (
+          <span className="btn btn-sm">{displayName}</span>
+        ) : (
+          <Link to="/login" className="btn btn-primary btn-sm no-underline">
+            Sign In <span className="nav-cta-kbd">S</span>
+          </Link>
+        )}
       </div>
     </nav>
   );

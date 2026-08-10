@@ -2,7 +2,8 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "./api";
 import type { User } from "./types";
-import Login from "./pages/Login";
+// Login page commented out — MAF handles authentication
+// import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Ingest from "./pages/Ingest";
@@ -27,72 +28,46 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Nav from "./components/Nav";
 import PublicNav from "./components/PublicNav";
-import ProtectedRoute from "./components/ProtectedRoute";
 import CookieConsent from "./components/CookieConsent";
-import {
-  PERM_ADMIN_CONNECTIONS,
-  PERM_ADMIN_CONNECTIONS_VIEW,
-  PERM_ADMIN_DATA_TRANSFER,
-  PERM_ADMIN_DATA_TRANSFER_PREVIEW,
-  PERM_ADMIN_AUDIT,
-  PERM_ADMIN_ASSOCIATE_LOOKUP,
-  PERM_ADMIN_CLIENT_ONBOARDING,
-  PERM_ADMIN_JOB_ONBOARDING,
-  PERM_ADMIN_REPORT_MAPPING,
-  PERM_ADMIN_REPORT_POLICIES,
-  PERM_ADMIN_REPORT_HEALTH,
-  PERM_ADMIN_MANAGE_USERS,
-  PERM_ADMIN_JOB_SLA_ANALYZER,
-} from "./constants/permissions";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(!localStorage.getItem("token"));
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  const checkAuth = () => {
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  useEffect(() => {
+    // In MAF mode, the backend trusts X-Auth-Email header (dev) or MAF JWT (deployed)
+    // No login redirect needed — just fetch the user profile
     api
-      .get("/auth/me", { headers })
+      .get("/auth/me")
       .then((r) => setUser(r.data))
-      .catch(() => {
-        setUser(null);
-        localStorage.removeItem("token");
+      .catch((err) => {
+        console.warn("[App] Failed to fetch user profile:", err.message);
+        // Even if /me fails, still show the app — user just won't have permissions
+        setUser({ id: "dev", email: "dev@local", name: "Developer", permissions: [] } as User);
       })
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    checkAuth();
   }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="loader-page">
         <div className="loader" />
       </div>
     );
-
-  if (location.pathname === "/login") {
-    if (user) return <Navigate to="/connections" />;
-    return (
-      <>
-        <PublicNav />
-        <Login onLogin={checkAuth} />
-        <CookieConsent />
-      </>
-    );
   }
+
+  // Login route removed — MAF handles authentication
+  // All routes are accessible once the user profile is loaded
 
   if (!user) {
     return (
       <>
-        <PublicNav />
+        <PublicNav userName="" userEmail="" />
         <Routes location={location}>
           <Route path="/home" element={<Home isAuthenticated={false} />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -110,187 +85,27 @@ export default function App() {
       <Nav user={user} />
       <Routes location={location}>
         <Route path="/home" element={<Home isAuthenticated={true} />} />
+        <Route path="/connections" element={<Dashboard user={user} />} />
+        <Route path="/ingest" element={<Ingest user={user} />} />
+        <Route path="/audit" element={<AuditLog user={user} />} />
 
-        {/* Protected routes with permission checks */}
-        <Route
-          path="/connections"
-          element={
-            <ProtectedRoute
-              user={user}
-              permissions={[PERM_ADMIN_CONNECTIONS, PERM_ADMIN_CONNECTIONS_VIEW]}
-              feature="Connections"
-            >
-              <Dashboard user={user} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ingest"
-          element={
-            <ProtectedRoute
-              user={user}
-              permissions={[PERM_ADMIN_DATA_TRANSFER, PERM_ADMIN_DATA_TRANSFER_PREVIEW]}
-              feature="Data Transfer"
-            >
-              <Ingest user={user} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/audit"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_AUDIT]} feature="Audit Log">
-              <AuditLog user={user} />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Admin routes — all protected with specific permissions */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute
-              user={user}
-              permissions={[
-                PERM_ADMIN_ASSOCIATE_LOOKUP,
-                PERM_ADMIN_CLIENT_ONBOARDING,
-                PERM_ADMIN_JOB_ONBOARDING,
-                PERM_ADMIN_REPORT_MAPPING,
-                PERM_ADMIN_REPORT_POLICIES,
-                PERM_ADMIN_REPORT_HEALTH,
-                PERM_ADMIN_MANAGE_USERS,
-                PERM_ADMIN_JOB_SLA_ANALYZER,
-              ]}
-              feature="Admin Panel"
-            >
-              <Admin permissions={user.permissions || []} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/associate-lookup"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_ASSOCIATE_LOOKUP]} feature="Associate Lookup">
-              <AssociateLookup />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/email-discrepancy"
-          element={
-            <ProtectedRoute
-              user={user}
-              permissions={["admin:email_discrepancy_audit"]}
-              feature="Email Discrepancy Audit"
-            >
-              <EmailDiscrepancyAudit />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/report-health"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_HEALTH]} feature="Report Health Dashboard">
-              <ReportHealthDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/client-onboarding"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_CLIENT_ONBOARDING]} feature="Client Onboarding">
-              <ClientOnboardingHub />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/client-onboarding/new"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_CLIENT_ONBOARDING]} feature="Client Onboarding">
-              <ClientOnboarding />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/client-onboarding/edit"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_CLIENT_ONBOARDING]} feature="Client Onboarding">
-              <ClientEdit />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/job-onboarding"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_ONBOARDING]} feature="Job Onboarding">
-              <JobOnboardingHub />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/job-onboarding/new"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_ONBOARDING]} feature="Job Onboarding">
-              <JobOnboarding />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/job-onboarding/edit"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_ONBOARDING]} feature="Job Onboarding">
-              <JobEdit />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/report-mapping"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_MAPPING]} feature="Report Mapping">
-              <ReportMappingHub />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/report-mapping/editor"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_MAPPING]} feature="Report Mapping">
-              <ReportMappingEditor />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/report-mapping/live-edit"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_MAPPING]} feature="Report Mapping">
-              <ReportMappingLiveEdit />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/report-policies"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_REPORT_POLICIES]} feature="Report Policies">
-              <ReportPolicies />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/user-management"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_MANAGE_USERS]} feature="User Management">
-              <UserManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/job-sla-analyzer"
-          element={
-            <ProtectedRoute user={user} permissions={[PERM_ADMIN_JOB_SLA_ANALYZER]} feature="Job SLA Analyzer">
-              <JobSlaAnalyzer />
-            </ProtectedRoute>
-          }
-        />
+        {/* Admin routes */}
+        <Route path="/admin" element={<Admin permissions={user.permissions || []} />} />
+        <Route path="/admin/associate-lookup" element={<AssociateLookup />} />
+        <Route path="/admin/email-discrepancy" element={<EmailDiscrepancyAudit />} />
+        <Route path="/admin/report-health" element={<ReportHealthDashboard />} />
+        <Route path="/admin/client-onboarding" element={<ClientOnboardingHub />} />
+        <Route path="/admin/client-onboarding/new" element={<ClientOnboarding />} />
+        <Route path="/admin/client-onboarding/edit" element={<ClientEdit />} />
+        <Route path="/admin/job-onboarding" element={<JobOnboardingHub />} />
+        <Route path="/admin/job-onboarding/new" element={<JobOnboarding />} />
+        <Route path="/admin/job-onboarding/edit" element={<JobEdit />} />
+        <Route path="/admin/report-mapping" element={<ReportMappingHub />} />
+        <Route path="/admin/report-mapping/editor" element={<ReportMappingEditor />} />
+        <Route path="/admin/report-mapping/live-edit" element={<ReportMappingLiveEdit />} />
+        <Route path="/admin/report-policies" element={<ReportPolicies />} />
+        <Route path="/admin/user-management" element={<UserManagement />} />
+        <Route path="/admin/job-sla-analyzer" element={<JobSlaAnalyzer />} />
 
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />

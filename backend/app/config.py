@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "structured"  # structured | plain
 
+    # ── Auth Mode ─────────────────────────────────────────────────────────────
+    # "maf" = trust MAF gateway JWT (extract email from token claims)
+    # "local" = self-managed JWT + OAuth (original behavior)
+    AUTH_MODE: str = "maf"
+    # For local dev without MAF gateway, set a fallback email to bypass auth
+    MAF_DEV_EMAIL: str = ""
+
     # ── Ingestion Limits ──────────────────────────────────────────────────────
     MAX_CSV_SIZE_MB: int = 50
     INGESTION_CHUNK_SIZE: int = 5000
