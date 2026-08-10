@@ -1,6 +1,10 @@
 /* Tailwind v4 */
 @import "tailwindcss";
 
+/* Ensure Tailwind scans all component/page files for utility classes
+   regardless of which directory webpack is invoked from */
+@source "../";
+
 /* ── Design Tokens ──────────────────────────────────────────────────
    Warm cream background, dark text, clean Inter typography.
    Custom aesthetic for the NFC Data Hub.

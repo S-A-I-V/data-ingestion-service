@@ -12,32 +12,26 @@ gsap.registerPlugin(ScrollTrigger);
 
 import Highlight from "./ui/Highlight";
 
-/** Database icons for the 3D cloud */
+/** Database icons for the 3D cloud — use CDN URLs since MAF doesn't serve static assets */
 const DB_CLOUD_ICONS = [
-  "/images/db-icons/postgresql.png",
-  "/images/db-icons/mysql.png",
-  "/images/db-icons/clickhouse.png",
-  "/images/db-icons/snowflake.png",
-  "/images/db-icons/bigquery.png",
-  "/images/db-icons/oracle.png",
-  "/images/db-icons/mssql.png",
-  "/images/db-icons/mariadb.png",
-  "/images/db-icons/elasticsearch.png",
-  "/images/db-icons/hive.png",
-  "/images/db-icons/spark.png",
-  "/images/db-icons/db2.png",
-  "/images/db-icons/sybase.png",
-  "/images/db-icons/vertica.png",
-  "/images/db-icons/duckdb.png",
-  "/images/db-icons/cockroachdb.png",
-  "/images/db-icons/trino.png",
-  "/images/db-icons/athena.png",
-  "/images/db-icons/csv.png",
-  "/images/db-icons/firebird.png",
-  "/images/db-icons/greenplum.png",
-  "/images/db-icons/presto.png",
-  "/images/db-icons/teradata.png",
-  "/images/db-icons/tidb.png",
+  "https://www.vectorlogo.zone/logos/postgresql/postgresql-icon.svg",
+  "https://www.vectorlogo.zone/logos/mysql/mysql-icon.svg",
+  "https://www.vectorlogo.zone/logos/snowflake/snowflake-icon.svg",
+  "https://www.vectorlogo.zone/logos/google_bigquery/google_bigquery-icon.svg",
+  "https://www.vectorlogo.zone/logos/oracle/oracle-icon.svg",
+  "https://www.vectorlogo.zone/logos/microsoft/microsoft-icon.svg",
+  "https://www.vectorlogo.zone/logos/mariadb/mariadb-icon.svg",
+  "https://www.vectorlogo.zone/logos/elastic/elastic-icon.svg",
+  "https://www.vectorlogo.zone/logos/apache_hive/apache_hive-icon.svg",
+  "https://www.vectorlogo.zone/logos/apache_spark/apache_spark-icon.svg",
+  "https://www.vectorlogo.zone/logos/mongodb/mongodb-icon.svg",
+  "https://www.vectorlogo.zone/logos/redis/redis-icon.svg",
+  "https://www.vectorlogo.zone/logos/apache_kafka/apache_kafka-icon.svg",
+  "https://www.vectorlogo.zone/logos/amazon_aws/amazon_aws-icon.svg",
+  "https://www.vectorlogo.zone/logos/databricks/databricks-icon.svg",
+  "https://www.vectorlogo.zone/logos/sqlite/sqlite-icon.svg",
+  "https://www.vectorlogo.zone/logos/apache_cassandra/apache_cassandra-icon.svg",
+  "https://www.vectorlogo.zone/logos/google_cloud/google_cloud-icon.svg",
 ];
 
 function DatabaseIcon({ className }: { className?: string }) {

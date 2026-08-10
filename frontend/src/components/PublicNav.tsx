@@ -20,7 +20,24 @@ export default function PublicNav() {
       {/* Left: Logo */}
       <Link to="/home" className="nav-brand-link" onClick={goHome}>
         <span className="nav-brand">
-          <img src="/images/logo.jpeg" alt="NFC Logo" className="brand-logo" />
+          <span
+            className="brand-logo"
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 5,
+              background: "#1a1a1a",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontSize: 11,
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
+          >
+            N
+          </span>
           <span className="nav-brand-name">NFC Data Hub</span>
           <span className="nav-brand-sub">by NFC Team</span>
         </span>

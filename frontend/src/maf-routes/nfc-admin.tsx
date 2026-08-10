@@ -15,6 +15,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "../styles/index.css";
 import { registerModule } from "./maf-api";
 
+// Navigation — rendered at the top level like App.tsx does locally
+import PublicNav from "../components/PublicNav";
+
 // Pages
 import Home from "../pages/Home";
 import Dashboard from "../pages/Dashboard";
@@ -37,28 +40,44 @@ const NfcAdminScreen: React.FC = () => {
   // The basename ensures all routes are relative to the MAF screen URL
   const basename = "/nfc-admin/nfc-admin";
 
+  // Inject Google Fonts <link> into document head at runtime.
+  // MAF shell doesn't allow us to modify the HTML template, so we do it here.
+  React.useEffect(() => {
+    const fontId = "nfc-fira-code-font";
+    if (!document.getElementById(fontId)) {
+      const link = document.createElement("link");
+      link.id = fontId;
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
+
   return (
-    <BrowserRouter basename={basename}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/ingest" element={<Ingest />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/report-health" element={<ReportHealthDashboard />} />
-        <Route path="/report-mapping" element={<ReportMappingHub />} />
-        <Route path="/report-mapping/editor" element={<ReportMappingEditor />} />
-        <Route path="/report-mapping/live-edit" element={<ReportMappingLiveEdit />} />
-        <Route path="/report-policies" element={<ReportPolicies />} />
-        <Route path="/job-sla" element={<JobSlaAnalyzer />} />
-        <Route path="/job-onboarding" element={<JobOnboarding />} />
-        <Route path="/client-onboarding" element={<ClientOnboarding />} />
-        <Route path="/associate-lookup" element={<AssociateLookup />} />
-        <Route path="/email-discrepancy" element={<EmailDiscrepancyAudit />} />
-        <Route path="/user-management" element={<UserManagement />} />
-        <Route path="/audit-log" element={<AuditLog />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <div className="nfc-app-root">
+      <BrowserRouter basename={basename} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <PublicNav />
+        <Routes>
+          <Route path="/" element={<Home isAuthenticated={true} />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/ingest" element={<Ingest />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/report-health" element={<ReportHealthDashboard />} />
+          <Route path="/report-mapping" element={<ReportMappingHub />} />
+          <Route path="/report-mapping/editor" element={<ReportMappingEditor />} />
+          <Route path="/report-mapping/live-edit" element={<ReportMappingLiveEdit />} />
+          <Route path="/report-policies" element={<ReportPolicies />} />
+          <Route path="/job-sla" element={<JobSlaAnalyzer />} />
+          <Route path="/job-onboarding" element={<JobOnboarding />} />
+          <Route path="/client-onboarding" element={<ClientOnboarding />} />
+          <Route path="/associate-lookup" element={<AssociateLookup />} />
+          <Route path="/email-discrepancy" element={<EmailDiscrepancyAudit />} />
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/audit-log" element={<AuditLog />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </div>
   );
 };
 

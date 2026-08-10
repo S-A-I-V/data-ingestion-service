@@ -314,6 +314,39 @@ body {
   scrollbar-gutter: stable;
 }
 
+/* MAF app root — scoped equivalent of html/body styles for MAF shell.
+   When running inside MAF, the app does not control html/body. This
+   wrapper inherits all base styling so nav, scroll, and layout work. */
+.nfc-app-root {
+  font-family: var(--font);
+  font-size: 14px;
+  background: var(--color-chrome);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+}
+
+/* ===== TRANSPARENT SCROLLBARS ===== */
+/* Hide scrollbar tracks globally — content still scrolls */
+.nfc-app-root,
+.nfc-app-root *,
+.lf-sidebar-left,
+.lf-sidebar-right {
+  scrollbar-width: none; /* Firefox */
+}
+
+.nfc-app-root::-webkit-scrollbar,
+.nfc-app-root *::-webkit-scrollbar,
+.lf-sidebar-left::-webkit-scrollbar,
+.lf-sidebar-right::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none; /* Chrome, Safari, Edge */
+}
+
 a {
   color: var(--text-primary);
   text-decoration: underline;

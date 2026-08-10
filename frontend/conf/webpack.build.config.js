@@ -16,6 +16,7 @@ module.exports = merge(baseConfig, {
     filename: commons.filenameTemplate,
     chunkLoading: "jsonp",
     chunkFilename: commons.filenameTemplate,
+    publicPath: `/${commons.appName}/`,
     devtoolModuleFilenameTemplate: "webpack://[namespace]/[resource-path]?[loaders]",
   },
 });

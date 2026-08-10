@@ -18,6 +18,7 @@ module.exports = merge(baseConfig, {
     filename: commons.filenameChunkhashTemplate,
     chunkLoading: "jsonp",
     chunkFilename: commons.filenameChunkhashTemplate,
+    publicPath: `/${commons.appName}/`,
   },
   optimization: {
     minimize: true,
@@ -36,6 +37,7 @@ module.exports = merge(baseConfig, {
       filename: commons.assetsManifestFileName,
       path: commons.path,
       prettyPrint: true,
+      removeFullPathAutoPrefix: true,
     }),
   ],
 });
