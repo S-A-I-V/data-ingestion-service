@@ -1,12 +1,7 @@
 import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { PROBLEMS } from "../constants/problems";
 import ProblemPopup from "./ProblemPopup";
-
-gsap.registerPlugin(ScrollTrigger);
 
 /**
  * Problems/Features Section — "All the tools, one integrated platform" style.

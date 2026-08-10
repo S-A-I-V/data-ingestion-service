@@ -116,15 +116,7 @@ function SectionHeader({
 
 export default function InfoSidebar() {
   return (
-    <nav
-      className="flex h-full w-full flex-col overflow-y-auto overflow-x-hidden"
-      style={{
-        display: "grid",
-        gridTemplateRows: "repeat(4, 1fr)",
-        gap: "var(--sidebar-card-margin)",
-        padding: "var(--sidebar-card-margin)",
-      }}
-    >
+    <nav className="grid h-full w-full grid-rows-[auto_auto_auto_1fr] gap-0 overflow-y-auto overflow-x-hidden p-0">
       {/* Community Stats */}
       <div className="sidebar-card">
         <div className="sidebar-card-content">
@@ -161,12 +153,10 @@ export default function InfoSidebar() {
         </div>
       </div>
 
-      {/* Empty placeholder card */}
-      <div className="sidebar-card">
+      {/* Empty placeholder card — fills remaining height */}
+      <div className="sidebar-card min-h-0">
         <div className="sidebar-card-content"></div>
       </div>
-
-      {/* Bottom spacing */}
     </nav>
   );
 }

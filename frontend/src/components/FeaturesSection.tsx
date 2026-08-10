@@ -1,14 +1,8 @@
-import { useRef } from "react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BentoGrid, BentoCard } from "./ui/BentoGrid";
 import { ConnectorMarquee } from "./bento/ConnectorMarquee";
 import { IngestionPulse } from "./bento/IngestionPulse";
 import IconCloud from "./bento/IconCloud";
 import { SqlPreview } from "./bento/SqlPreview";
-
-gsap.registerPlugin(ScrollTrigger);
 
 import Highlight from "./ui/Highlight";
 
@@ -105,30 +99,8 @@ const FEATURES = [
 ];
 
 export default function FeaturesSection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      const heading = sectionRef.current?.querySelector(".features-heading");
-      if (heading) {
-        gsap.from(heading, {
-          y: 24,
-          opacity: 0,
-          duration: 0.6,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: heading,
-            start: "top 88%",
-            toggleActions: "play none none none",
-          },
-        });
-      }
-    },
-    { scope: sectionRef },
-  );
-
   return (
-    <section className="features-section" ref={sectionRef}>
+    <section className="features-section">
       <h2 className="text-[32px] font-medium text-[#20201D] mb-10">
         Works with <Highlight>any data stack.</Highlight>
       </h2>

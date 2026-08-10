@@ -1,5 +1,5 @@
-/* Tailwind v4 */
-@import "tailwindcss";
+/* Tailwind v4 — "important" ensures utilities override MAF shell's reset CSS */
+@import "tailwindcss" important;
 
 /* Ensure Tailwind scans all component/page files for utility classes
    regardless of which directory webpack is invoked from */

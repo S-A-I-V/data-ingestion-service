@@ -31,8 +31,8 @@
   position: relative;
   overflow: visible;
   border-radius: 0;
-  border: 1px solid #e5e5e0;
-  background: #f6f6f3;
+  border: 1px solid #e5e5e0 !important;
+  background: #f6f6f3 !important;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -235,8 +235,8 @@
   gap: 6px;
   padding: 12px 14px;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
+  border: 1px solid var(--border) !important;
+  background: var(--bg-surface) !important;
   flex-shrink: 0;
   width: 200px;
   min-height: 110px;
@@ -302,6 +302,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
+  overflow: hidden;
 }
 
 .bento-pulse-card {
@@ -310,8 +311,8 @@
   gap: 4px;
   padding: 6px 8px;
   border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg-surface);
+  border: 1px solid var(--border) !important;
+  background: var(--bg-surface) !important;
   font-family: var(--font);
   height: 70px;
   transition:

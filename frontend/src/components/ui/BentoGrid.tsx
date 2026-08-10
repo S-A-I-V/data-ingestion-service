@@ -1,9 +1,4 @@
 import { useRef, type ReactNode } from "react";
-import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface BentoCardProps {
   Icon: React.ComponentType<{ className?: string }>;
@@ -38,25 +33,9 @@ interface BentoGridProps {
 export function BentoGrid({ children, className = "" }: BentoGridProps) {
   const ref = useRef<HTMLDivElement>(null);
 
-  useGSAP(
-    () => {
-      const cards = ref.current?.querySelectorAll(".bento-card");
-      if (!cards?.length) return;
-      gsap.from(cards, {
-        y: 52,
-        opacity: 0,
-        duration: 0.65,
-        ease: "power2.out",
-        stagger: 0.1,
-        scrollTrigger: {
-          trigger: ref.current,
-          start: "top 78%",
-          toggleActions: "play none none none",
-        },
-      });
-    },
-    { scope: ref },
-  );
+  // Note: GSAP ScrollTrigger animations are disabled because MAF's shell
+  // uses a non-window scroll container, preventing triggers from firing.
+  // Cards render immediately without entrance animation.
 
   return (
     <div ref={ref} className={`bento-grid ${className}`}>
