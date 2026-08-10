@@ -110,7 +110,7 @@ export default function Home({ isAuthenticated }: Props) {
               viewport={{ once: true }}
               className="text-center text-[44px] md:text-[54px] lg:text-[64px] leading-[1.05] font-medium tracking-tight text-[#20201D]"
             >
-              <Highlight>Open NFC</Highlight> Data
+              <Highlight>Open Source</Highlight> Data
               <br />
               <Highlight>Engineering</Highlight> <Highlight>Platform</Highlight>
             </motion.h1>
