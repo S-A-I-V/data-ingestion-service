@@ -55,7 +55,7 @@ const NfcAdminScreen: React.FC = () => {
 
   return (
     <div className="nfc-app-root">
-      <BrowserRouter basename={basename} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <BrowserRouter basename={basename}>
         <PublicNav />
         <Routes>
           <Route path="/" element={<Home isAuthenticated={true} />} />
