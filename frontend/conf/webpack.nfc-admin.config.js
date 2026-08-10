@@ -23,9 +23,9 @@ module.exports = merge(baseConfig, {
     },
     path: outputPath,
     chunkLoadingGlobal: `${appName}ChunkLoadingGlobal`,
-    filename: "[name].js?[chunkhash]",
+    filename: "[name].js",
     chunkLoading: "jsonp",
-    chunkFilename: "[name].js?[chunkhash]",
+    chunkFilename: "[name].js",
     publicPath: `/${appName}/`,
   },
   optimization: {
