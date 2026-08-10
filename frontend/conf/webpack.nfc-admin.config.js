@@ -26,7 +26,6 @@ module.exports = merge(baseConfig, {
     filename: "[name].js",
     chunkLoading: "jsonp",
     chunkFilename: "[name].js",
-    publicPath: `/${appName}/`,
   },
   optimization: {
     minimize: true,
