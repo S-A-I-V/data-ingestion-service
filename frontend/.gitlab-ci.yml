@@ -19,6 +19,8 @@ variables:
 
 .npmrc_setup: &npmrc_setup
   - cd frontend
+  - echo "@nielsen-media:registry=https://gitlab.com/api/v4/projects/23296024/packages/npm/" > .npmrc
+  - echo "//gitlab.com/api/v4/projects/23296024/packages/npm/:_authToken=${CI_JOB_TOKEN}" >> .npmrc
 
 .build_zip_and_verify: &build_zip_and_verify
   - cd build
@@ -38,9 +40,9 @@ BUILD_FRONTEND_DEV:
   before_script:
     - *npmrc_setup
     - apk add --no-cache zip
-    - npm ci
+    - yarn install --frozen-lockfile
   script:
-    - npm run build:nfc-admin
+    - yarn build:nfc-admin
     - export ZIP_NAME="nfc-admin.zip"
     - export FOLDER_NAME="nfc-admin"
     - *build_zip_and_verify

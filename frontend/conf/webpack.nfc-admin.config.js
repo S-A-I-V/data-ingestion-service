@@ -46,6 +46,14 @@ module.exports = merge(baseConfig, {
       path: outputPath,
       prettyPrint: true,
       removeFullPathAutoPrefix: true,
+      processOutput: function (assets) {
+        // MAF requires init_scripts and version in the manifest
+        // init_scripts lists chunks to load before screen bundles
+        // Since we bundle everything per-screen (no splitChunks), this is empty
+        assets.init_scripts = [];
+        assets.version = require("../package.json").version;
+        return JSON.stringify(assets, null, 2);
+      },
     }),
   ],
 });
