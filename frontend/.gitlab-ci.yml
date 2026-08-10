@@ -9,7 +9,7 @@ stages:
 
 variables:
   NODE_VERSION: "22"
-  ASSETS_VERSION: "1.0.5"
+  ASSETS_VERSION: "1.0.0"
   APP_NAME: "NFC"
   EXTERNAL_GW_URL: "https://externalgw.api.dev.apps.nielsen.com"
   EXTERNAL_PROD_GW_URL: "https://externalgw.api.apps.nielsen.com"
@@ -83,6 +83,7 @@ DEPLOY_FRONTEND_DEV:
     - 'echo "Assets deployed successfully"'
   rules:
     - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
+  when: manual
 
 DEPLOY_MANIFEST_DEV:
   stage: deploy-manifest
@@ -109,6 +110,7 @@ DEPLOY_MANIFEST_DEV:
     - 'echo "Manifest deployed successfully"'
   rules:
     - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
+  when: manual
 
 # =========================================================
 # 2. QA / STAGING ENVIRONMENT
