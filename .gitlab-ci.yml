@@ -8,6 +8,7 @@ include:
     file: 'sast/sast.nlsn.yml'
 
 stages:
+  - db-migrate
   - build
   - test
   - deploy
@@ -25,6 +26,74 @@ variables:
   QA_KUBE_CONTEXT: "nielsen-media/platforms/tools-devops-external/runners-as-a-service/runner-nfc-staging:kaas2"
   PROD_KUBE_CONTEXT: "nielsen-media/platforms/tools-devops-external/runners-as-a-service/runner-nfc-backend:kaas2-ue1-prod"
   SAST_EXCLUDED_PATHS: "node_modules, dist, build, frontend/node_modules, backend/.pytest_cache"
+
+# ==========================================
+# DATABASE MIGRATIONS (Liquibase)
+# ==========================================
+# Runs Liquibase update against nfc_admin schema.
+# Uses the same DB_USER/DB_PASSWORD as the application (injected via CI variables).
+# Idempotent — only applies new changesets, safe to run on every deploy.
+
+DB_MIGRATE_DEV:
+  stage: db-migrate
+  environment:
+    name: dev
+  image: liquibase/liquibase:4.29
+  variables:
+    DB_HOST: $NFC_ADMIN_DB_HOST
+    DB_PORT: "5432"
+    DB_NAME: $NFC_ADMIN_DB_NAME
+    DB_USER: $NFC_ADMIN_DB_USER
+    DB_PASSWORD: $NFC_ADMIN_DB_PASSWORD
+  script:
+    - cd backend
+    - liquibase --defaults-file=db/liquibase.properties status
+    - liquibase --defaults-file=db/liquibase.properties update
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
+      changes:
+        - backend/db/**/*
+
+DB_MIGRATE_QA:
+  stage: db-migrate
+  environment:
+    name: qa
+  image: liquibase/liquibase:4.29
+  variables:
+    DB_HOST: $NFC_ADMIN_DB_HOST
+    DB_PORT: "5432"
+    DB_NAME: $NFC_ADMIN_DB_NAME
+    DB_USER: $NFC_ADMIN_DB_USER
+    DB_PASSWORD: $NFC_ADMIN_DB_PASSWORD
+  script:
+    - cd backend
+    - liquibase --defaults-file=db/liquibase.properties status
+    - liquibase --defaults-file=db/liquibase.properties update
+  rules:
+    - if: $CI_COMMIT_BRANCH == "qa"
+      changes:
+        - backend/db/**/*
+
+DB_MIGRATE_PROD:
+  stage: db-migrate
+  environment:
+    name: prod
+  image: liquibase/liquibase:4.29
+  variables:
+    DB_HOST: $NFC_ADMIN_DB_HOST_PROD
+    DB_PORT: "5432"
+    DB_NAME: $NFC_ADMIN_DB_NAME_PROD
+    DB_USER: $NFC_ADMIN_DB_USER_PROD
+    DB_PASSWORD: $NFC_ADMIN_DB_PASSWORD_PROD
+  script:
+    - cd backend
+    - liquibase --defaults-file=db/liquibase.properties status
+    - liquibase --defaults-file=db/liquibase.properties update
+  rules:
+    - if: $CI_COMMIT_BRANCH == "prod"
+      changes:
+        - backend/db/**/*
+  when: manual
 
 # ==========================================
 # BACKEND - DEV

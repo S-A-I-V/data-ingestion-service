@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="005-create-saved-report-mappings-table" author="nfc-admin">
+        <comment>Saved report mappings — per-user DAG pipeline configurations (JSONB)</comment>
+        <createTable schemaName="nfc_admin" tableName="saved_report_mappings">
+            <column name="id" type="SERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="false"
+                             foreignKeyName="fk_mappings_user_id"
+                             references="nfc_admin.users(id)"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="report_name" type="VARCHAR(255)"/>
+            <column name="application_name" type="VARCHAR(255)"/>
+            <column name="mapping_data" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()"/>
+        </createTable>
+
+        <createIndex schemaName="nfc_admin" tableName="saved_report_mappings" indexName="idx_mappings_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable schemaName="nfc_admin" tableName="saved_report_mappings"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

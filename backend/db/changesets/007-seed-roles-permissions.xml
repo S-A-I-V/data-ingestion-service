@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="007-seed-roles-permissions" author="nfc-admin">
+        <comment>Seed default roles and permissions for the NFC Admin app</comment>
+
+        <!-- Roles -->
+        <insert schemaName="nfc_admin" tableName="roles">
+            <column name="id" valueNumeric="1"/>
+            <column name="name" value="admin"/>
+            <column name="description" value="Full platform access — all features and user management"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="roles">
+            <column name="id" valueNumeric="2"/>
+            <column name="name" value="user"/>
+            <column name="description" value="Standard user — connections, ingestion, audit"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="roles">
+            <column name="id" valueNumeric="3"/>
+            <column name="name" value="viewer"/>
+            <column name="description" value="Read-only access to dashboards and audit logs"/>
+        </insert>
+
+        <!-- Permissions -->
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="1"/>
+            <column name="code" value="connections:read"/>
+            <column name="description" value="View database connections"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="2"/>
+            <column name="code" value="connections:write"/>
+            <column name="description" value="Create, update, delete connections"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="3"/>
+            <column name="code" value="ingestion:execute"/>
+            <column name="description" value="Preview and execute data ingestion"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="4"/>
+            <column name="code" value="audit:read"/>
+            <column name="description" value="View audit logs and metrics"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="5"/>
+            <column name="code" value="admin:associate_lookup"/>
+            <column name="description" value="Search associate information by BEID/email"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="6"/>
+            <column name="code" value="admin:report_health"/>
+            <column name="description" value="View report health dashboard"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="7"/>
+            <column name="code" value="admin:report_mapping"/>
+            <column name="description" value="Manage report-to-job pipeline mappings"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="8"/>
+            <column name="code" value="admin:report_policies"/>
+            <column name="description" value="Manage report SLA policies"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="9"/>
+            <column name="code" value="admin:client_onboarding"/>
+            <column name="description" value="Onboard and edit NFC clients"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="10"/>
+            <column name="code" value="admin:job_onboarding"/>
+            <column name="description" value="Onboard and edit NFC jobs"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="11"/>
+            <column name="code" value="admin:email_discrepancy"/>
+            <column name="description" value="Scan and fix email discrepancies"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="12"/>
+            <column name="code" value="admin:manage_users"/>
+            <column name="description" value="Manage user roles and permissions"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="permissions">
+            <column name="id" valueNumeric="13"/>
+            <column name="code" value="admin:job_sla"/>
+            <column name="description" value="View job SLA analyzer"/>
+        </insert>
+
+        <!-- Role → Permission mappings -->
+        <!-- Admin gets everything -->
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="1"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="2"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="3"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="4"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="5"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="6"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="7"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="8"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="9"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="10"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="11"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="12"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="1"/><column name="permission_id" valueNumeric="13"/>
+        </insert>
+
+        <!-- User role: connections + ingestion + audit -->
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="2"/><column name="permission_id" valueNumeric="1"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="2"/><column name="permission_id" valueNumeric="2"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="2"/><column name="permission_id" valueNumeric="3"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="2"/><column name="permission_id" valueNumeric="4"/>
+        </insert>
+
+        <!-- Viewer role: read-only -->
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="3"/><column name="permission_id" valueNumeric="1"/>
+        </insert>
+        <insert schemaName="nfc_admin" tableName="role_permissions">
+            <column name="role_id" valueNumeric="3"/><column name="permission_id" valueNumeric="4"/>
+        </insert>
+
+        <rollback>
+            <delete schemaName="nfc_admin" tableName="role_permissions"/>
+            <delete schemaName="nfc_admin" tableName="permissions"/>
+            <delete schemaName="nfc_admin" tableName="roles"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

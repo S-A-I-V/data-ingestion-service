@@ -23,7 +23,12 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str = "change-me-encryption-key"
 
     # ── Database ──────────────────────────────────────────────────────────────
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/ingestion_service"
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/nfc_prod?options=-csearch_path%3Dnfc_admin"
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "nfc_prod"
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres"
     DB_POOL_SIZE: int = 20
     DB_MAX_OVERFLOW: int = 50
     DB_POOL_TIMEOUT: int = 30

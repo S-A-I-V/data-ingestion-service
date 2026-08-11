@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-create-users-table" author="nfc-admin">
+        <comment>Users table — authentication and account management</comment>
+        <createTable schemaName="nfc_admin" tableName="users">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(320)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="picture" type="VARCHAR(2000)"/>
+            <column name="password_hash" type="VARCHAR(200)"/>
+            <column name="email_verified" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_verify_token" type="VARCHAR(200)"/>
+            <column name="email_verify_expires" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="password_reset_token" type="VARCHAR(200)"/>
+            <column name="password_reset_expires" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="failed_login_attempts" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locked_until" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()"/>
+            <column name="last_login" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <createIndex schemaName="nfc_admin" tableName="users" indexName="idx_users_email">
+            <column name="email"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable schemaName="nfc_admin" tableName="users"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

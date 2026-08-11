@@ -18,7 +18,6 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings, validate_production_config
-from app.database import Base, engine
 from app.logging_config import configure_logging
 from app.middleware.request_context import RequestContextMiddleware
 from app.middleware.security import SecurityHeadersMiddleware
@@ -46,8 +45,9 @@ logger = logging.getLogger(__name__)
 # ── 2. Validate Configuration ────────────────────────────────────────────────
 validate_production_config()
 
-# ── 3. Create Tables ─────────────────────────────────────────────────────────
-Base.metadata.create_all(bind=engine)
+# ── 3. Schema managed by Liquibase ────────────────────────────────────────────
+# Tables are created via Liquibase changesets (backend/db/).
+# Do NOT use Base.metadata.create_all() — Liquibase owns the DDL.
 
 # ── 4. Application Setup ─────────────────────────────────────────────────────
 app = FastAPI(

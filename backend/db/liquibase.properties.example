@@ -1,0 +1,21 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Liquibase Configuration — NFC Admin App
+# ─────────────────────────────────────────────────────────────────────────────
+# Copy to liquibase.properties and fill in your credentials.
+# liquibase.properties is gitignored — never commit real passwords.
+# ─────────────────────────────────────────────────────────────────────────────
+
+driver: org.postgresql.Driver
+url: jdbc:postgresql://nfc-prod-db.cgubhdwnqvih.us-east-1.rds.amazonaws.com:5432/nfc_prod
+username: your_username
+password: your_password
+
+# Schema configuration — all tables and changelog tracking in nfc_admin
+defaultSchemaName: nfc_admin
+liquibaseSchemaName: nfc_admin
+
+# Changelog
+changeLogFile: db/changelog-master.xml
+
+# Logging
+logLevel: INFO

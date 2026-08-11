@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003-create-db-connections-table" author="nfc-admin">
+        <comment>Database connections — stores encrypted credentials for target databases</comment>
+        <createTable schemaName="nfc_admin" tableName="db_connections">
+            <column name="id" type="SERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="db_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="host" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="port" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="database" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Column name is "password" in DB, mapped to password_encrypted in SQLAlchemy -->
+            <column name="password" type="TEXT" defaultValue=""/>
+            <column name="use_ssl" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="ssh_enabled" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="ssh_host" type="VARCHAR(500)"/>
+            <column name="ssh_port" type="INTEGER" defaultValueNumeric="22"/>
+            <column name="ssh_username" type="VARCHAR(200)"/>
+            <column name="ssh_password" type="TEXT"/>
+            <column name="connection_timeout" type="INTEGER" defaultValueNumeric="30"/>
+            <column name="jdbc_url" type="TEXT"/>
+            <column name="last_tested_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="last_test_ok" type="BOOLEAN"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"
+                             foreignKeyName="fk_connections_created_by"
+                             references="nfc_admin.users(id)"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()"/>
+        </createTable>
+
+        <createIndex schemaName="nfc_admin" tableName="db_connections" indexName="idx_conn_db_type">
+            <column name="db_type"/>
+        </createIndex>
+        <createIndex schemaName="nfc_admin" tableName="db_connections" indexName="idx_conn_created_by">
+            <column name="created_by"/>
+        </createIndex>
+        <createIndex schemaName="nfc_admin" tableName="db_connections" indexName="idx_conn_user_type">
+            <column name="created_by"/>
+            <column name="db_type"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable schemaName="nfc_admin" tableName="db_connections"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

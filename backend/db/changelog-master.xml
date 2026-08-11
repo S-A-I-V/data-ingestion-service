@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        NFC Admin — Master Changelog
+        Schema: nfc_admin (on nfc_prod database)
+
+        Changesets are applied in order. Each file is idempotent —
+        Liquibase tracks applied changesets in nfc_admin.databasechangelog.
+    -->
+
+    <include file="db/changesets/001-create-schema.xml"/>
+    <include file="db/changesets/002-create-users-table.xml"/>
+    <include file="db/changesets/003-create-db-connections-table.xml"/>
+    <include file="db/changesets/004-create-audit-logs-table.xml"/>
+    <include file="db/changesets/005-create-saved-report-mappings-table.xml"/>
+    <include file="db/changesets/006-create-rbac-tables.xml"/>
+    <include file="db/changesets/007-seed-roles-permissions.xml"/>
+
+</databaseChangeLog>
