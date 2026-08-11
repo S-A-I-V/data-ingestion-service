@@ -28,11 +28,25 @@ export function useScreenUser(): { user: ScreenUser; loading: boolean } {
     // Inject Google Fonts for Inter + Fira Code
     const fontId = "nfc-google-fonts";
     if (!document.getElementById(fontId)) {
+      // Preconnect for faster font loading
+      if (!document.querySelector('link[href="https://fonts.googleapis.com"]')) {
+        const preconnect1 = document.createElement("link");
+        preconnect1.rel = "preconnect";
+        preconnect1.href = "https://fonts.googleapis.com";
+        document.head.appendChild(preconnect1);
+
+        const preconnect2 = document.createElement("link");
+        preconnect2.rel = "preconnect";
+        preconnect2.href = "https://fonts.gstatic.com";
+        preconnect2.crossOrigin = "anonymous";
+        document.head.appendChild(preconnect2);
+      }
+
       const link = document.createElement("link");
       link.id = fontId;
       link.rel = "stylesheet";
       link.href =
-        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap";
+        "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=block";
       document.head.appendChild(link);
     }
   }, []);

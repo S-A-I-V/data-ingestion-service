@@ -85,7 +85,10 @@ button[role="combobox"]:hover {
   margin: 4px -4px;
 }
 
-:root {
+/* Design tokens — defined on BOTH :root (for Vite/standalone) and .nfc-app-root
+   (for MAF shell where :root is owned by the shell and our vars may be lost). */
+:root,
+.nfc-app-root {
   --bg-base: #faf9f7;
   --bg-surface: #ffffff;
   --bg-glass: #ffffff;
@@ -316,17 +319,114 @@ body {
 
 /* MAF app root — scoped equivalent of html/body styles for MAF shell.
    When running inside MAF, the app does not control html/body. This
-   wrapper inherits all base styling so nav, scroll, and layout work. */
+   wrapper inherits all base styling so nav, scroll, and layout work.
+   The aggressive reset below forces our design system onto every descendant,
+   overriding the MAF shell's own CSS resets which compete at the same specificity. */
 .nfc-app-root {
-  font-family: var(--font);
-  font-size: 14px;
-  background: var(--color-chrome);
-  color: var(--text-primary);
+  font-family: var(--font) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  background: var(--color-chrome) !important;
+  color: var(--text-primary) !important;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   position: relative;
   width: 100%;
+  box-sizing: border-box;
+}
+
+/* Force our font, color, and box-sizing on ALL descendants.
+   The MAF shell sets font-family on *, body, and common elements —
+   this scoped wildcard at .nfc-app-root * has higher specificity and wins.
+   Using !important as a last-resort specificity weapon against the MAF shell's
+   own global resets which may load after our styles in the cascade.
+   Native form controls (checkbox, radio) are excluded to preserve browser
+   rendering of their indicators (checkmarks, radio dots). */
+.nfc-app-root *:not([type="checkbox"]):not([type="radio"]),
+.nfc-app-root *::before,
+.nfc-app-root *::after {
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+}
+
+/* Scoped element resets — these override MAF shell's own element-level styles.
+   In standalone Vite mode these also fire (harmlessly) since .nfc-app-root doesn't exist,
+   and the unscoped body {} rule handles it. In MAF mode, these win. */
+.nfc-app-root a {
+  color: var(--text-primary) !important;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 2px;
+  transition:
+    color 0.15s ease,
+    text-decoration-color 0.15s ease;
+}
+.nfc-app-root a:hover {
+  text-decoration-color: var(--text-primary);
+}
+
+.nfc-app-root button,
+.nfc-app-root input,
+.nfc-app-root select,
+.nfc-app-root textarea {
+  font-family: inherit !important;
+  line-height: inherit;
+}
+
+/* font-size inherit only for inputs/selects/textareas — NOT buttons.
+   Buttons set their own size via .btn (13px), .btn-primary etc. */
+.nfc-app-root input,
+.nfc-app-root select,
+.nfc-app-root textarea {
+  font-size: inherit;
+}
+
+/* Color inherit only for inputs/selects/textareas — NOT buttons.
+   Buttons set their own color via .btn-primary, .btn etc. */
+.nfc-app-root input,
+.nfc-app-root select,
+.nfc-app-root textarea {
+  color: inherit;
+}
+
+/* Restore native appearance for checkboxes and radios.
+   Tailwind v4 preflight strips appearance on all form controls, but
+   we rely on the native checkbox/radio rendering + accent-color. */
+.nfc-app-root input[type="checkbox"],
+.nfc-app-root input[type="radio"] {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+}
+
+.nfc-app-root h1,
+.nfc-app-root h2,
+.nfc-app-root h3,
+.nfc-app-root h4,
+.nfc-app-root h5,
+.nfc-app-root h6 {
+  font-family: inherit !important;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.nfc-app-root p {
+  margin: 0;
+  font-family: inherit !important;
+}
+
+.nfc-app-root ul,
+.nfc-app-root ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nfc-app-root img,
+.nfc-app-root svg {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
 }
 
 /* ===== TRANSPARENT SCROLLBARS ===== */

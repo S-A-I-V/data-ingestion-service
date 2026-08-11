@@ -10,10 +10,12 @@ const AdminScreen: React.FC = () => {
   const { user, loading } = useScreenUser();
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
   return (
-    <MemoryRouter initialEntries={["/admin"]}>
-      <Nav user={user} />
-      <Admin permissions={user.permissions || []} />
-    </MemoryRouter>
+    <div className="nfc-app-root">
+      <MemoryRouter initialEntries={["/admin"]}>
+        <Nav user={user} />
+        <Admin permissions={user.permissions || []} />
+      </MemoryRouter>
+    </div>
   );
 };
 

@@ -136,13 +136,27 @@ const NfcAdminScreen: React.FC = () => {
 
   // Inject Google Fonts <link> into document head at runtime.
   // MAF shell doesn't allow us to modify the HTML template, so we do it here.
+  // Load all fonts used by the app (matching index.html) — not just Fira Code.
   React.useEffect(() => {
     const fontId = "nfc-fira-code-font";
     if (!document.getElementById(fontId)) {
+      // Preconnect for faster font loading
+      const preconnect1 = document.createElement("link");
+      preconnect1.rel = "preconnect";
+      preconnect1.href = "https://fonts.googleapis.com";
+      document.head.appendChild(preconnect1);
+
+      const preconnect2 = document.createElement("link");
+      preconnect2.rel = "preconnect";
+      preconnect2.href = "https://fonts.gstatic.com";
+      preconnect2.crossOrigin = "anonymous";
+      document.head.appendChild(preconnect2);
+
       const link = document.createElement("link");
       link.id = fontId;
       link.rel = "stylesheet";
-      link.href = "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap";
+      link.href =
+        "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=block";
       document.head.appendChild(link);
     }
   }, []);

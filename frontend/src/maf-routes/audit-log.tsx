@@ -10,10 +10,12 @@ const AuditLogScreen: React.FC = () => {
   const { user, loading } = useScreenUser();
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
   return (
-    <MemoryRouter initialEntries={["/audit"]}>
-      <Nav user={user} />
-      <AuditLog user={user} />
-    </MemoryRouter>
+    <div className="nfc-app-root">
+      <MemoryRouter initialEntries={["/audit"]}>
+        <Nav user={user} />
+        <AuditLog user={user} />
+      </MemoryRouter>
+    </div>
   );
 };
 

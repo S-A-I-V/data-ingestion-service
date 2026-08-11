@@ -10,10 +10,12 @@ const DashboardScreen: React.FC = () => {
   const { user, loading } = useScreenUser();
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
   return (
-    <MemoryRouter initialEntries={["/connections"]}>
-      <Nav user={user} />
-      <Dashboard user={user} />
-    </MemoryRouter>
+    <div className="nfc-app-root">
+      <MemoryRouter initialEntries={["/connections"]}>
+        <Nav user={user} />
+        <Dashboard user={user} />
+      </MemoryRouter>
+    </div>
   );
 };
 
