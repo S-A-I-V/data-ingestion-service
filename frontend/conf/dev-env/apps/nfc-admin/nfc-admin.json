@@ -816,75 +816,7 @@
       ]
     }
   ],
-  "ui_toggles": [
-    {
-      "name": "CONNECTIONS_WRITE",
-      "description": "Allow creating, updating, deleting, and testing connections",
-      "dependency_rest_actions": [
-        { "path": "/api/connections/?$", "method": "POST" },
-        { "path": "/api/connections/[0-9]+$", "method": "PUT" },
-        { "path": "/api/connections/[0-9]+$", "method": "DELETE" },
-        { "path": "/api/connections/[0-9]+/test$", "method": "POST" }
-      ]
-    },
-    {
-      "name": "INGESTION_WRITE",
-      "description": "Allow previewing and executing data ingestion",
-      "dependency_rest_actions": [
-        { "path": "/api/ingestion/preview$", "method": "POST" },
-        { "path": "/api/ingestion/execute$", "method": "POST" }
-      ]
-    },
-    {
-      "name": "REPORT_MAPPING_WRITE",
-      "description": "Allow creating, updating, deleting, previewing, and applying report mappings",
-      "dependency_rest_actions": [
-        { "path": "/api/admin/report-mapping/saved$", "method": "POST" },
-        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "PUT" },
-        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "DELETE" },
-        { "path": "/api/admin/report-mapping/preview-changes$", "method": "POST" },
-        { "path": "/api/admin/report-mapping/apply-changes$", "method": "POST" }
-      ]
-    },
-    {
-      "name": "REPORT_POLICIES_WRITE",
-      "description": "Allow previewing and applying report policy changes",
-      "dependency_rest_actions": [
-        { "path": "/api/admin/report-policies/preview$", "method": "POST" },
-        { "path": "/api/admin/report-policies/apply$", "method": "POST" }
-      ]
-    },
-    {
-      "name": "JOB_ONBOARDING_WRITE",
-      "description": "Allow executing, updating, and deleting job onboarding",
-      "dependency_rest_actions": [
-        { "path": "/api/admin/job-onboarding/execute$", "method": "POST" },
-        { "path": "/api/admin/job-onboarding/update$", "method": "PUT" },
-        { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "method": "DELETE" }
-      ]
-    },
-    {
-      "name": "CLIENT_ONBOARDING_WRITE",
-      "description": "Allow executing and updating client onboarding",
-      "dependency_rest_actions": [
-        { "path": "/api/admin/client-onboarding/execute$", "method": "POST" },
-        { "path": "/api/admin/client-onboarding/update$", "method": "PUT" }
-      ]
-    },
-    {
-      "name": "EMAIL_DISCREPANCY_WRITE",
-      "description": "Allow fixing email discrepancies",
-      "dependency_rest_actions": [{ "path": "/api/admin/email-discrepancy/fix-emails$", "method": "POST" }]
-    },
-    {
-      "name": "USER_MANAGEMENT_WRITE",
-      "description": "Allow assigning and removing user roles",
-      "dependency_rest_actions": [
-        { "path": "/api/admin/rbac/users/[0-9]+/roles$", "method": "POST" },
-        { "path": "/api/admin/rbac/users/[0-9]+/roles/[0-9]+$", "method": "DELETE" }
-      ]
-    }
-  ],
+  "ui_toggles": [],
   "screens": [
     {
       "name": "nfc-admin",
@@ -899,11 +831,14 @@
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/connections/?$", "method": "GET" },
+        { "path": "/api/connections/?$", "method": "POST" },
         { "path": "/api/connections/[0-9]+$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+$", "method": "PUT" },
+        { "path": "/api/connections/[0-9]+$", "method": "DELETE" },
+        { "path": "/api/connections/[0-9]+/test$", "method": "POST" },
         { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
         { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["CONNECTIONS_WRITE"]
+      ]
     },
     {
       "name": "ingest",
@@ -913,9 +848,10 @@
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/connections/?$", "method": "GET" },
         { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["INGESTION_WRITE"]
+        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" },
+        { "path": "/api/ingestion/preview$", "method": "POST" },
+        { "path": "/api/ingestion/execute$", "method": "POST" }
+      ]
     },
     {
       "name": "audit-log",
@@ -955,10 +891,14 @@
         { "path": "/api/admin/report-mapping/existing$", "method": "GET" },
         { "path": "/api/admin/report-mapping/existing/[0-9]+$", "method": "GET" },
         { "path": "/api/admin/report-mapping/saved$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/saved$", "method": "POST" },
         { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "GET" },
-        { "path": "/api/admin/report-mapping/export/[a-f0-9-]+$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["REPORT_MAPPING_WRITE"]
+        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "PUT" },
+        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "DELETE" },
+        { "path": "/api/admin/report-mapping/export/[a-f0-9-]+$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/preview-changes$", "method": "POST" },
+        { "path": "/api/admin/report-mapping/apply-changes$", "method": "POST" }
+      ]
     },
     {
       "name": "report-policies",
@@ -967,9 +907,10 @@
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/report-policies/reports$", "method": "GET" },
-        { "path": "/api/admin/report-policies/reports/[0-9]+$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["REPORT_POLICIES_WRITE"]
+        { "path": "/api/admin/report-policies/reports/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/report-policies/preview$", "method": "POST" },
+        { "path": "/api/admin/report-policies/apply$", "method": "POST" }
+      ]
     },
     {
       "name": "job-sla",
@@ -998,13 +939,15 @@
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/job-onboarding/jobs$", "method": "GET" },
         { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "method": "DELETE" },
         { "path": "/api/admin/job-onboarding/next-id$", "method": "GET" },
         { "path": "/api/admin/job-onboarding/trigger-jobs$", "method": "GET" },
         { "path": "/api/admin/job-onboarding/trigger-jobs/[0-9]+/sla$", "method": "GET" },
         { "path": "/api/admin/job-onboarding/report-sla-options$", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/report-sla/[0-9]+/convert$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["JOB_ONBOARDING_WRITE"]
+        { "path": "/api/admin/job-onboarding/report-sla/[0-9]+/convert$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/execute$", "method": "POST" },
+        { "path": "/api/admin/job-onboarding/update$", "method": "PUT" }
+      ]
     },
     {
       "name": "client-onboarding",
@@ -1015,9 +958,10 @@
         { "path": "/api/admin/client-onboarding/report-definitions$", "method": "GET" },
         { "path": "/api/admin/client-onboarding/next-ids$", "method": "GET" },
         { "path": "/api/admin/client-onboarding/clients$", "method": "GET" },
-        { "path": "/api/admin/client-onboarding/client/[0-9]+$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["CLIENT_ONBOARDING_WRITE"]
+        { "path": "/api/admin/client-onboarding/client/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/client-onboarding/execute$", "method": "POST" },
+        { "path": "/api/admin/client-onboarding/update$", "method": "PUT" }
+      ]
     },
     {
       "name": "associate-lookup",
@@ -1034,9 +978,9 @@
       "display_code": "EMAIL_DISCREPANCY",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
-        { "path": "/api/admin/email-discrepancy/scan$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["EMAIL_DISCREPANCY_WRITE"]
+        { "path": "/api/admin/email-discrepancy/scan$", "method": "GET" },
+        { "path": "/api/admin/email-discrepancy/fix-emails$", "method": "POST" }
+      ]
     },
     {
       "name": "user-management",
@@ -1046,11 +990,12 @@
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/rbac/users$", "method": "GET" },
         { "path": "/api/admin/rbac/users/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/rbac/users/[0-9]+/roles$", "method": "POST" },
+        { "path": "/api/admin/rbac/users/[0-9]+/roles/[0-9]+$", "method": "DELETE" },
         { "path": "/api/admin/rbac/roles$", "method": "GET" },
         { "path": "/api/admin/rbac/roles/[0-9]+$", "method": "GET" },
         { "path": "/api/admin/rbac/permissions$", "method": "GET" }
-      ],
-      "dependency_ui_toggles": ["USER_MANAGEMENT_WRITE"]
+      ]
     }
   ]
 }
