@@ -819,61 +819,15 @@
   "ui_toggles": [],
   "screens": [
     {
-      "name": "nfc-admin",
-      "description": "NFC Admin Home",
-      "display_code": "NFC_ADMIN_HOME",
+      "name": "NFC Admin",
+      "description": "NFC Admin tool — full application entry point",
+      "display_code": "nfc-admin",
       "dependency_rest_actions": [{ "path": "/api/auth/me$", "method": "GET" }]
     },
     {
-      "name": "dashboard",
-      "description": "Connections",
-      "display_code": "CONNECTIONS",
-      "dependency_rest_actions": [
-        { "path": "/api/auth/me$", "method": "GET" },
-        { "path": "/api/connections/?$", "method": "GET" },
-        { "path": "/api/connections/?$", "method": "POST" },
-        { "path": "/api/connections/[0-9]+$", "method": "GET" },
-        { "path": "/api/connections/[0-9]+$", "method": "PUT" },
-        { "path": "/api/connections/[0-9]+$", "method": "DELETE" },
-        { "path": "/api/connections/[0-9]+/test$", "method": "POST" },
-        { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" }
-      ]
-    },
-    {
-      "name": "ingest",
-      "description": "Data Transfer",
-      "display_code": "DATA_TRANSFER",
-      "dependency_rest_actions": [
-        { "path": "/api/auth/me$", "method": "GET" },
-        { "path": "/api/connections/?$", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" },
-        { "path": "/api/ingestion/preview$", "method": "POST" },
-        { "path": "/api/ingestion/execute$", "method": "POST" }
-      ]
-    },
-    {
-      "name": "audit-log",
-      "description": "Audit Log",
-      "display_code": "AUDIT_LOG",
-      "dependency_rest_actions": [
-        { "path": "/api/auth/me$", "method": "GET" },
-        { "path": "/api/audit/?$", "method": "GET" },
-        { "path": "/api/audit/metrics$", "method": "GET" },
-        { "path": "/api/audit/verify-integrity$", "method": "GET" }
-      ]
-    },
-    {
-      "name": "admin",
-      "description": "Admin Hub",
-      "display_code": "ADMIN_HUB",
-      "dependency_rest_actions": [{ "path": "/api/auth/me$", "method": "GET" }]
-    },
-    {
-      "name": "report-health",
-      "description": "Report Health",
-      "display_code": "REPORT_HEALTH",
+      "name": "Report Health",
+      "description": "Report delivery health monitoring with SLA tracking",
+      "display_code": "report-health",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/report-health/?$", "method": "GET" },
@@ -882,9 +836,9 @@
       ]
     },
     {
-      "name": "report-mapping",
-      "description": "Report Mapping",
-      "display_code": "REPORT_MAPPING",
+      "name": "Report Mapping",
+      "description": "Report-to-job workflow mapping editor",
+      "display_code": "report-mapping",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/report-mapping/jobs$", "method": "GET" },
@@ -901,9 +855,9 @@
       ]
     },
     {
-      "name": "report-policies",
-      "description": "Report Policies",
-      "display_code": "REPORT_POLICIES",
+      "name": "Report Policies",
+      "description": "Report SLA policy editor",
+      "display_code": "report-policies",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/report-policies/reports$", "method": "GET" },
@@ -913,9 +867,9 @@
       ]
     },
     {
-      "name": "job-sla",
-      "description": "Job SLA Analyzer",
-      "display_code": "JOB_SLA_ANALYZER",
+      "name": "Job SLA Analyzer",
+      "description": "Job-level SLA analytics with trends, heatmaps, and incidents",
+      "display_code": "job-sla",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/job-sla/jobs$", "method": "GET" },
@@ -932,9 +886,9 @@
       ]
     },
     {
-      "name": "job-onboarding",
-      "description": "Job Onboarding",
-      "display_code": "JOB_ONBOARDING",
+      "name": "Job Onboarding",
+      "description": "Job creation and management",
+      "display_code": "job-onboarding",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/job-onboarding/jobs$", "method": "GET" },
@@ -950,9 +904,9 @@
       ]
     },
     {
-      "name": "client-onboarding",
-      "description": "Client Onboarding",
-      "display_code": "CLIENT_ONBOARDING",
+      "name": "Client Onboarding",
+      "description": "Client creation and management",
+      "display_code": "client-onboarding",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/client-onboarding/report-definitions$", "method": "GET" },
@@ -964,18 +918,53 @@
       ]
     },
     {
-      "name": "associate-lookup",
-      "description": "Associate Lookup",
-      "display_code": "ASSOCIATE_LOOKUP",
+      "name": "Data Ingestion",
+      "description": "CSV upload and database ingestion",
+      "display_code": "ingest",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/connections/?$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" },
+        { "path": "/api/ingestion/preview$", "method": "POST" },
+        { "path": "/api/ingestion/execute$", "method": "POST" }
+      ]
+    },
+    {
+      "name": "Connections",
+      "description": "Database connection management",
+      "display_code": "dashboard",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/connections/?$", "method": "GET" },
+        { "path": "/api/connections/?$", "method": "POST" },
+        { "path": "/api/connections/[0-9]+$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+$", "method": "PUT" },
+        { "path": "/api/connections/[0-9]+$", "method": "DELETE" },
+        { "path": "/api/connections/[0-9]+/test$", "method": "POST" },
+        { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" }
+      ]
+    },
+    {
+      "name": "Admin Hub",
+      "description": "Admin tools hub — entry point for all admin features",
+      "display_code": "admin",
+      "dependency_rest_actions": [{ "path": "/api/auth/me$", "method": "GET" }]
+    },
+    {
+      "name": "Associate Lookup",
+      "description": "Associate/Business entity lookup",
+      "display_code": "associate-lookup",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/associate-lookup/?$", "method": "GET" }
       ]
     },
     {
-      "name": "email-discrepancy",
-      "description": "Email Discrepancy",
-      "display_code": "EMAIL_DISCREPANCY",
+      "name": "Email Discrepancy",
+      "description": "Email discrepancy scanner and fix tool",
+      "display_code": "email-discrepancy",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/email-discrepancy/scan$", "method": "GET" },
@@ -983,9 +972,9 @@
       ]
     },
     {
-      "name": "user-management",
-      "description": "User Management",
-      "display_code": "USER_MANAGEMENT",
+      "name": "User Management",
+      "description": "RBAC user and role management",
+      "display_code": "user-management",
       "dependency_rest_actions": [
         { "path": "/api/auth/me$", "method": "GET" },
         { "path": "/api/admin/rbac/users$", "method": "GET" },
@@ -995,6 +984,17 @@
         { "path": "/api/admin/rbac/roles$", "method": "GET" },
         { "path": "/api/admin/rbac/roles/[0-9]+$", "method": "GET" },
         { "path": "/api/admin/rbac/permissions$", "method": "GET" }
+      ]
+    },
+    {
+      "name": "Audit Log",
+      "description": "Data ingestion audit trail with integrity verification",
+      "display_code": "audit-log",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/audit/?$", "method": "GET" },
+        { "path": "/api/audit/metrics$", "method": "GET" },
+        { "path": "/api/audit/verify-integrity$", "method": "GET" }
       ]
     }
   ]
