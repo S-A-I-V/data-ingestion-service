@@ -1,9 +1,8 @@
+// NOTE: Login page (pages/Login.tsx) is not used — MAF handles authentication via OIDC.
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "./api";
 import type { User } from "./types";
-// Login page commented out — MAF handles authentication
-// import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Ingest from "./pages/Ingest";
@@ -60,9 +59,6 @@ export default function App() {
       </div>
     );
   }
-
-  // Login route removed — MAF handles authentication
-  // All routes are accessible once the user profile is loaded
 
   if (!user) {
     return (

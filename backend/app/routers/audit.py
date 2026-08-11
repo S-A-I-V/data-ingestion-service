@@ -135,9 +135,6 @@ def get_audit_logs(
     if status and status in ("success", "failed"):
         query = query.filter(AuditLog.status == status)
 
-    # NOTE: total count not yet used in response — add when migrating to server-side pagination
-    # total = query.count()
-
     logs = query.order_by(AuditLog.executed_at.desc()).offset(offset).limit(limit).all()
 
     return [
