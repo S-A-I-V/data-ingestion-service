@@ -364,6 +364,16 @@ body {
   text-decoration-color: var(--text-primary);
 }
 
+/* Opt-out: navigation links, sidebar items, and explicit no-underline classes */
+.nfc-app-root a.nav-brand-link,
+.nfc-app-root a.nav-tab,
+.nfc-app-root a.lf-toc-link,
+.nfc-app-root a.no-underline,
+.nfc-app-root .sidebar-card a,
+.nfc-app-root a[class*="no-underline"] {
+  text-decoration: none;
+}
+
 .nfc-app-root button,
 .nfc-app-root input,
 .nfc-app-root select,

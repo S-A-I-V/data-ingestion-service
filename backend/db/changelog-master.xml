@@ -20,5 +20,6 @@
     <include file="db/changesets/005-create-saved-report-mappings-table.xml"/>
     <include file="db/changesets/006-create-rbac-tables.xml"/>
     <include file="db/changesets/007-seed-roles-permissions.xml"/>
+    <include file="db/changesets/008-create-audit-metrics-view.xml"/>
 
 </databaseChangeLog>

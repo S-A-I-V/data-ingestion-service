@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="008-create-audit-metrics-view" author="nfc-admin">
+        <comment>
+            Materialized view for pre-computed per-user audit metrics.
+            Refreshed CONCURRENTLY after each ingestion operation (non-blocking reads).
+            Requires a unique index on user_id for CONCURRENT refresh support.
+        </comment>
+
+        <sql splitStatements="false">
+            CREATE MATERIALIZED VIEW IF NOT EXISTS nfc_admin.audit_metrics_mv AS
+            SELECT
+                user_id,
+                COUNT(*)::INTEGER                                   AS total_operations,
+                COUNT(*) FILTER (WHERE status = 'success')::INTEGER AS successful,
+                COUNT(*) FILTER (WHERE status = 'failed')::INTEGER  AS failed,
+                ROUND(
+                    (COUNT(*) FILTER (WHERE status = 'success')::NUMERIC / NULLIF(COUNT(*), 0)) * 100, 1
+                )                                                   AS success_rate,
+                COALESCE(SUM(rows_inserted), 0)::BIGINT             AS total_rows_inserted,
+                COALESCE(SUM(rows_skipped), 0)::BIGINT              AS total_rows_skipped,
+                COALESCE(SUM(file_size_bytes), 0)::BIGINT           AS total_data_ingested_bytes,
+                COALESCE(SUM(total_time_ms), 0)::BIGINT             AS total_time_ms,
+                ROUND(COALESCE(AVG(throughput_rps), 0)::NUMERIC, 1) AS avg_throughput_rps,
+                ROUND(COALESCE(MAX(throughput_rps), 0)::NUMERIC, 1) AS peak_throughput_rps,
+                ROUND(COALESCE(AVG(total_time_ms), 0)::NUMERIC)     AS avg_duration_ms,
+                ROUND(COALESCE(AVG(validation_score), 0)::NUMERIC, 1) AS avg_validation_score,
+                COALESCE(SUM(error_rows), 0)::INTEGER               AS total_error_rows,
+                COALESCE(SUM(duplicate_count), 0)::INTEGER          AS total_duplicates,
+                COALESCE(MAX(peak_memory_bytes), 0)::BIGINT         AS peak_memory_bytes,
+                ROUND(COALESCE(SUM(cpu_time_s), 0)::NUMERIC, 2)    AS total_cpu_time_s
+            FROM nfc_admin.audit_logs
+            GROUP BY user_id;
+        </sql>
+
+        <!-- Unique index required for REFRESH MATERIALIZED VIEW CONCURRENTLY -->
+        <sql>
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_audit_metrics_mv_user
+            ON nfc_admin.audit_metrics_mv (user_id);
+        </sql>
+
+        <!-- Initial population -->
+        <sql>
+            REFRESH MATERIALIZED VIEW nfc_admin.audit_metrics_mv;
+        </sql>
+
+        <rollback>
+            <sql>DROP MATERIALIZED VIEW IF EXISTS nfc_admin.audit_metrics_mv;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
