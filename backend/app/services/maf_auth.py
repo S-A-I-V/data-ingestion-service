@@ -1,24 +1,9 @@
 """
-MAF Authentication — extract user identity from MAF gateway JWT.
+MAF Authentication helpers — used by get_current_user dependency as a fallback
+when the middleware hasn't populated request.state.
 
-When AUTH_MODE=maf, the MAF App Gateway injects a signed JWT (v3, RS256)
-into the Authorization header for every request where force_user=true.
-
-MAF JWT payload fields (relevant subset):
-  - email: "user@nielsen.com"
-  - firstName: "John"
-  - lastName: "Doe"
-  - middleName: "M"
-  - id: 123
-  - entityCode: 1212
-  - tenantCode: 1
-  - roles: [{...}, ...]
-  - isActive: true
-  - jobTitle: "..."
-
-For local development without the full MAF gateway stack:
-  - Set MAF_DEV_EMAIL in .env to bypass JWT verification and use a fixed email
-  - Or pass X-Auth-Email header (only in development mode)
+For the full middleware implementation, see app/middleware/maf_auth.py.
+This module provides a simpler get_maf_user() for use in route-level dependencies.
 """
 
 import logging
@@ -40,58 +25,49 @@ class MAFUser:
     name: str = ""
     first_name: str = ""
     last_name: str = ""
+    source: str = "unknown"
 
 
 def get_maf_user(request: Request) -> MAFUser:
     """
-    Extract user identity from MAF-injected JWT or dev fallbacks.
-
-    Priority:
-    1. Authorization: Bearer <JWT> — decode and extract email/name claims
-    2. X-Auth-Email header (development only) — trust directly
-    3. MAF_DEV_EMAIL env var (development only) — fixed fallback
+    Extract user identity from request. Same priority as middleware:
+      1. JWT from Authorization header
+      2. X-User-Email header (if allowed)
+      3. MAF_DEV_EMAIL fallback (development only)
     """
-    # Try Authorization header (MAF gateway injects this)
+    # 1. MAF JWT
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
         try:
-            # Decode without signature verification — MAF gateway is trusted infrastructure.
-            # In production with external exposure, verify against MAF JWKS endpoint.
             payload = jwt.decode(token, options={"verify_signature": False})
-
-            # MAF token fields: email, firstName, lastName, middleName, id, roles, etc.
             email = payload.get("email") or payload.get("sub") or payload.get("preferred_username", "")
-            first_name = payload.get("firstName", "") or payload.get("given_name", "")
-            last_name = payload.get("lastName", "") or payload.get("family_name", "")
-            name = f"{first_name} {last_name}".strip() or payload.get("name", "")
-
             if email:
-                logger.debug(f"MAF auth: extracted email={email}, name={name} from JWT")
+                first_name = payload.get("firstName", "") or payload.get("given_name", "")
+                last_name = payload.get("lastName", "") or payload.get("family_name", "")
+                name = f"{first_name} {last_name}".strip() or payload.get("name", "")
                 return MAFUser(
-                    email=email,
+                    email=email.strip().lower(),
                     name=name,
                     first_name=first_name,
                     last_name=last_name,
+                    source="jwt",
                 )
-        except jwt.exceptions.DecodeError:
-            logger.warning("MAF auth: failed to decode JWT from Authorization header")
         except Exception as e:
-            logger.warning(f"MAF auth: JWT decode error: {e}")
+            logger.warning(f"MAF auth service: JWT decode error: {e}")
 
-    # Dev fallback: X-Auth-Email header (only in development)
-    if settings.ENVIRONMENT == "development":
-        dev_email = request.headers.get("X-Auth-Email", "")
-        if dev_email:
-            logger.debug(f"MAF auth: using X-Auth-Email header: {dev_email}")
-            return MAFUser(email=dev_email, name=dev_email.split("@")[0])
+    # 2. X-User-Email header (impersonation)
+    if settings.MAF_ALLOW_EMAIL_HEADER_FALLBACK:
+        header_email = request.headers.get(settings.MAF_EMAIL_HEADER_NAME, "").strip().lower()
+        if header_email:
+            return MAFUser(email=header_email, name=header_email.split("@")[0], source="header")
 
-        # Dev fallback: fixed email from env
-        if settings.MAF_DEV_EMAIL:
-            logger.debug(f"MAF auth: using MAF_DEV_EMAIL fallback: {settings.MAF_DEV_EMAIL}")
-            return MAFUser(email=settings.MAF_DEV_EMAIL, name=settings.MAF_DEV_EMAIL.split("@")[0])
+    # 3. Dev fallback (ONLY in development)
+    if settings.ENVIRONMENT == "development" and settings.MAF_DEV_EMAIL:
+        fallback = settings.MAF_DEV_EMAIL.strip().lower()
+        return MAFUser(email=fallback, name=fallback.split("@")[0], source="fallback")
 
     raise HTTPException(
         status_code=401,
-        detail="Authentication required. No valid MAF JWT or dev fallback found.",
+        detail="Authentication required. No valid MAF JWT or fallback found.",
     )

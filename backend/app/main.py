@@ -62,15 +62,22 @@ app.state.limiter = auth.limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Middleware Stack (outermost first) ────────────────────────────────────────
-# Order: Security Headers → Request Context → Session → CORS
+# Order: Security Headers → MAF Auth → Request Context → Session → CORS
 app.add_middleware(SecurityHeadersMiddleware)
+
+# MAF Auth middleware — decodes JWT, resolves user email, loads RBAC permissions
+if settings.AUTH_MODE == "maf":
+    from app.middleware.maf_auth import MAFAuthMiddleware
+
+    app.add_middleware(MAFAuthMiddleware)
+
 app.add_middleware(RequestContextMiddleware)
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
+    allow_origins=[settings.FRONTEND_URL, "http://localhost:6100", "https://localhost:6100"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
 

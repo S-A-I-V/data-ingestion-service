@@ -3,11 +3,11 @@ module.exports = {
     name: "Nielsen Fulfillment Center Admin",
     displayCode: "nfc-admin",
     token: "REPLACE_WITH_NFC_ADMIN_APP_TOKEN",
-    entryPoint: "http://host.docker.internal:6101",
+    entryPoint: "http://host.docker.internal:8000",
     frontendLayerVersion: 2,
     reactVersion: 18,
   },
-  initScripts: ["vendors", "commons"],
+  initScripts: [],
   menus: [
     {
       name: "NFC Admin",

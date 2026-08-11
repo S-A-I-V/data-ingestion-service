@@ -148,16 +148,21 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     Unified auth dependency — works in both MAF and local modes.
 
     MAF mode (AUTH_MODE=maf):
-      Extracts email from MAF gateway JWT, returns or creates a User record.
+      Reads user from request.state (populated by MAFAuthMiddleware).
+      Falls back to direct JWT decode if middleware didn't run.
 
     Local mode (AUTH_MODE=local):
       Decodes self-issued HS256 JWT from cookie or Authorization header.
     """
     if settings.AUTH_MODE == "maf":
+        # Middleware already resolved the user — use request.state
+        if hasattr(request.state, "user") and request.state.user:
+            return request.state.user
+
+        # Fallback: middleware didn't run (e.g., excluded path accessed directly)
         from app.services.maf_auth import get_maf_user
 
         maf_user = get_maf_user(request)
-        # Look up or auto-create user by email
         user = db.query(User).filter(User.email == maf_user.email).first()
         if not user:
             import secrets as _secrets
@@ -413,10 +418,14 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/me")
-async def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    from app.services.rbac import get_user_permissions
+async def me(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Use permissions from middleware state if available (avoids double DB query)
+    if hasattr(request.state, "user_permissions") and request.state.user_permissions:
+        permissions = request.state.user_permissions
+    else:
+        from app.services.rbac import get_user_permissions
 
-    permissions = get_user_permissions(user.id, db)
+        permissions = get_user_permissions(user.id, db)
     return {
         "id": user.id,
         "email": user.email,

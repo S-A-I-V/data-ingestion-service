@@ -50,7 +50,15 @@ class Settings(BaseSettings):
     # "maf" = trust MAF gateway JWT (extract email from token claims)
     # "local" = self-managed JWT + OAuth (original behavior)
     AUTH_MODE: str = "maf"
-    # For local dev without MAF gateway, set a fallback email to bypass auth
+
+    # ── MAF Security Settings ────────────────────────────────────────────────
+    # Allow X-User-Email header as an override (for impersonation/testing)
+    MAF_ALLOW_EMAIL_HEADER_FALLBACK: bool = True
+    # Header name to read the override email from
+    MAF_EMAIL_HEADER_NAME: str = "X-User-Email"
+    # Internal email domain (for isInternal checks)
+    MAF_INTERNAL_EMAIL_DOMAIN: str = "@nielsen.com"
+    # Fallback email — ONLY used in development. Must be empty in deployed envs.
     MAF_DEV_EMAIL: str = ""
 
     # ── Ingestion Limits ──────────────────────────────────────────────────────

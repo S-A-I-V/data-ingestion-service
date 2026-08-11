@@ -8,7 +8,14 @@
     {
       "path": "/api/health$",
       "display_path": "/api/health",
-      "methods": [{ "method": "GET", "description": "Health check", "force_user": false, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Health check endpoint",
+          "force_user": false,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/auth/me$",
@@ -16,7 +23,7 @@
       "methods": [
         {
           "method": "GET",
-          "description": "Get current user profile and permissions",
+          "description": "Get current authenticated user",
           "force_user": true,
           "force_source_app": false
         }
@@ -26,17 +33,27 @@
       "path": "/api/auth/logout$",
       "display_path": "/api/auth/logout",
       "methods": [
-        { "method": "POST", "description": "Logout current user", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Logout current user",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/connections/?$",
-      "display_path": "/api/connections",
+      "display_path": "/api/connections/",
       "methods": [
-        { "method": "GET", "description": "List database connections", "force_user": true, "force_source_app": false },
+        {
+          "method": "GET",
+          "description": "List all connections",
+          "force_user": true,
+          "force_source_app": false
+        },
         {
           "method": "POST",
-          "description": "Create a database connection",
+          "description": "Create a new connection",
           "force_user": true,
           "force_source_app": false
         }
@@ -44,26 +61,63 @@
     },
     {
       "path": "/api/connections/[0-9]+$",
-      "display_path": "/api/connections/{connId}",
+      "display_path": "/api/connections/{id}",
       "methods": [
-        { "method": "PUT", "description": "Update a connection", "force_user": true, "force_source_app": false },
-        { "method": "DELETE", "description": "Delete a connection", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get connection by ID",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "PUT",
+          "description": "Update connection by ID",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "DELETE",
+          "description": "Delete connection by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/connections/[0-9]+/test$",
-      "display_path": "/api/connections/{connId}/test",
-      "methods": [{ "method": "POST", "description": "Test connection", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/connections/{id}/test",
+      "methods": [
+        {
+          "method": "POST",
+          "description": "Test connection by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/connections/[0-9]+/tables$",
-      "display_path": "/api/connections/{connId}/tables",
-      "methods": [{ "method": "GET", "description": "List tables", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/connections/{id}/tables",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List tables for a connection",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/connections/[0-9]+/tables/[^/]+/columns$",
-      "display_path": "/api/connections/{connId}/tables/{table}/columns",
-      "methods": [{ "method": "GET", "description": "List columns", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/connections/{id}/tables/{name}/columns",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List columns for a table",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/ingestion/preview$",
@@ -71,7 +125,7 @@
       "methods": [
         {
           "method": "POST",
-          "description": "Preview CSV before ingestion",
+          "description": "Preview data ingestion",
           "force_user": true,
           "force_source_app": false
         }
@@ -81,92 +135,174 @@
       "path": "/api/ingestion/execute$",
       "display_path": "/api/ingestion/execute",
       "methods": [
-        { "method": "POST", "description": "Execute CSV ingestion", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Execute data ingestion",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/audit/?$",
-      "display_path": "/api/audit",
-      "methods": [{ "method": "GET", "description": "List audit logs", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/audit/",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List audit log entries",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/audit/metrics$",
       "display_path": "/api/audit/metrics",
       "methods": [
-        { "method": "GET", "description": "Get audit metrics", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get audit metrics",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/audit/verify-integrity$",
       "display_path": "/api/audit/verify-integrity",
       "methods": [
-        { "method": "GET", "description": "Verify hash chain integrity", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Verify audit log integrity",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-health/?$",
-      "display_path": "/api/admin/report-health",
+      "display_path": "/api/admin/report-health/",
       "methods": [
-        { "method": "GET", "description": "Get report delivery health", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List report health records",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-health/filters$",
       "display_path": "/api/admin/report-health/filters",
       "methods": [
-        { "method": "GET", "description": "Get filter options", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get report health filter options",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-health/[0-9]+/detail$",
-      "display_path": "/api/admin/report-health/{reportId}/detail",
+      "display_path": "/api/admin/report-health/{id}/detail",
       "methods": [
-        { "method": "GET", "description": "Get job-level report detail", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get report health detail by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-mapping/jobs$",
       "display_path": "/api/admin/report-mapping/jobs",
       "methods": [
-        { "method": "GET", "description": "List jobs for mapping", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List jobs for report mapping",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-mapping/existing$",
       "display_path": "/api/admin/report-mapping/existing",
       "methods": [
-        { "method": "GET", "description": "List existing mappings", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List existing report mappings",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-mapping/existing/[0-9]+$",
-      "display_path": "/api/admin/report-mapping/existing/{reportId}",
+      "display_path": "/api/admin/report-mapping/existing/{id}",
       "methods": [
-        { "method": "GET", "description": "Get report mapping graph", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get existing report mapping by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-mapping/saved$",
       "display_path": "/api/admin/report-mapping/saved",
       "methods": [
-        { "method": "GET", "description": "List saved mappings", "force_user": true, "force_source_app": false },
-        { "method": "POST", "description": "Save a mapping", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List saved report mapping drafts",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "POST",
+          "description": "Create a saved report mapping draft",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$",
-      "display_path": "/api/admin/report-mapping/saved/{mappingId}",
+      "display_path": "/api/admin/report-mapping/saved/{uuid}",
       "methods": [
-        { "method": "GET", "description": "Load saved mapping", "force_user": true, "force_source_app": false },
-        { "method": "PUT", "description": "Update saved mapping", "force_user": true, "force_source_app": false },
-        { "method": "DELETE", "description": "Delete saved mapping", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get saved report mapping draft by UUID",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "PUT",
+          "description": "Update saved report mapping draft by UUID",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "DELETE",
+          "description": "Delete saved report mapping draft by UUID",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-mapping/export/[a-f0-9-]+$",
-      "display_path": "/api/admin/report-mapping/export/{mappingId}",
+      "display_path": "/api/admin/report-mapping/export/{uuid}",
       "methods": [
-        { "method": "GET", "description": "Export mapping as CSV", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Export report mapping draft by UUID",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
@@ -175,7 +311,7 @@
       "methods": [
         {
           "method": "POST",
-          "description": "Preview mapping SQL changes",
+          "description": "Preview report mapping changes",
           "force_user": true,
           "force_source_app": false
         }
@@ -185,23 +321,33 @@
       "path": "/api/admin/report-mapping/apply-changes$",
       "display_path": "/api/admin/report-mapping/apply-changes",
       "methods": [
-        { "method": "POST", "description": "Apply mapping changes", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Apply report mapping changes",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-policies/reports$",
       "display_path": "/api/admin/report-policies/reports",
       "methods": [
-        { "method": "GET", "description": "List report definitions", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List reports for policy management",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-policies/reports/[0-9]+$",
-      "display_path": "/api/admin/report-policies/reports/{reportId}",
+      "display_path": "/api/admin/report-policies/reports/{id}",
       "methods": [
         {
           "method": "GET",
-          "description": "Get report with SLA policies",
+          "description": "Get report policy detail by ID",
           "force_user": true,
           "force_source_app": false
         }
@@ -211,56 +357,93 @@
       "path": "/api/admin/report-policies/preview$",
       "display_path": "/api/admin/report-policies/preview",
       "methods": [
-        { "method": "POST", "description": "Preview policy changes", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Preview report policy changes",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/report-policies/apply$",
       "display_path": "/api/admin/report-policies/apply",
       "methods": [
-        { "method": "POST", "description": "Apply policy changes", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Apply report policy changes",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs$",
       "display_path": "/api/admin/job-sla/jobs",
-      "methods": [{ "method": "GET", "description": "List active jobs", "force_user": true, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List jobs for SLA analysis",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/summary$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/summary",
+      "display_path": "/api/admin/job-sla/jobs/{id}/summary",
       "methods": [
-        { "method": "GET", "description": "Get job SLA summary", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job SLA summary",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/history$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/history",
+      "display_path": "/api/admin/job-sla/jobs/{id}/history",
       "methods": [
-        { "method": "GET", "description": "Get job live state history", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job SLA history",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/events$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/events",
+      "display_path": "/api/admin/job-sla/jobs/{id}/events",
       "methods": [
-        { "method": "GET", "description": "Get job event history", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job SLA events",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/calendar$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/calendar",
+      "display_path": "/api/admin/job-sla/jobs/{id}/calendar",
       "methods": [
-        { "method": "GET", "description": "Get job calendar data", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job SLA calendar view",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/heatmap$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/heatmap",
+      "display_path": "/api/admin/job-sla/jobs/{id}/heatmap",
       "methods": [
         {
           "method": "GET",
-          "description": "Get day-of-week hour heatmap",
+          "description": "Get job SLA heatmap",
           "force_user": true,
           "force_source_app": false
         }
@@ -268,85 +451,149 @@
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/trends$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/trends",
+      "display_path": "/api/admin/job-sla/jobs/{id}/trends",
       "methods": [
-        { "method": "GET", "description": "Get SLA trend data", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job SLA trends",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/duration-distribution$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/duration-distribution",
+      "display_path": "/api/admin/job-sla/jobs/{id}/duration-distribution",
       "methods": [
-        { "method": "GET", "description": "Get duration distribution", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job duration distribution",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/artifacts$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/artifacts",
+      "display_path": "/api/admin/job-sla/jobs/{id}/artifacts",
       "methods": [
-        { "method": "GET", "description": "Get artifact tracking", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job artifacts",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/proxy$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/proxy",
-      "methods": [{ "method": "GET", "description": "Get proxy rules", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/admin/job-sla/jobs/{id}/proxy",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get job proxy inference rules",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/job-sla/jobs/[0-9]+/incidents$",
-      "display_path": "/api/admin/job-sla/jobs/{jobId}/incidents",
+      "display_path": "/api/admin/job-sla/jobs/{id}/incidents",
       "methods": [
-        { "method": "GET", "description": "Get SEV1 incidents", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job incidents",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-onboarding/jobs$",
       "display_path": "/api/admin/job-onboarding/jobs",
       "methods": [
-        { "method": "GET", "description": "List job definitions", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List jobs for onboarding",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-onboarding/jobs/[0-9]+$",
-      "display_path": "/api/admin/job-onboarding/jobs/{jobId}",
+      "display_path": "/api/admin/job-onboarding/jobs/{id}",
       "methods": [
-        { "method": "GET", "description": "Get full job config", "force_user": true, "force_source_app": false },
-        { "method": "DELETE", "description": "Soft-delete a job", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get job onboarding detail by ID",
+          "force_user": true,
+          "force_source_app": false
+        },
+        {
+          "method": "DELETE",
+          "description": "Delete job by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-onboarding/next-id$",
       "display_path": "/api/admin/job-onboarding/next-id",
-      "methods": [{ "method": "GET", "description": "Get next job ID", "force_user": true, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get next available job ID",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/job-onboarding/trigger-jobs$",
       "display_path": "/api/admin/job-onboarding/trigger-jobs",
       "methods": [
-        { "method": "GET", "description": "List trigger jobs", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List trigger jobs",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-onboarding/trigger-jobs/[0-9]+/sla$",
-      "display_path": "/api/admin/job-onboarding/trigger-jobs/{jobId}/sla",
+      "display_path": "/api/admin/job-onboarding/trigger-jobs/{id}/sla",
       "methods": [
-        { "method": "GET", "description": "Get trigger job SLA", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get trigger job SLA",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-onboarding/report-sla-options$",
       "display_path": "/api/admin/job-onboarding/report-sla-options",
       "methods": [
-        { "method": "GET", "description": "List report SLA options", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get report SLA options for job onboarding",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-onboarding/report-sla/[0-9]+/convert$",
-      "display_path": "/api/admin/job-onboarding/report-sla/{reportId}/convert",
+      "display_path": "/api/admin/job-onboarding/report-sla/{id}/convert",
       "methods": [
         {
           "method": "GET",
-          "description": "Convert report SLA to job format",
+          "description": "Convert report SLA to job SLA",
           "force_user": true,
           "force_source_app": false
         }
@@ -356,297 +603,454 @@
       "path": "/api/admin/job-onboarding/execute$",
       "display_path": "/api/admin/job-onboarding/execute",
       "methods": [
-        { "method": "POST", "description": "Execute job onboarding", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Execute job onboarding",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/job-onboarding/update$",
       "display_path": "/api/admin/job-onboarding/update",
       "methods": [
-        { "method": "PUT", "description": "Update existing job", "force_user": true, "force_source_app": false }
+        {
+          "method": "PUT",
+          "description": "Update job onboarding",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/client-onboarding/report-definitions$",
       "display_path": "/api/admin/client-onboarding/report-definitions",
       "methods": [
-        { "method": "GET", "description": "Get report definitions", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List report definitions for client onboarding",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/client-onboarding/next-ids$",
       "display_path": "/api/admin/client-onboarding/next-ids",
-      "methods": [{ "method": "GET", "description": "Get next IDs", "force_user": true, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get next available client IDs",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/client-onboarding/execute$",
       "display_path": "/api/admin/client-onboarding/execute",
       "methods": [
-        { "method": "POST", "description": "Execute client onboarding", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Execute client onboarding",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/client-onboarding/clients$",
       "display_path": "/api/admin/client-onboarding/clients",
-      "methods": [{ "method": "GET", "description": "List clients", "force_user": true, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List onboarded clients",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/client-onboarding/client/[0-9]+$",
-      "display_path": "/api/admin/client-onboarding/client/{clientId}",
+      "display_path": "/api/admin/client-onboarding/client/{id}",
       "methods": [
-        { "method": "GET", "description": "Get client config", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Get client detail by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/client-onboarding/update$",
       "display_path": "/api/admin/client-onboarding/update",
-      "methods": [{ "method": "PUT", "description": "Update client", "force_user": true, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "PUT",
+          "description": "Update client onboarding",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/associate-lookup/?$",
-      "display_path": "/api/admin/associate-lookup",
-      "methods": [{ "method": "GET", "description": "Query associates", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/admin/associate-lookup/",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Lookup associate information",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/email-discrepancy/scan$",
       "display_path": "/api/admin/email-discrepancy/scan",
       "methods": [
-        { "method": "GET", "description": "Scan for discrepancies", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "Scan for email discrepancies",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/email-discrepancy/fix-emails$",
       "display_path": "/api/admin/email-discrepancy/fix-emails",
       "methods": [
-        { "method": "POST", "description": "Batch fix emails", "force_user": true, "force_source_app": false }
+        {
+          "method": "POST",
+          "description": "Fix email discrepancies",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/rbac/users$",
       "display_path": "/api/admin/rbac/users",
       "methods": [
-        { "method": "GET", "description": "List users with roles", "force_user": true, "force_source_app": false }
+        {
+          "method": "GET",
+          "description": "List RBAC users",
+          "force_user": true,
+          "force_source_app": false
+        }
       ]
     },
     {
       "path": "/api/admin/rbac/users/[0-9]+$",
-      "display_path": "/api/admin/rbac/users/{userId}",
-      "methods": [{ "method": "GET", "description": "Get user details", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/admin/rbac/users/{id}",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get RBAC user by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/rbac/users/[0-9]+/roles$",
-      "display_path": "/api/admin/rbac/users/{userId}/roles",
-      "methods": [{ "method": "POST", "description": "Assign role", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/admin/rbac/users/{id}/roles",
+      "methods": [
+        {
+          "method": "POST",
+          "description": "Assign role to user",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/rbac/users/[0-9]+/roles/[0-9]+$",
-      "display_path": "/api/admin/rbac/users/{userId}/roles/{roleId}",
-      "methods": [{ "method": "DELETE", "description": "Revoke role", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/admin/rbac/users/{id}/roles/{id}",
+      "methods": [
+        {
+          "method": "DELETE",
+          "description": "Remove role from user",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/rbac/roles$",
       "display_path": "/api/admin/rbac/roles",
-      "methods": [{ "method": "GET", "description": "List roles", "force_user": true, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List RBAC roles",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/rbac/roles/[0-9]+$",
-      "display_path": "/api/admin/rbac/roles/{roleId}",
-      "methods": [{ "method": "GET", "description": "Get role details", "force_user": true, "force_source_app": false }]
+      "display_path": "/api/admin/rbac/roles/{id}",
+      "methods": [
+        {
+          "method": "GET",
+          "description": "Get RBAC role by ID",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     },
     {
       "path": "/api/admin/rbac/permissions$",
       "display_path": "/api/admin/rbac/permissions",
-      "methods": [{ "method": "GET", "description": "List permissions", "force_user": true, "force_source_app": false }]
+      "methods": [
+        {
+          "method": "GET",
+          "description": "List RBAC permissions",
+          "force_user": true,
+          "force_source_app": false
+        }
+      ]
     }
   ],
-  "ui_toggles": [],
+  "ui_toggles": [
+    {
+      "name": "CONNECTIONS_WRITE",
+      "description": "Allow creating, updating, deleting, and testing connections",
+      "dependency_rest_actions": [
+        { "path": "/api/connections/?$", "method": "POST" },
+        { "path": "/api/connections/[0-9]+$", "method": "PUT" },
+        { "path": "/api/connections/[0-9]+$", "method": "DELETE" },
+        { "path": "/api/connections/[0-9]+/test$", "method": "POST" }
+      ]
+    },
+    {
+      "name": "INGESTION_WRITE",
+      "description": "Allow previewing and executing data ingestion",
+      "dependency_rest_actions": [
+        { "path": "/api/ingestion/preview$", "method": "POST" },
+        { "path": "/api/ingestion/execute$", "method": "POST" }
+      ]
+    },
+    {
+      "name": "REPORT_MAPPING_WRITE",
+      "description": "Allow creating, updating, deleting, previewing, and applying report mappings",
+      "dependency_rest_actions": [
+        { "path": "/api/admin/report-mapping/saved$", "method": "POST" },
+        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "PUT" },
+        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "DELETE" },
+        { "path": "/api/admin/report-mapping/preview-changes$", "method": "POST" },
+        { "path": "/api/admin/report-mapping/apply-changes$", "method": "POST" }
+      ]
+    },
+    {
+      "name": "REPORT_POLICIES_WRITE",
+      "description": "Allow previewing and applying report policy changes",
+      "dependency_rest_actions": [
+        { "path": "/api/admin/report-policies/preview$", "method": "POST" },
+        { "path": "/api/admin/report-policies/apply$", "method": "POST" }
+      ]
+    },
+    {
+      "name": "JOB_ONBOARDING_WRITE",
+      "description": "Allow executing, updating, and deleting job onboarding",
+      "dependency_rest_actions": [
+        { "path": "/api/admin/job-onboarding/execute$", "method": "POST" },
+        { "path": "/api/admin/job-onboarding/update$", "method": "PUT" },
+        { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "method": "DELETE" }
+      ]
+    },
+    {
+      "name": "CLIENT_ONBOARDING_WRITE",
+      "description": "Allow executing and updating client onboarding",
+      "dependency_rest_actions": [
+        { "path": "/api/admin/client-onboarding/execute$", "method": "POST" },
+        { "path": "/api/admin/client-onboarding/update$", "method": "PUT" }
+      ]
+    },
+    {
+      "name": "EMAIL_DISCREPANCY_WRITE",
+      "description": "Allow fixing email discrepancies",
+      "dependency_rest_actions": [{ "path": "/api/admin/email-discrepancy/fix-emails$", "method": "POST" }]
+    },
+    {
+      "name": "USER_MANAGEMENT_WRITE",
+      "description": "Allow assigning and removing user roles",
+      "dependency_rest_actions": [
+        { "path": "/api/admin/rbac/users/[0-9]+/roles$", "method": "POST" },
+        { "path": "/api/admin/rbac/users/[0-9]+/roles/[0-9]+$", "method": "DELETE" }
+      ]
+    }
+  ],
   "screens": [
     {
-      "name": "NFC Admin",
-      "description": "NFC Admin tool — full application entry point",
-      "display_code": "nfc-admin",
+      "name": "nfc-admin",
+      "description": "NFC Admin Home",
+      "display_code": "NFC_ADMIN_HOME",
+      "dependency_rest_actions": [{ "path": "/api/auth/me$", "method": "GET" }]
+    },
+    {
+      "name": "dashboard",
+      "description": "Connections",
+      "display_code": "CONNECTIONS",
       "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" }
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/connections/?$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["CONNECTIONS_WRITE"]
+    },
+    {
+      "name": "ingest",
+      "description": "Data Transfer",
+      "display_code": "DATA_TRANSFER",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/connections/?$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables$", "method": "GET" },
+        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["INGESTION_WRITE"]
+    },
+    {
+      "name": "audit-log",
+      "description": "Audit Log",
+      "display_code": "AUDIT_LOG",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/audit/?$", "method": "GET" },
+        { "path": "/api/audit/metrics$", "method": "GET" },
+        { "path": "/api/audit/verify-integrity$", "method": "GET" }
       ]
     },
     {
-      "name": "Report Health",
-      "description": "Report delivery health monitoring with SLA tracking",
-      "display_code": "report-health",
+      "name": "admin",
+      "description": "Admin Hub",
+      "display_code": "ADMIN_HUB",
+      "dependency_rest_actions": [{ "path": "/api/auth/me$", "method": "GET" }]
+    },
+    {
+      "name": "report-health",
+      "description": "Report Health",
+      "display_code": "REPORT_HEALTH",
       "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-health/?$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-health/filters$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-health/[0-9]+/detail$", "appCode": "nfc-admin", "method": "GET" }
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/report-health/?$", "method": "GET" },
+        { "path": "/api/admin/report-health/filters$", "method": "GET" },
+        { "path": "/api/admin/report-health/[0-9]+/detail$", "method": "GET" }
       ]
     },
     {
-      "name": "Report Mapping",
-      "description": "Report-to-job workflow mapping editor",
-      "display_code": "report-mapping",
+      "name": "report-mapping",
+      "description": "Report Mapping",
+      "display_code": "REPORT_MAPPING",
       "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-mapping/jobs$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-mapping/existing$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-mapping/existing/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-mapping/saved$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-mapping/saved$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "appCode": "nfc-admin", "method": "PUT" },
-        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "appCode": "nfc-admin", "method": "DELETE" },
-        { "path": "/api/admin/report-mapping/export/[a-f0-9-]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-mapping/preview-changes$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/report-mapping/apply-changes$", "appCode": "nfc-admin", "method": "POST" }
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/jobs$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/existing$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/existing/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/saved$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/saved/[a-f0-9-]+$", "method": "GET" },
+        { "path": "/api/admin/report-mapping/export/[a-f0-9-]+$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["REPORT_MAPPING_WRITE"]
+    },
+    {
+      "name": "report-policies",
+      "description": "Report Policies",
+      "display_code": "REPORT_POLICIES",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/report-policies/reports$", "method": "GET" },
+        { "path": "/api/admin/report-policies/reports/[0-9]+$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["REPORT_POLICIES_WRITE"]
+    },
+    {
+      "name": "job-sla",
+      "description": "Job SLA Analyzer",
+      "display_code": "JOB_SLA_ANALYZER",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/summary$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/history$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/events$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/calendar$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/heatmap$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/trends$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/duration-distribution$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/artifacts$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/proxy$", "method": "GET" },
+        { "path": "/api/admin/job-sla/jobs/[0-9]+/incidents$", "method": "GET" }
       ]
     },
     {
-      "name": "Report Policies",
-      "description": "Report SLA policy editor",
-      "display_code": "report-policies",
+      "name": "job-onboarding",
+      "description": "Job Onboarding",
+      "display_code": "JOB_ONBOARDING",
       "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-policies/reports$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-policies/reports/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/report-policies/preview$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/report-policies/apply$", "appCode": "nfc-admin", "method": "POST" }
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/jobs$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/next-id$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/trigger-jobs$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/trigger-jobs/[0-9]+/sla$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/report-sla-options$", "method": "GET" },
+        { "path": "/api/admin/job-onboarding/report-sla/[0-9]+/convert$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["JOB_ONBOARDING_WRITE"]
+    },
+    {
+      "name": "client-onboarding",
+      "description": "Client Onboarding",
+      "display_code": "CLIENT_ONBOARDING",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/client-onboarding/report-definitions$", "method": "GET" },
+        { "path": "/api/admin/client-onboarding/next-ids$", "method": "GET" },
+        { "path": "/api/admin/client-onboarding/clients$", "method": "GET" },
+        { "path": "/api/admin/client-onboarding/client/[0-9]+$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["CLIENT_ONBOARDING_WRITE"]
+    },
+    {
+      "name": "associate-lookup",
+      "description": "Associate Lookup",
+      "display_code": "ASSOCIATE_LOOKUP",
+      "dependency_rest_actions": [
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/associate-lookup/?$", "method": "GET" }
       ]
     },
     {
-      "name": "Job SLA Analyzer",
-      "description": "Job-level SLA analytics with trends, heatmaps, and incidents",
-      "display_code": "job-sla",
+      "name": "email-discrepancy",
+      "description": "Email Discrepancy",
+      "display_code": "EMAIL_DISCREPANCY",
       "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/summary$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/history$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/events$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/calendar$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/heatmap$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/trends$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/duration-distribution$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/artifacts$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/proxy$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-sla/jobs/[0-9]+/incidents$", "appCode": "nfc-admin", "method": "GET" }
-      ]
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/email-discrepancy/scan$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["EMAIL_DISCREPANCY_WRITE"]
     },
     {
-      "name": "Job Onboarding",
-      "description": "Job creation and management",
-      "display_code": "job-onboarding",
+      "name": "user-management",
+      "description": "User Management",
+      "display_code": "USER_MANAGEMENT",
       "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/jobs$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/jobs/[0-9]+$", "appCode": "nfc-admin", "method": "DELETE" },
-        { "path": "/api/admin/job-onboarding/next-id$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/trigger-jobs$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/trigger-jobs/[0-9]+/sla$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/report-sla-options$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/report-sla/[0-9]+/convert$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/job-onboarding/execute$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/job-onboarding/update$", "appCode": "nfc-admin", "method": "PUT" }
-      ]
-    },
-    {
-      "name": "Client Onboarding",
-      "description": "Client creation and management",
-      "display_code": "client-onboarding",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/client-onboarding/report-definitions$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/client-onboarding/next-ids$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/client-onboarding/execute$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/client-onboarding/clients$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/client-onboarding/client/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/client-onboarding/update$", "appCode": "nfc-admin", "method": "PUT" }
-      ]
-    },
-    {
-      "name": "Data Ingestion",
-      "description": "CSV upload and database ingestion",
-      "display_code": "ingest",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/ingestion/preview$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/ingestion/execute$", "appCode": "nfc-admin", "method": "POST" }
-      ]
-    },
-    {
-      "name": "Connections",
-      "description": "Database connection management",
-      "display_code": "admin",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/?$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/connections/[0-9]+$", "appCode": "nfc-admin", "method": "PUT" },
-        { "path": "/api/connections/[0-9]+$", "appCode": "nfc-admin", "method": "DELETE" },
-        { "path": "/api/connections/[0-9]+/test$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/connections/[0-9]+/tables$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/connections/[0-9]+/tables/[^/]+/columns$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Associate Lookup",
-      "description": "Associate/Business entity lookup",
-      "display_code": "associate-lookup",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/associate-lookup/?$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Email Discrepancy",
-      "description": "Email discrepancy scanner and fix tool",
-      "display_code": "email-discrepancy",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/email-discrepancy/scan$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/email-discrepancy/fix-emails$", "appCode": "nfc-admin", "method": "POST" }
-      ]
-    },
-    {
-      "name": "User Management",
-      "description": "RBAC user and role management",
-      "display_code": "user-management",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/rbac/users$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/rbac/users/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/rbac/users/[0-9]+/roles$", "appCode": "nfc-admin", "method": "POST" },
-        { "path": "/api/admin/rbac/users/[0-9]+/roles/[0-9]+$", "appCode": "nfc-admin", "method": "DELETE" },
-        { "path": "/api/admin/rbac/roles$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/rbac/roles/[0-9]+$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/admin/rbac/permissions$", "appCode": "nfc-admin", "method": "GET" }
-      ]
-    },
-    {
-      "name": "Audit Log",
-      "description": "Data ingestion audit trail with integrity verification",
-      "display_code": "audit-log",
-      "dependency_rest_actions": [
-        { "path": "/api/health$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/auth/me$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/audit/?$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/audit/metrics$", "appCode": "nfc-admin", "method": "GET" },
-        { "path": "/api/audit/verify-integrity$", "appCode": "nfc-admin", "method": "GET" }
-      ]
+        { "path": "/api/auth/me$", "method": "GET" },
+        { "path": "/api/admin/rbac/users$", "method": "GET" },
+        { "path": "/api/admin/rbac/users/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/rbac/roles$", "method": "GET" },
+        { "path": "/api/admin/rbac/roles/[0-9]+$", "method": "GET" },
+        { "path": "/api/admin/rbac/permissions$", "method": "GET" }
+      ],
+      "dependency_ui_toggles": ["USER_MANAGEMENT_WRITE"]
     }
   ]
 }

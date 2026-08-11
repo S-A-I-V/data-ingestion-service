@@ -6,7 +6,7 @@ api.interceptors.request.use((config) => {
   // In MAF mode (local dev via Vite), use X-Auth-Email header for auth
   // The backend AUTH_MODE=maf will trust this in development
   if (import.meta.env.DEV) {
-    config.headers["X-Auth-Email"] = "mafadminuser.local@nielsen.com";
+    config.headers["X-Auth-Email"] = "saideep.verma01@gmail.com";
   }
 
   // Keep legacy token support for local-only mode (if AUTH_MODE=local)
