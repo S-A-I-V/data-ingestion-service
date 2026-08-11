@@ -1,5 +1,5 @@
 """
-NFC Data Ingestion Service — FastAPI Application Entry Point.
+NFC Admin Portal — FastAPI Application Entry Point.
 
 Startup sequence:
   1. Configure structured logging
@@ -51,7 +51,7 @@ validate_production_config()
 
 # ── 4. Application Setup ─────────────────────────────────────────────────────
 app = FastAPI(
-    title="NFC Data Ingestion Service",
+    title="NFC Admin Portal",
     version="2.0.0",
     docs_url="/api/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/api/redoc" if settings.ENVIRONMENT != "production" else None,

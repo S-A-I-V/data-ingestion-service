@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# NFC Data Ingestion Service — Production Dockerfile
+# NFC Admin Portal — Production Dockerfile
 # ═══════════════════════════════════════════════════════════════════════════════
 # Multi-stage build for minimal attack surface and fast deployments.
 

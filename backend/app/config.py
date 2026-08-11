@@ -22,13 +22,13 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me"
     ENCRYPTION_KEY: str = "change-me-encryption-key"
 
-    # ── Database ──────────────────────────────────────────────────────────────
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/nfc_prod?options=-csearch_path%3Dnfc_admin"
-    DB_HOST: str = "localhost"
+    # ── Database (nfc_admin schema on nfc_prod RDS) ─────────────────────────────
+    DATABASE_URL: str = ""  # REQUIRED — set via .env or environment
+    DB_HOST: str = "nfc-prod-db.cgubhdwnqvih.us-east-1.rds.amazonaws.com"
     DB_PORT: int = 5432
     DB_NAME: str = "nfc_prod"
     DB_USER: str = "postgres"
-    DB_PASSWORD: str = "postgres"
+    DB_PASSWORD: str = ""  # REQUIRED — set via .env or environment
     DB_POOL_SIZE: int = 20
     DB_MAX_OVERFLOW: int = 50
     DB_POOL_TIMEOUT: int = 30
@@ -127,7 +127,9 @@ def validate_production_config() -> None:
             errors.append("SECRET_KEY must be set to a strong random value in production")
         if settings.ENCRYPTION_KEY in _INSECURE_DEFAULTS:
             errors.append("ENCRYPTION_KEY must be set to a strong random value in production")
-        if "localhost" in settings.DATABASE_URL:
+        if not settings.DATABASE_URL:
+            errors.append("DATABASE_URL must be set in production")
+        elif "localhost" in settings.DATABASE_URL:
             errors.append("DATABASE_URL should not point to localhost in production")
         if not settings.GOOGLE_CLIENT_ID and not settings.GITHUB_CLIENT_ID:
             errors.append("At least one OAuth provider must be configured in production")

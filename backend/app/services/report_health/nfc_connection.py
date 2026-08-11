@@ -33,7 +33,7 @@ def resolve_nfc_prod_connection(user_id: str, db: Session):
 
     Args:
         user_id: The authenticated user's ID (used to scope the connection lookup).
-        db: SQLAlchemy session on the ingestion_service DB.
+        db: SQLAlchemy session on the nfc_admin schema (nfc_prod DB).
 
     Returns:
         A db connector instance (supports execute_query / execute_transaction).
