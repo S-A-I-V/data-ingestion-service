@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings, validate_production_config
@@ -62,10 +63,24 @@ app.state.limiter = auth.limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Middleware Stack (outermost first) ────────────────────────────────────────
-# Order: Security Headers → MAF Auth → Request Context → Session → CORS
 app.add_middleware(SecurityHeadersMiddleware)
 
-# MAF Auth middleware — decodes JWT, resolves user email, loads RBAC permissions
+
+class MAFPathStripMiddleware(BaseHTTPMiddleware):
+    """Strip the /nfc-admin prefix that MAF gateway prepends to forwarded requests."""
+
+    APP_PREFIX = "/nfc-admin"
+
+    async def dispatch(self, request, call_next):
+        path = request.scope.get("path", "")
+        if path.startswith(self.APP_PREFIX + "/"):
+            request.scope["path"] = path[len(self.APP_PREFIX) :]
+        return await call_next(request)
+
+
+app.add_middleware(MAFPathStripMiddleware)
+
+# MAF Auth middleware
 if settings.AUTH_MODE == "maf":
     from app.middleware.maf_auth import MAFAuthMiddleware
 

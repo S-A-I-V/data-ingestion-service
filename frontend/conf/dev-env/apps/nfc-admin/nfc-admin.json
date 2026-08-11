@@ -947,12 +947,6 @@
       ]
     },
     {
-      "name": "Admin Hub",
-      "description": "Admin tools hub — entry point for all admin features",
-      "display_code": "admin",
-      "dependency_rest_actions": [{ "path": "/api/auth/me$", "method": "GET" }]
-    },
-    {
       "name": "Associate Lookup",
       "description": "Associate/Business entity lookup",
       "display_code": "associate-lookup",
