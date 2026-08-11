@@ -949,7 +949,7 @@
     {
       "name": "Admin Hub",
       "description": "Admin tools hub",
-      "display_code": "admin-hub",
+      "display_code": "admin",
       "dependency_rest_actions": [{ "path": "/api/auth/me$", "method": "GET" }]
     },
     {
