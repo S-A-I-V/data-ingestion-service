@@ -34,6 +34,9 @@ variables:
 # Uses the same DB_USER/DB_PASSWORD as the application (injected via CI variables).
 # Idempotent — only applies new changesets, safe to run on every deploy.
 
+# TODO: Once the dedicated backend runner ($GITLAB_RUNNER) is provisioned,
+# remove `when: manual` and `allow_failure: true` to restore automatic execution.
+# Original trigger: automatic on push to dev/feature/maf-deployment with backend/db/** changes.
 DB_MIGRATE_DEV:
   stage: db-migrate
   environment:
@@ -53,6 +56,8 @@ DB_MIGRATE_DEV:
     - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
       changes:
         - backend/db/**/*
+  when: manual
+  allow_failure: true
 
 DB_MIGRATE_QA:
   stage: db-migrate
