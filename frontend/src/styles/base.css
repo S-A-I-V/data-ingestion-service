@@ -354,7 +354,6 @@ body {
    In standalone Vite mode these also fire (harmlessly) since .nfc-app-root doesn't exist,
    and the unscoped body {} rule handles it. In MAF mode, these win. */
 .nfc-app-root a {
-  color: var(--text-primary) !important;
   text-decoration: underline;
   text-decoration-color: var(--border);
   text-underline-offset: 2px;
