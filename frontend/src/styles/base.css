@@ -138,7 +138,6 @@ button[role="combobox"]:hover {
   --sidebar-card-radius: 6px;
   --sidebar-card-bg: #edeee9;
   --sidebar-card-border: rgba(0, 0, 0, 0.08);
-  /* --sidebar-card-margin: 6px; */
 }
 
 /* Shared sidebar card style */

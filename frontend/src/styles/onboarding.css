@@ -48,7 +48,10 @@
   font-weight: 600;
   color: var(--text-secondary);
   background: var(--bg-base);
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .step-progress-item.active .step-progress-circle {
@@ -286,7 +289,10 @@
   font-weight: 600;
   color: var(--text-secondary);
   background: #ffffff;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .step-v-item.active .step-v-circle {
@@ -478,7 +484,10 @@
   background: var(--bg-surface);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background-color 0.15s;
   white-space: nowrap;
 }
 
@@ -1306,7 +1315,10 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1430,7 +1442,10 @@
   border-radius: 0;
   background: var(--bg-surface);
   cursor: pointer;
-  transition: all 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
   font-family: inherit;
   text-align: center;
   position: relative;

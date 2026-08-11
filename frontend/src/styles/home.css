@@ -448,7 +448,10 @@
   cursor: pointer;
   font-family: var(--font);
   letter-spacing: -0.2px;
-  transition: all 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -486,7 +489,10 @@
   cursor: pointer;
   font-family: var(--font);
   letter-spacing: -0.2px;
-  transition: all 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -497,14 +503,9 @@
   border-color: var(--border-hover);
 }
 
-/* === RIGHT SIDEBAR — removed, content moved to nav dropdowns === */
-/* ===== LOGO SECTION — text wordmark style ===== */
+/* ===== LOGO SECTION ===== */
 .db-logos-section {
-  padding: 36px 0 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
+  display: none;
 }
 
 .db-logo-row {
@@ -540,20 +541,10 @@
   cursor: pointer;
 }
 
-.db-logos-section {
-  display: none;
-}
-
-/* Bottom bar removed */
-
-/* Bottom bar removed */
-
-/* Hide scroll hint */
 .home-scroll-hint {
   display: none;
 }
 
-/* Stats (legacy) */
 .home-stats {
   display: none;
 }
@@ -605,7 +596,10 @@
   gap: 10px;
   height: auto;
   min-height: 120px;
-  transition: all 0.15s ease;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
   cursor: pointer;
   text-decoration: none;
 }

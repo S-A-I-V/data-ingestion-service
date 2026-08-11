@@ -177,7 +177,9 @@
   padding: 12px 28px;
   border-radius: 2px;
   font-size: 14px;
-  transition: all 0.12s;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
 }
 .btn-google:hover {
   border-color: var(--border-hover);
