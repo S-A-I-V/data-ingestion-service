@@ -133,24 +133,10 @@ def get_report_health(
     mark_connection_active(nfc_connection_record, db)
 
     # ── Server-side filtering ─────────────────────────────────────────────────
-    filtered = payloads
-    if report_name:
-        q = report_name.lower()
-        filtered = [p for p in filtered if q in p.report.report_name.lower()]
-    if client_name:
-        q = client_name.lower()
-        filtered = [p for p in filtered if q in (p.report.client_name or "").lower()]
-    if application_name:
-        filtered = [p for p in filtered if p.report.application_name == application_name]
-    if sev1:
-        q = sev1.lower()
-        filtered = [p for p in filtered if q in (p.report.sev1_numbers or "").lower()]
-    if delay_status:
-        filtered = [p for p in filtered if p.report.report_delay_status == delay_status]
-
-    # ── Compute summary counts ────────────────────────────────────────────────
-    # Counts are computed BEFORE delay_status filter so the strip shows totals
-    # for the base filter set (report_name, client, app, sev1, date range).
+    # Perf: Apply base filters once to produce `base`, then derive `filtered`
+    # by adding only the delay_status predicate. Previously the same 4 filters
+    # were applied twice (once for `filtered`, once for `base`), causing
+    # redundant O(n) iterations over the full payload list.
     base = payloads
     if report_name:
         q = report_name.lower()
@@ -164,12 +150,38 @@ def get_report_health(
         q = sev1.lower()
         base = [p for p in base if q in (p.report.sev1_numbers or "").lower()]
 
+    # delay_status is applied AFTER base so summary counts reflect all statuses
+    if delay_status:
+        filtered = [p for p in base if p.report.report_delay_status == delay_status]
+    else:
+        filtered = base
+
+    # ── Compute summary counts ────────────────────────────────────────────────
+    # Perf: Single-pass accumulator replaces 4 separate iterations over `base`.
+    # Counts reflect the base filter set (before delay_status) so the status
+    # strip always shows totals for the current search scope.
+    cnt_in_progress = 0
+    cnt_client_delayed = 0
+    cnt_internal_delayed = 0
+    cnt_completed = 0
+    for p in base:
+        status = p.report.report_delivery_status
+        delay = p.report.report_delay_status
+        if status == "in_progress":
+            cnt_in_progress += 1
+        elif status == "success":
+            cnt_completed += 1
+        if delay == "client_delayed":
+            cnt_client_delayed += 1
+        elif delay == "internal_delayed":
+            cnt_internal_delayed += 1
+
     summary = ReportHealthSummary(
         total=len(base),
-        in_progress=sum(1 for p in base if p.report.report_delivery_status == "in_progress"),
-        client_delayed=sum(1 for p in base if p.report.report_delay_status == "client_delayed"),
-        internal_delayed=sum(1 for p in base if p.report.report_delay_status == "internal_delayed"),
-        completed=sum(1 for p in base if p.report.report_delivery_status == "success"),
+        in_progress=cnt_in_progress,
+        client_delayed=cnt_client_delayed,
+        internal_delayed=cnt_internal_delayed,
+        completed=cnt_completed,
     )
 
     logger.info(
