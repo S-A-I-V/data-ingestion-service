@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: nfc-ingestion-backend-svc
-  namespace: nfc-backend
+  name: nfc-admin-backend-svc
+  namespace: nfc-admin-backend
   labels:
-    app: nfc-ingestion-backend
+    app: nfc-admin-backend
 spec:
   type: ClusterIP
   selector:
-    app: nfc-ingestion-backend
+    app: nfc-admin-backend
   ports:
     - port: 8000
       targetPort: 8000

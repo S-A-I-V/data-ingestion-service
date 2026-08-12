@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nfc-ingestion-backend-ingress
-  namespace: nfc-backend
+  name: nfc-admin-backend-ingress
+  namespace: nfc-admin-backend
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
@@ -10,13 +10,13 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: nfc-backend.sre-np.svc.nlsn.media
+    - host: nfc-admin-backend.sre-np.svc.nlsn.media
       http:
         paths:
           - path: /api(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
-                name: nfc-ingestion-backend-svc
+                name: nfc-admin-backend-svc
                 port:
                   number: 8000

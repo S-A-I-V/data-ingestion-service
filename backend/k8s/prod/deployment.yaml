@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nfc-ingestion-backend
-  namespace: nfc-backend
+  name: nfc-admin-backend
+  namespace: nfc-admin-backend
   labels:
-    app: nfc-ingestion-backend
+    app: nfc-admin-backend
     environment: prod
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: nfc-ingestion-backend
+      app: nfc-admin-backend
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -19,21 +19,40 @@ spec:
   template:
     metadata:
       labels:
-        app: nfc-ingestion-backend
+        app: nfc-admin-backend
         environment: prod
     spec:
       serviceAccountName: nfc-backend-sa
       imagePullSecrets:
-        - name: gitlab-registry-secret-prod
+        - name: gitlab-registry-secret
+      # KaaS2 provisioner: AMD node pool (mayank-mohit)
+      # NOTE: Prod tolerations may differ once prod namespace is provisioned.
+      # Update these values with what the platform team provides for prod.
+      nodeSelector:
+        provisioner: mayank-mohit-amd-node-pool
+      tolerations:
+        - key: "workload-leader-amd64"
+          operator: "Equal"
+          value: "mayank-mohit"
+          effect: "NoSchedule"
       containers:
-        - name: nfc-ingestion-backend
-          image: registry.gitlab.com/nielsen-media/nfc/prod/backend:__IMAGE_TAG__
+        - name: nfc-admin-backend
+          image: registry.gitlab.com/nielsen-media/nielsen-fulfillment-center/nfc-admin/prod/backend:__IMAGE_TAG__
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
               protocol: TCP
           env:
             - name: ENVIRONMENT
               value: "production"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -53,6 +72,10 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
           livenessProbe:
             httpGet:
               path: /api/health

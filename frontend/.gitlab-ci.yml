@@ -54,7 +54,7 @@ BUILD_FRONTEND_DEV:
       - frontend/build/nfc-admin.zip
       - frontend/conf/dev-env/apps/nfc-admin/
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
+    - if: $CI_COMMIT_BRANCH == "dev"
 
 DEPLOY_FRONTEND_DEV:
   stage: deploy
@@ -82,7 +82,7 @@ DEPLOY_FRONTEND_DEV:
       --assets-app-version "$ASSETS_VERSION"
     - 'echo "Assets deployed successfully"'
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
+    - if: $CI_COMMIT_BRANCH == "dev"
   when: manual
 
 DEPLOY_MANIFEST_DEV:
@@ -109,7 +109,7 @@ DEPLOY_MANIFEST_DEV:
       --manifest-path "conf/dev-env/apps/nfc-admin/nfc-admin.json"
     - 'echo "Manifest deployed successfully"'
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "feature/maf-deployment"
+    - if: $CI_COMMIT_BRANCH == "dev"
   when: manual
 
 # =========================================================
