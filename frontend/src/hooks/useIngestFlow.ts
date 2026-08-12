@@ -42,7 +42,7 @@ export function useIngestFlow() {
   // Load connections on mount
   useEffect(() => {
     api
-      .get("/connections")
+      .get("/connections/")
       .then((r) => setConns(r.data))
       .catch(() => {})
       .finally(() => setConnsLoading(false));

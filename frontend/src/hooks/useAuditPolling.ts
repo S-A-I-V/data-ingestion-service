@@ -18,7 +18,7 @@ export default function useAuditPolling(): UseAuditPollingResult {
 
   const refresh = useCallback(() => {
     api
-      .get("/audit")
+      .get("/audit/")
       .then((r) => setLogs(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));

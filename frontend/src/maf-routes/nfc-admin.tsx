@@ -89,19 +89,13 @@ const NfcAdminScreen: React.FC = () => {
     picture: "",
     permissions: [],
   });
+  const [authError, setAuthError] = React.useState(false);
 
   React.useEffect(() => {
-    // Fetch user profile from backend via MAF gateway.
-    // Pattern: /api/v3/{appDisplayCode}/{backendPath}
-    // In deployed: this is the only path. MAF gateway injects JWT and forwards to backend.
-    // In local: first try MAF gateway, then fall back to direct backend (for dev convenience).
     const tryFetch = async () => {
       const mafApiPath = "/api/v3/nfc-admin/api/auth/me";
+      const res = await fetch(mafApiPath, { credentials: "include" }).catch(() => null);
 
-      // Attempt 1: via MAF gateway (works in both deployed and local with maf-cli)
-      let res = await fetch(mafApiPath, { credentials: "include" }).catch(() => null);
-
-      // Check if the response is actually JSON (not MAF's HTML error page)
       if (res && res.ok) {
         const contentType = res.headers.get("content-type") || "";
         if (contentType.includes("application/json")) {
@@ -116,20 +110,9 @@ const NfcAdminScreen: React.FC = () => {
         }
       }
 
-      // Attempt 2: direct to backend (local dev only — won't work in deployed)
-      res = await fetch("http://localhost:8000/api/auth/me", {
-        headers: { "X-User-Email": mafUser.email },
-      }).catch(() => null);
-
-      if (res && res.ok) {
-        const data = await res.json();
-        setUser({
-          name: data.name || mafUser.name,
-          email: data.email || mafUser.email,
-          picture: data.picture || "",
-          permissions: data.permissions || [],
-        });
-      }
+      // Gateway unavailable or returned non-JSON — show error state
+      console.warn("[nfc-admin] MAF gateway /api/auth/me failed or unavailable");
+      setAuthError(true);
     };
     tryFetch();
   }, []);
@@ -160,6 +143,21 @@ const NfcAdminScreen: React.FC = () => {
       document.head.appendChild(link);
     }
   }, []);
+
+  if (authError) {
+    return (
+      <div className="nfc-app-root">
+        <div className="access-denied">
+          <div className="access-denied-title">Service Unavailable</div>
+          <div className="access-denied-message">
+            Unable to connect to the NFC Admin backend. The MAF API gateway may not be configured or the backend is
+            unreachable.
+          </div>
+          <div className="access-denied-hint">Check that the manifest is deployed and the backend is running.</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="nfc-app-root">

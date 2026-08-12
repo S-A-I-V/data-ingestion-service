@@ -61,7 +61,7 @@ export default function Dashboard() {
 
   const load = () =>
     api
-      .get("/connections")
+      .get("/connections/")
       .then((r) => {
         const loaded: Connection[] = r.data;
         setConns(loaded);

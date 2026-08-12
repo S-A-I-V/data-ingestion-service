@@ -54,6 +54,7 @@ validate_production_config()
 app = FastAPI(
     title="NFC Admin Portal",
     version="2.0.0",
+    redirect_slashes=False,
     docs_url="/api/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/api/redoc" if settings.ENVIRONMENT != "production" else None,
 )
@@ -78,8 +79,6 @@ class MAFPathStripMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-app.add_middleware(MAFPathStripMiddleware)
-
 # MAF Auth middleware
 if settings.AUTH_MODE == "maf":
     from app.middleware.maf_auth import MAFAuthMiddleware
@@ -95,6 +94,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Path strip MUST be outermost (added last = runs first in Starlette LIFO order)
+app.add_middleware(MAFPathStripMiddleware)
 
 # ── 5. Routers ───────────────────────────────────────────────────────────────
 app.include_router(auth.router)

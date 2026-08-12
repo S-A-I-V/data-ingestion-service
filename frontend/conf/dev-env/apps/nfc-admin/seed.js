@@ -2,7 +2,7 @@ module.exports = {
   app: {
     name: "Nielsen Fulfillment Center Admin",
     displayCode: "nfc-admin",
-    token: process.env.MAF_APP_TOKEN || "local-dev-token",
+    token: "9686de06-7b31-49f6-8db2-541dc257bf2c",
     entryPoint: "http://host.docker.internal:8000",
     frontendLayerVersion: 2,
     reactVersion: 18,
