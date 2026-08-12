@@ -978,8 +978,9 @@
 /* Push timezone select to the far right — uses Radix SelectTrigger */
 .js-tz-select {
   margin-left: auto;
-  width: 10rem;
-  min-width: 10rem;
+  width: 10rem !important;
+  min-width: 10rem !important;
+  max-width: 10rem !important;
   height: 1.75rem;
   font-size: 11px;
   border-radius: 0;
