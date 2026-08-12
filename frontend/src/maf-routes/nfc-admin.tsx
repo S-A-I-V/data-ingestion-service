@@ -167,7 +167,7 @@ const NfcAdminScreen: React.FC = () => {
           <Route path="/" element={<Home isAuthenticated={true} />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ingest" element={<Ingest />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<Admin permissions={user.permissions} />} />
           <Route path="/report-health" element={<ReportHealthDashboard />} />
           <Route path="/report-mapping" element={<ReportMappingHub />} />
           <Route path="/report-mapping/editor" element={<ReportMappingEditor />} />

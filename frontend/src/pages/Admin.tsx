@@ -26,21 +26,21 @@ const ADMIN_TOOLS = [
     description:
       "Manage user roles and permissions. Assign or revoke roles, view effective permissions, and monitor cache stats.",
     icon: ManageAccountsIcon,
-    to: "/admin/user-management",
+    to: "/user-management",
   },
   {
     permission: "admin:associate_lookup",
     title: "Associate Lookup",
     description: "Query the Sybase CustomerRepository for associate and business entity data by BEID or DMZID.",
     icon: SearchIcon,
-    to: "/admin/associate-lookup",
+    to: "/associate-lookup",
   },
   {
     permission: "admin:client_onboarding",
     title: "Client Onboarding",
     description: "Onboard new clients or edit existing client configurations — groups, BEIDs, reports, and aliases.",
     icon: GroupsIcon,
-    to: "/admin/client-onboarding",
+    to: "/client-onboarding",
   },
   {
     permission: "admin:job_onboarding",
@@ -48,21 +48,21 @@ const ADMIN_TOOLS = [
     description:
       "Onboard new jobs or edit existing jobs — SLA policies, proxy inference rules, and artifact definitions.",
     icon: WorkIcon,
-    to: "/admin/job-onboarding",
+    to: "/job-onboarding",
   },
   {
     permission: "admin:report_mapping",
     title: "Report Job Mapping",
     description: "Visual DAG editor for report→job pipelines. Create, copy, edit, and export mapping configurations.",
     icon: AccountTreeIcon,
-    to: "/admin/report-mapping",
+    to: "/report-mapping",
   },
   {
     permission: "admin:email_discrepancy_audit",
     title: "Email Discrepancy Audit",
     description: "Scan CPR vs NFC to find email mismatches. Preview and batch-fix stale emails in the users table.",
     icon: SyncProblemIcon,
-    to: "/admin/email-discrepancy",
+    to: "/email-discrepancy",
   },
   {
     permission: "admin:report_health",
@@ -70,7 +70,7 @@ const ADMIN_TOOLS = [
     description:
       "Full pipeline observability — SLA status, delay attribution, per-job events, proxy inference, run heatmaps, and ownership for every active report.",
     icon: MonitorHeartIcon,
-    to: "/admin/report-health",
+    to: "/report-health",
   },
   {
     permission: "admin:report_policies",
@@ -78,7 +78,7 @@ const ADMIN_TOOLS = [
     description:
       "View and edit report definitions & SLA policies. Manage expected delivery times, schedule frequencies, and window configurations.",
     icon: MonitorHeartIcon,
-    to: "/admin/report-policies",
+    to: "/report-policies",
   },
   {
     permission: "admin:job_sla_analyzer",
@@ -86,12 +86,12 @@ const ADMIN_TOOLS = [
     description:
       "Deep-dive analysis of job SLA compliance. Timeline charts, day×hour heatmaps, run history, artifacts, proxy inference, and incident tracking.",
     icon: QueryStatsIcon,
-    to: "/admin/job-sla-analyzer",
+    to: "/job-sla",
   },
 ];
 
 export default function Admin({ permissions }: Props) {
-  const visibleTools = ADMIN_TOOLS.filter((t) => permissions.includes(t.permission));
+  const visibleTools = ADMIN_TOOLS.filter((t) => (permissions || []).includes(t.permission));
 
   return (
     <div className="lf-layout">

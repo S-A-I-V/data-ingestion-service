@@ -154,6 +154,9 @@ export default function Nav({ user }: Props) {
               if (mafNavigate && tab.screenId) {
                 e.preventDefault();
                 mafNavigate({ screenId: tab.screenId });
+              } else if (mafNavigate && tab.to === "/admin") {
+                e.preventDefault();
+                window.location.href = "/nfc-admin/nfc-admin/admin";
               }
             }}
             className={`btn btn-sm no-underline ${(tab.to === "/admin" ? isOnAdminPage : loc.pathname === tab.to) ? "btn--active" : "btn--ghost"}`}
